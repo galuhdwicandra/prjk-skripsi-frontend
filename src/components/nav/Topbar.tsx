@@ -9,7 +9,6 @@ type TopbarProps = {
 export default function Topbar({ onMenuClick, onLogout }: TopbarProps): React.ReactElement {
   const { user, logout } = useAuth();
 
-  // inisial user (data asli, bukan dummy)
   const initials =
     (user?.name ?? "")
       .split(" ")
@@ -18,100 +17,57 @@ export default function Topbar({ onMenuClick, onLogout }: TopbarProps): React.Re
       .slice(0, 2)
       .join("") || "U";
 
-  // role asli (pastikan sudah ada di auth store)
   const roleLabel = user?.role ?? "";
 
   const doLogout = () => {
-    if (onLogout) { onLogout(); return; }
+    if (onLogout) {
+      onLogout();
+      return;
+    }
     void logout();
   };
 
   return (
-    <header
-      style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 40,
-        height: 64,
-        borderBottom: "1px solid rgba(0,0,0,.08)",
-        background: "rgba(255,255,255,.9)",
-        backdropFilter: "blur(8px)",
-        boxShadow: "0 1px 8px rgba(0,0,0,.06)",
-      }}
-    >
-      <div
-        style={{
-          height: "100%",
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          padding: "0 16px",
-          maxWidth: 1200,
-          margin: "0 auto",
-        }}
-      >
-        {/* Kiri: tombol menu + brand */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+    <header className="topbar" aria-label="Topbar">
+      <div className="topbar__inner">
+        {/* Left: menu + brand */}
+        <div className="topbar__left">
           <button
             type="button"
             onClick={onMenuClick}
-            className="button button-ghost"
-            style={{ paddingLeft: 12, paddingRight: 12 }}
+            className="button button-ghost topbar__menuBtn"
             aria-label="Buka menu"
             title="Menu"
           >
-            {/* ikon hamburger sederhana */}
-            <span aria-hidden style={{ display: "inline-block", width: 22, color: "#334155" }}>
-              <span style={{ display: "block", height: 2, borderRadius: 2, background: "currentColor" }} />
-              <span style={{ margin: "5px 0", display: "block", height: 2, borderRadius: 2, background: "currentColor" }} />
-              <span style={{ display: "block", height: 2, borderRadius: 2, background: "currentColor" }} />
+            <span className="topbar__hamburger" aria-hidden="true">
+              <span />
+              <span />
+              <span />
             </span>
           </button>
 
-          <div style={{ fontWeight: 700, letterSpacing: ".02em", color: "#1f2937" }}>
-            POS Prime <span style={{ opacity: 0.6 }}>Katalog</span>
+          <div className="topbar__brand" title="POS Prime">
+            <span className="topbar__brandMuted">Sistem</span>
+            <span className="topbar__brandTitle">POS Prime</span>
           </div>
         </div>
 
-        {/* Tengah: spacer (tempat search nanti jika diperlukan) */}
-        <div style={{ flex: 1, minWidth: 40 }} />
+        {/* Middle: placeholder (search nanti) */}
+        <div className="topbar__center" />
 
-        {/* Kanan: avatar inisial + nama + role (badge) + keluar */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
-          <span
-            aria-hidden
-            style={{
-              display: "inline-flex",
-              height: 36,
-              width: 36,
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: "9999px",
-              background: "var(--color-primary)",
-              color: "#fff",
-              fontWeight: 600,
-              fontSize: 12,
-              boxShadow: "0 2px 6px rgba(0,0,0,.12)",
-              flex: "0 0 auto",
-            }}
-          >
+        {/* Right: user */}
+        <div className="topbar__right">
+          <span className="topbar__avatar" aria-hidden="true">
             {initials}
           </span>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-            <span
-              title={user?.name}
-              style={{
-                maxWidth: 180,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {user?.name}
+          <div className="topbar__user">
+            <span className="topbar__name" title={user?.name}>
+              {user?.name ?? "-"}
             </span>
+
             {roleLabel ? (
-              <span className="badge" style={{ textTransform: "capitalize", whiteSpace: "nowrap" }}>
+              <span className="badge topbar__role" style={{ textTransform: "capitalize" }}>
                 {roleLabel}
               </span>
             ) : null}
@@ -119,7 +75,7 @@ export default function Topbar({ onMenuClick, onLogout }: TopbarProps): React.Re
 
           <button
             onClick={doLogout}
-            className="button button-outline"
+            className="button button-outline topbar__logout"
             title="Keluar"
             aria-label="Keluar"
           >

@@ -244,67 +244,356 @@ a:hover { text-decoration: underline; }
 .badge-warning { background: rgba(245,158,11,.12); color: var(--color-warning); }  /* oranye */
 .badge-danger  { background: rgba(220,38,38,.10); color: var(--color-danger); }    /* merah */
 
-/* --- NAV (flat style) --- */
-.sidebar { background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); }
-.sidebar-brand { padding: 14px 16px; font-weight: 700; letter-spacing: .02em; color: var(--color-primary-700); }
-.nav { padding: 6px 8px 12px; }
-.nav-item {
+/* --- NAV (POS Prime Sidebar) --- */
+
+/* Overlay (mobile) */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.28);
+  z-index: 39;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* Sidebar shell */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 280px;
+  z-index: 40;
+
+  background: rgba(255,255,255,.92);
+  backdrop-filter: blur(10px);
+  border-right: 1px solid rgba(0,0,0,.06);
+  box-shadow: 0 18px 40px rgba(0,0,0,.12);
+
+  transform: translateX(-100%);
+  transition: transform .18s ease;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.sidebar--open {
+  transform: translateX(0);
+}
+
+/* Brand (sticky header) */
+.sidebar-brand {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+
+  padding: 14px 16px;
+  background: rgba(255,255,255,.92);
+  border-bottom: 1px solid rgba(0,0,0,.06);
+}
+
+.sidebar-brand__left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.sidebar-brand__logo {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(180deg, var(--color-primary), var(--color-primary-600));
+  box-shadow: 0 10px 18px rgba(192,70,87,.22);
+  flex: 0 0 auto;
+}
+
+.sidebar-brand__text {
+  min-width: 0;
+}
+
+.sidebar-brand__title {
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-brand__subtitle {
+  font-size: .82rem;
+  color: var(--color-text-soft);
+  opacity: .9;
+  line-height: 1.2;
+}
+
+.sidebar-brand__close {
+  padding: .45rem .6rem;
+  border-radius: var(--radius-pill);
+}
+
+/* Nav container */
+.nav {
+  padding: 10px 10px 14px;
+}
+
+.navlist {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Section */
+.navsection {
+  padding: 2px 0;
+}
+
+/* Group header */
+.navgroup {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  padding: 10px 10px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: rgba(0,0,0,.62);
+  font-weight: 800;
+}
+
+.navgroup:hover {
+  background: rgba(0,0,0,.03);
+  border-radius: 12px;
+}
+
+.navgroup__title {
+  text-align: left;
+}
+
+.navgroup__chev {
+  transition: transform .15s ease;
+  opacity: .8;
+}
+.navgroup__chev.is-open {
+  transform: rotate(90deg);
+}
+
+/* Items container (collapse) */
+.navgroup__items {
+  display: none;
+  padding: 6px 0 2px;
+}
+.navgroup__items.is-open {
   display: block;
-  padding: 10px 12px;
-  border-radius: 8px;
-  font-size: .92rem;
-  color: #374151;
-  transition: background .2s ease, color .2s ease;
 }
-.nav-item:hover { background: rgba(192, 70, 87, .06); } /* #C04657 @ 6% */
-.nav-item--active {
-  position: relative;
+
+/* Item */
+.navitem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 9px 12px 9px 12px;
+  margin-left: 6px; /* sedikit indent untuk hierarki */
+  text-decoration: none;
+  color: var(--color-text);
+  border-radius: 12px;
+
+  transition: background .15s ease, color .15s ease;
+}
+
+.navitem:hover {
+  background: rgba(192, 70, 87, .06);
+}
+
+.navitem.is-active {
   background: rgba(192, 70, 87, .10);
-  color: #1f2937;
+  color: var(--color-primary-700);
+  font-weight: 700;
+  position: relative;
 }
-.nav-item--active::before {
+
+.navitem.is-active::before {
   content: "";
   position: absolute;
-  inset: 8px auto 8px 0;
+  left: -6px;
+  top: 8px;
+  bottom: 8px;
   width: 3px;
   border-radius: 3px;
   background: var(--color-primary);
 }
 
-/* === Sidebar (clean items, no rounded) === */
-.navgroup {               /* header grup (summary) */
-  display:flex; align-items:center; justify-content:space-between;
-  padding:8px 10px;
-  font-size:11px; text-transform:uppercase; letter-spacing:.06em;
-  cursor:pointer; user-select:none;
-}
-details summary { list-style:none; }
-details summary::-webkit-details-marker { display:none; }
-
-.chev { transition: transform .2s ease; }
-details[open] .chev { transform: rotate(90deg); }
-
-.navlist { padding:4px 6px; }
-.navitem {
-  display:flex; align-items:center; gap:10px;
-  padding:8px 10px;
-  text-decoration:none;
-  color: inherit;
-  border-radius:0;              /* no rounded */
-}
-.navitem:hover {
-  background: rgba(0,0,0,.04);  /* hover halus, tetap flat */
-}
-.navitem.is-active {
-  font-weight:600;
-  color: var(--color-primary-700);
-  border-left:3px solid var(--color-primary-600);
-  background: rgba(192, 70, 87, .06); /* sangat tipis, masih clean */
-  padding-left:7px; /* kompensasi border-left (10px - 3px) */
+.navitem__label {
+  line-height: 1.25;
 }
 
-/* pemisah antar group */
-nav details + details { border-top: 1px solid rgba(0,0,0,.06); }
+/* Footer */
+.sidebar-footer {
+  padding: 12px 16px 16px;
+  border-top: 1px solid rgba(0,0,0,.06);
+  margin-top: 8px;
+}
+
+.sidebar-footer__hint {
+  font-size: .82rem;
+  color: var(--color-text-soft);
+  opacity: .85;
+}
+
+/* Desktop behavior (opsional): kalau layout Anda punya sidebar permanen di desktop,
+   Anda bisa matikan transform di breakpoint tertentu dan hilangkan overlay.
+   Jika belum ada kebutuhan, biarkan default slide seperti sekarang. */
+@media (min-width: 1024px) {
+  .sidebar-overlay { display: none; }
+}
+
+/* --- TOPBAR (POS Prime) --- */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  height: 64px;
+
+  background: rgba(255,255,255,.92);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0,0,0,.06);
+  box-shadow: 0 10px 22px rgba(0,0,0,.06);
+}
+
+.topbar__inner {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.topbar__left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.topbar__menuBtn {
+  padding-left: 12px;
+  padding-right: 12px;
+  border-radius: var(--radius-pill);
+}
+
+.topbar__hamburger {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 22px;
+  color: #334155;
+}
+
+.topbar__hamburger span {
+  display: block;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+}
+
+.topbar__brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+}
+
+.topbar__brandTitle {
+  white-space: nowrap;
+}
+
+.topbar__brandMuted {
+  opacity: .6;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.topbar__center {
+  flex: 1;
+  min-width: 40px;
+}
+
+.topbar__right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.topbar__avatar {
+  height: 36px;
+  width: 36px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+
+  color: #fff;
+  font-weight: 800;
+  font-size: 12px;
+  background: linear-gradient(180deg, var(--color-primary), var(--color-primary-600));
+  box-shadow: 0 10px 18px rgba(192,70,87,.22);
+}
+
+.topbar__user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.topbar__name {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text);
+}
+
+.topbar__role {
+  white-space: nowrap;
+}
+
+.topbar__logout {
+  border-radius: var(--radius-pill);
+}
+
+/* Responsif: sembunyikan nama di layar kecil agar tidak sempit */
+@media (max-width: 520px) {
+  .topbar__name { display: none; }
+  .topbar__logout { padding-left: .8rem; padding-right: .8rem; }
+}
 
 /* 14) Scrollbar halus (webkit) */
 *::-webkit-scrollbar { height: 10px; width: 10px; }
@@ -317,4 +606,152 @@ nav details + details { border-top: 1px solid rgba(0,0,0,.06); }
 /* 15) Motion preference */
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
+}
+
+/* =========================
+   Dialog / Modal (Global)
+   Dipakai oleh: Variants Dialog, Media Dialog, dll.
+   ========================= */
+
+.dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+
+  /* default hidden */
+  display: none;
+
+  /* layout */
+  align-items: center;
+  justify-content: center;
+
+  padding: 1.25rem;
+}
+
+.dialog.is-open {
+  display: flex;
+}
+
+.dialog__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55); /* slate-900-ish */
+  backdrop-filter: blur(6px);
+}
+
+.dialog__content {
+  position: relative;
+  z-index: 1;
+
+  width: min(980px, 100%);
+  max-height: 90dvh;
+  overflow: auto;
+
+  /* biar terasa modal */
+  border-radius: 22px;
+  box-shadow: var(--shadow-lg);
+}
+
+/* Opsional: ukuran card besar (karena Anda pakai class card--lg di dialog) */
+.card--lg {
+  padding: calc(var(--space-6) + 0.25rem);
+}
+
+/* Responsif: mobile lebih rapat */
+@media (max-width: 640px) {
+  .dialog {
+    padding: 0.9rem;
+  }
+
+  .dialog__content {
+    max-height: 92dvh;
+    border-radius: 18px;
+  }
+
+  .card--lg {
+    padding: var(--space-5);
+  }
+}
+
+/* =========================
+   MODAL / DIALOG (Checkout, dll)
+   ========================= */
+
+/* backdrop + center */
+.modal-overlay{
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(0,0,0,.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+
+  /* kalau konten modal tinggi, biar tetap bisa scroll tanpa mendorong layout */
+  overflow: auto;
+}
+
+/* container modal */
+.modal{
+  width: min(960px, 100%);
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+/* header & actions yang dipakai CheckoutDialog */
+.modal-header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.modal-title{
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.modal-actions{
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding: 14px 16px;
+  border-top: 1px solid var(--color-border);
+  flex-wrap: wrap;
+}
+
+/* util yang dipakai beberapa komponen pos */
+.divider{
+  height: 1px;
+  background: var(--color-border);
+  margin: 12px 0;
+}
+
+.kbd{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 .45rem;
+  height: 22px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: rgba(0,0,0,.02);
+  font-size: .78rem;
+  font-weight: 700;
+}
+
+/* optional: animasi ringan, tetap aman */
+.modal-overlay{
+  animation: modalFade .12s ease-out;
+}
+@keyframes modalFade{
+  from{ opacity: 0; }
+  to{ opacity: 1; }
 }

@@ -47,12 +47,12 @@ export default function LoginForm(): React.ReactElement {
     <form
       onSubmit={onSubmit}
       className="mx-auto w-full"
-      style={{ maxWidth: "24rem" }} // ≈ max-w-sm
+      style={{ maxWidth: "26rem" }}
       autoComplete="on"
       noValidate
     >
       {/* Email */}
-      <div style={{ marginBottom: "1rem" }}>
+      <div style={{ marginBottom: "0.9rem" }}>
         <label htmlFor="email" className="block text-sm font-medium">
           Email
         </label>
@@ -64,23 +64,24 @@ export default function LoginForm(): React.ReactElement {
           value={form.email}
           onChange={onEmailChange}
           className="input w-full"
-          style={{ marginTop: "0.25rem" }} // mt-1
+          style={{ marginTop: "0.35rem" }}
           autoComplete="username"
           inputMode="email"
           autoCapitalize="none"
           autoCorrect="off"
           spellCheck={false}
           aria-invalid={hasError ? "true" : "false"}
+          placeholder="nama@email.com"
         />
       </div>
 
       {/* Password + toggle */}
-      <div style={{ marginBottom: "1rem" }}>
+      <div style={{ marginBottom: "0.9rem" }}>
         <label htmlFor="password" className="block text-sm font-medium">
           Password
         </label>
 
-        <div style={{ position: "relative", marginTop: "0.25rem" }}>
+        <div style={{ position: "relative", marginTop: "0.35rem" }}>
           <input
             id="password"
             name="password"
@@ -89,12 +90,12 @@ export default function LoginForm(): React.ReactElement {
             value={form.password}
             onChange={onPasswordChange}
             className="input w-full"
-            // beri ruang untuk tombol di kanan
-            style={{ paddingRight: "3.25rem" }}
+            style={{ paddingRight: "3.4rem" }}
             autoComplete="current-password"
             autoCapitalize="none"
             autoCorrect="off"
             aria-invalid={hasError ? "true" : "false"}
+            placeholder="••••••••"
           />
 
           <button
@@ -103,16 +104,18 @@ export default function LoginForm(): React.ReactElement {
               setForm((s) => ({ ...s, showPassword: !s.showPassword }))
             }
             className="button button-ghost"
-            aria-label={form.showPassword ? "Sembunyikan password" : "Tampilkan password"}
-            // posisikan di dalam input (kanan, center)
+            aria-label={
+              form.showPassword ? "Sembunyikan password" : "Tampilkan password"
+            }
             style={{
               position: "absolute",
-              right: "0.5rem",
+              right: "0.45rem",
               top: "50%",
               transform: "translateY(-50%)",
-              padding: "0.25rem 0.5rem",
+              padding: "0.28rem 0.55rem",
               fontSize: "0.75rem",
               lineHeight: 1,
+              borderRadius: "999px",
             }}
           >
             {form.showPassword ? "Hide" : "Show"}
@@ -122,12 +125,17 @@ export default function LoginForm(): React.ReactElement {
 
       {/* Error */}
       {form.error && (
-        <p
+        <div
           className="badge badge-danger"
-          style={{ display: "block", marginBottom: "1rem" }}
+          style={{
+            display: "block",
+            marginBottom: "0.9rem",
+            padding: "0.6rem 0.75rem",
+            borderRadius: "12px",
+          }}
         >
           {form.error}
-        </p>
+        </div>
       )}
 
       {/* Submit */}
@@ -135,7 +143,12 @@ export default function LoginForm(): React.ReactElement {
         type="submit"
         disabled={form.submitting}
         className="button button-primary"
-        style={{ width: "100%" }}
+        style={{
+          width: "100%",
+          borderRadius: "999px",
+          padding: "0.75rem 1rem",
+          fontWeight: 700,
+        }}
       >
         {form.submitting ? "Masuk…" : "Masuk"}
       </button>

@@ -19,7 +19,7 @@ export default React.memo(function GudangSelect({
   value,
   onChange,
   disabled,
-  allowAll,
+  allowAll = false,
   autoSelectFirst = true,
 }: Props) {
   const [rows, setRows] = useState<Warehouse[]>([]);
@@ -41,20 +41,22 @@ export default React.memo(function GudangSelect({
     setLoading(true);
 
     listWarehouses({ cabang_id: cabangId, is_active: true, per_page: 100 })
-      .then(res => {
+      .then((res) => {
         if (!alive) return;
         const data = (res?.data ?? []) as Warehouse[];
         rowsForCabangRef.current = cabangId;
         setRows(data);
       })
       .catch(() => {
-        // abaikan error di dropdown
+        // dropdown: fail-soft (tidak menampilkan error di sini)
       })
       .finally(() => {
         if (alive) setLoading(false);
       });
 
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, [cabangId]);
 
   // auto-select default/first (opsional)
@@ -67,7 +69,7 @@ export default React.memo(function GudangSelect({
     if (rowsForCabangRef.current !== cabangId) return;
     if (lastAutoSelectedCabangRef.current === cabangId) return;
 
-    const def = rows.find(r => !!r.is_default) ?? rows[0];
+    const def = rows.find((r) => !!r.is_default) ?? rows[0];
     if (!def?.id) return;
     if (def.id === value) return;
 
@@ -77,11 +79,23 @@ export default React.memo(function GudangSelect({
   }, [rows, cabangId, value, allowAll, autoSelectFirst]);
 
   const opts = useMemo(() => {
+    // sort konsisten (id locale)
     return [...rows].sort((a, b) => a.nama.localeCompare(b.nama, "id"));
   }, [rows]);
 
   const selected = typeof value === "number" && value > 0 ? String(value) : "";
-  const isDisabled = Boolean(disabled || !cabangId || cabangId <= 0 || loading);
+
+  const cabangReady = Boolean(cabangId && cabangId > 0);
+  const isDisabled = Boolean(disabled || !cabangReady || loading);
+
+  // placeholder label yang lebih jelas
+  const placeholder = !cabangReady
+    ? "Pilih cabang dulu"
+    : loading
+      ? "Memuat gudang…"
+      : allowAll
+        ? "Semua Gudang"
+        : "Pilih gudang";
 
   return (
     <select
@@ -95,18 +109,24 @@ export default React.memo(function GudangSelect({
       }}
       aria-label="Pilih Gudang"
     >
-      {allowAll && (
-        <option value="">
-          {cabangId ? (loading ? "Memuat..." : "Semua Gudang") : "Pilih cabang dulu"}
-        </option>
-      )}
-      {!allowAll && (!cabangId || cabangId <= 0) && <option value="">Pilih cabang dulu</option>}
+      {/* Placeholder: selalu tampil sebagai opsi kosong untuk UX yang konsisten */}
+      <option value="">{placeholder}</option>
 
-      {opts.map(g => (
-        <option key={g.id} value={String(g.id)}>
-          {g.nama}{g.is_default ? " · default" : ""}
-        </option>
-      ))}
+      {/* Jika allowAll=true, placeholder di atas sudah mewakili "Semua Gudang" */}
+      {/* Jika allowAll=false, placeholder di atas mewakili "Pilih gudang" */}
+
+      {opts.map((g) => {
+        const label = `${g.nama}${g.is_default ? " (default)" : ""}`;
+        return (
+          <option
+            key={g.id}
+            value={String(g.id)}
+            title={g.is_default ? "Gudang default" : undefined}
+          >
+            {label}
+          </option>
+        );
+      })}
     </select>
   );
 });

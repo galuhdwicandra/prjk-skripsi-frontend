@@ -2,7 +2,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../../store/auth";
-import { filterMenuByRole, GROUP_ORDER, groupOf, type GroupKey } from "../../nav-config";
+import {
+  filterMenuByRole,
+  GROUP_ORDER,
+  groupOf,
+  type GroupKey,
+} from "../../nav-config";
 
 type SidebarProps = {
   open: boolean;
@@ -15,7 +20,6 @@ export default function Sidebar({ open, onClose }: SidebarProps): React.ReactEle
   const { hasRole } = useAuth();
   const items = filterMenuByRole(hasRole); // data asli (bukan dummy)
 
-  // Kelompokkan item berdasarkan group yang didefinisikan di nav-config.ts
   const sections = useMemo(
     () =>
       GROUP_ORDER
@@ -27,7 +31,6 @@ export default function Sidebar({ open, onClose }: SidebarProps): React.ReactEle
     [items]
   );
 
-  // Inisialisasi grup yang dibuka (default: Umum & POS terbuka)
   const defaultOpen: Record<GroupKey, boolean> = GROUP_ORDER.reduce((acc, g) => {
     acc[g as GroupKey] = g === "Umum" || g === "POS";
     return acc;
@@ -35,7 +38,6 @@ export default function Sidebar({ open, onClose }: SidebarProps): React.ReactEle
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(defaultOpen);
 
-  // Restore dari localStorage
   useEffect(() => {
     try {
       const raw = localStorage.getItem(LS_KEY);
@@ -47,7 +49,6 @@ export default function Sidebar({ open, onClose }: SidebarProps): React.ReactEle
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Simpan ke localStorage
   useEffect(() => {
     try {
       localStorage.setItem(LS_KEY, JSON.stringify(openGroups));
@@ -61,108 +62,96 @@ export default function Sidebar({ open, onClose }: SidebarProps): React.ReactEle
   return (
     <>
       {open && (
-        <div
+        <button
+          type="button"
+          className="sidebar-overlay"
           onClick={onClose}
-          aria-hidden="true"
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.28)", zIndex: 39 }}
+          aria-label="Tutup sidebar"
         />
       )}
 
       <aside
         aria-label="Navigasi"
-        className="sidebar"
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          bottom: 0,
-          width: 280,
-          transform: open ? "translateX(0)" : "translateX(-100%)",
-          transition: "transform .2s ease",
-          zIndex: 40,
-          background: "#fff",
-          overflowY: "auto",
-          WebkitOverflowScrolling: "touch",
-        }}
+        className={"sidebar" + (open ? " sidebar--open" : "")}
       >
-        {/* Brand */}
-        <div className="sidebar-brand" style={{ padding: "16px 20px", fontWeight: 700, fontSize: 16 }}>
-          POS Prime <span style={{ opacity: 0.6, fontWeight: 500 }}>Katalog</span>
+        {/* Brand (sticky) */}
+        <div className="sidebar-brand">
+          <div className="sidebar-brand__left">
+            <div className="sidebar-brand__logo" aria-hidden="true">
+              P
+            </div>
+            <div className="sidebar-brand__text">
+              <div className="sidebar-brand__title">POS Prime</div>
+              <div className="sidebar-brand__subtitle">Katalog & Sistem POS</div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="sidebar-brand__close button button-ghost"
+            onClick={onClose}
+            aria-label="Tutup"
+            title="Tutup"
+          >
+            ✕
+          </button>
         </div>
 
-        {/* Dropdown (grouped) — clean, tanpa rounded */}
+        {/* Menu */}
         <nav className="nav" aria-label="Menu utama">
-          <div className="navlist" style={{ paddingBottom: 16 }}>
+          <div className="navlist">
             {sections.map((sec) => {
               const isOpen = !!openGroups[sec.group];
+
               return (
-                <div key={sec.group}>
-                  {/* Header Grup sebagai tombol dropdown */}
+                <section className="navsection" key={sec.group}>
                   <button
                     type="button"
+                    className="navgroup"
                     onClick={() => toggleGroup(sec.group)}
                     aria-expanded={isOpen}
                     aria-controls={`grp-${sec.group}`}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      width: "100%",
-                      padding: "12px 20px",
-                      fontSize: 12,
-                      textTransform: "uppercase",
-                      letterSpacing: 0.6,
-                      color: "rgba(0,0,0,.62)",
-                      fontWeight: 700,
-                      background: "transparent",
-                      border: 0,
-                      cursor: "pointer",
-                    }}
                     title={sec.group}
                   >
-                    <span style={{ flex: 1, textAlign: "left" }}>{sec.group}</span>
-                    {/* Chevron sederhana */}
+                    <span className="navgroup__title">{sec.group}</span>
                     <span
+                      className={"navgroup__chev" + (isOpen ? " is-open" : "")}
                       aria-hidden="true"
-                      style={{
-                        display: "inline-block",
-                        transition: "transform .15s ease",
-                        transform: isOpen ? "rotate(90deg)" : "rotate(0deg)",
-                      }}
                     >
                       ▶
                     </span>
                   </button>
 
-                  {/* Isi grup */}
-                  <div id={`grp-${sec.group}`} role="region" aria-label={sec.group}>
-                    {isOpen &&
-                      sec.items.map((item) => (
-                        <NavLink
-                          key={item.key}
-                          to={item.to}
-                          className={({ isActive }) => "navitem" + (isActive ? " is-active" : "")}
-                          onClick={onClose}
-                          title={item.label}
-                          style={{
-                            display: "block",
-                            padding: "10px 28px 10px 28px", // agak menjorok agar hierarki terasa
-                            fontSize: 14,
-                            textDecoration: "none",
-                            color: "inherit",
-                          }}
-                        >
-                          <span>{item.label}</span>
-                        </NavLink>
-                      ))}
+                  <div
+                    id={`grp-${sec.group}`}
+                    role="region"
+                    aria-label={sec.group}
+                    className={"navgroup__items" + (isOpen ? " is-open" : "")}
+                  >
+                    {sec.items.map((item) => (
+                      <NavLink
+                        key={item.key}
+                        to={item.to}
+                        className={({ isActive }) => "navitem" + (isActive ? " is-active" : "")}
+                        onClick={onClose}
+                        title={item.label}
+                      >
+                        <span className="navitem__label">{item.label}</span>
+                      </NavLink>
+                    ))}
                   </div>
-
-                  {/* Pemisah antar grup (jarak vertikal tipis) */}
-                  <div style={{ height: 6 }} />
-                </div>
+                </section>
               );
             })}
           </div>
         </nav>
+
+        {/* Footer kecil (opsional, tetap UI-only) */}
+        <div className="sidebar-footer">
+          <div className="sidebar-footer__hint">
+            © {new Date().getFullYear()} POS Prime
+          </div>
+        </div>
       </aside>
     </>
   );
