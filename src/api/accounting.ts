@@ -15,6 +15,7 @@ import type {
     ReportQuery,
 } from "../types/accounting";
 import type { Paginated } from "../types/http";
+import type { BalanceSheetAgg } from "../types/accounting";
 
 // ========== Accounts ==========
 export async function listAccounts(params?: {
@@ -165,10 +166,15 @@ export async function getProfitLoss(q: ReportQuery): Promise<ProfitLossAgg> {
     return out as unknown as ProfitLossAgg;
 }
 
-export async function getBalanceSheet(q: ReportQuery) {
-    const resp = await api.get("/accounting/reports/balance-sheet", { params: q });
-    const obj = (resp.data?.data ?? resp.data) as Record<string, number | string>;
-    const out: Record<string, number> = {};
-    for (const k of Object.keys(obj)) out[k] = toNum((obj as any)[k]);
-    return out;
+export async function getBalanceSheet(q: ReportQuery): Promise<BalanceSheetAgg> {
+  const resp = await api.get("/accounting/reports/balance-sheet", { params: q });
+
+  // raw = objek hasil backend: { Asset: {debit, credit}, Liability: {...}, Equity: {...} }
+  const raw = (resp.data?.data ?? resp.data) as Record<string, { debit: unknown; credit: unknown }>;
+
+  const out: Record<string, { debit: number; credit: number }> = {};
+  for (const [k, v] of Object.entries(raw)) {
+    out[k] = { debit: toNum(v?.debit), credit: toNum(v?.credit) };
+  }
+  return out as unknown as BalanceSheetAgg;
 }

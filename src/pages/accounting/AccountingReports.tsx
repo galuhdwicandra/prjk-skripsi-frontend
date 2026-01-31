@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { getTrialBalance, getGeneralLedger, getProfitLoss, getBalanceSheet } from "../../api/accounting";
 import type { TrialBalanceRow, GLRow, ID } from "../../types/accounting";
+import type { BalanceSheetAgg, ProfitLossAgg } from "../../types/accounting";
 import { useAuth } from "../../store/auth";
 
 export default function AccountingReports() {
@@ -14,8 +15,9 @@ export default function AccountingReports() {
 
   const [tb, setTb] = useState<TrialBalanceRow[] | null>(null);
   const [gl, setGl] = useState<GLRow[] | null>(null);
-  const [pl, setPl] = useState<Record<string, { debit: number; credit: number }> | null>(null);
-  const [bs, setBs] = useState<Record<string, number> | null>(null);
+  const [pl, setPl] = useState<ProfitLossAgg | null>(null);
+  const [bs, setBs] = useState<BalanceSheetAgg | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // formatter uang (tanpa koma desimal, konsisten dengan style id-ID)
   const fmt = useCallback((n: number) => {
@@ -33,6 +35,14 @@ export default function AccountingReports() {
 
   const refresh = useCallback(async () => {
     const cabang_id = getCabangId();
+    setError(null);
+
+    if (!cabang_id) {
+      setError("Cabang tidak terdeteksi. Pastikan user memiliki cabang_id (branch/cabang) yang valid.");
+      setTb([]); setGl([]); setPl({}); setBs({});
+      return;
+    }
+
     try {
       if (tab === "TB") {
         const data = await getTrialBalance({ cabang_id, year, month });
@@ -40,7 +50,10 @@ export default function AccountingReports() {
         return;
       }
       if (tab === "GL") {
-        if (!accountId) { setGl([]); setTb(null); setPl(null); setBs(null); return; }
+        if (!accountId) {
+          setGl([]); setTb(null); setPl(null); setBs(null);
+          return;
+        }
         const data = await getGeneralLedger({ cabang_id, year, month, account_id: accountId });
         setGl(data); setTb(null); setPl(null); setBs(null);
         return;
@@ -55,8 +68,18 @@ export default function AccountingReports() {
         setBs(data); setTb(null); setGl(null); setPl(null);
         return;
       }
-    } catch {
-      // opsional: tampilkan alert error global kalau sudah punya mekanisme toast
+    } catch (e: any) {
+      // tampilkan error apa adanya kalau ada response message dari backend
+      const msg =
+        e?.response?.data?.message ||
+        e?.message ||
+        "Gagal memuat report. Cek Network/Console (401/403/500) dan pastikan ada jurnal POSTED di periode ini.";
+      setError(String(msg));
+      // set ke empty supaya UI tetap konsisten
+      if (tab === "TB") setTb([]);
+      if (tab === "GL") setGl([]);
+      if (tab === "PL") setPl({});
+      if (tab === "BS") setBs({});
     }
   }, [getCabangId, tab, year, month, accountId]);
 
@@ -122,6 +145,11 @@ export default function AccountingReports() {
           </div>
         </div>
       </div>
+      {error && (
+        <div className="alert alert-danger" style={{ marginBottom: 12 }}>
+          {error}
+        </div>
+      )}
 
       {/* Trial Balance */}
       {tab === "TB" && (
@@ -216,8 +244,43 @@ export default function AccountingReports() {
       {/* Profit & Loss */}
       {tab === "PL" && (
         <div className="card" style={{ marginBottom: 12 }}>
-          <div className="card__body">
-            <pre className="code-block">{JSON.stringify(pl ?? {}, null, 2)}</pre>
+          <div className="card__body" style={{ padding: 0 }}>
+            <div className="table-responsive">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Kelompok</th>
+                    <th className="text-right">Debit</th>
+                    <th className="text-right">Kredit</th>
+                    <th className="text-right">Net</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(pl ?? {}).map(([k, v]) => {
+                    const debit = Number(v?.debit ?? 0);
+                    const credit = Number(v?.credit ?? 0);
+                    const net = credit - debit; // revenue normal credit, expense normal debit; ini tetap “indikatif”
+                    return (
+                      <tr key={k}>
+                        <td>{k}</td>
+                        <td className="text-right">{fmt(debit)}</td>
+                        <td className="text-right">{fmt(credit)}</td>
+                        <td className="text-right">{fmt(net)}</td>
+                      </tr>
+                    );
+                  })}
+                  {Object.keys(pl ?? {}).length === 0 && (
+                    <tr>
+                      <td colSpan={4}>
+                        <div className="empty text-muted">
+                          Tidak ada data. Pastikan ada jurnal berstatus POSTED untuk periode ini.
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
@@ -225,8 +288,63 @@ export default function AccountingReports() {
       {/* Balance Sheet */}
       {tab === "BS" && (
         <div className="card" style={{ marginBottom: 12 }}>
-          <div className="card__body">
-            <pre className="code-block">{JSON.stringify(bs ?? {}, null, 2)}</pre>
+          <div className="card__body" style={{ padding: 0 }}>
+            <div className="table-responsive">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Kelompok</th>
+                    <th className="text-right">Debit</th>
+                    <th className="text-right">Kredit</th>
+                    <th className="text-right">Saldo (Net)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(["Asset", "Liability", "Equity"] as const).map((k) => {
+                    const row = (bs as any)?.[k];
+                    const debit = Number(row?.debit ?? 0);
+                    const credit = Number(row?.credit ?? 0);
+                    const net = k === "Asset" ? debit - credit : credit - debit; // normal balance
+                    return (
+                      <tr key={k}>
+                        <td>{k}</td>
+                        <td className="text-right">{fmt(debit)}</td>
+                        <td className="text-right">{fmt(credit)}</td>
+                        <td className="text-right">{fmt(net)}</td>
+                      </tr>
+                    );
+                  })}
+
+                  {(() => {
+                    const a = (bs as any)?.Asset;
+                    const l = (bs as any)?.Liability;
+                    const e = (bs as any)?.Equity;
+                    const asset = (Number(a?.debit ?? 0) - Number(a?.credit ?? 0));
+                    const lia = (Number(l?.credit ?? 0) - Number(l?.debit ?? 0));
+                    const eq = (Number(e?.credit ?? 0) - Number(e?.debit ?? 0));
+                    const diff = asset - (lia + eq);
+
+                    const empty = !bs || Object.keys(bs as any).length === 0;
+                    if (empty) return (
+                      <tr>
+                        <td colSpan={4}>
+                          <div className="empty text-muted">
+                            Tidak ada data. Pastikan ada jurnal berstatus POSTED untuk periode ini.
+                          </div>
+                        </td>
+                      </tr>
+                    );
+
+                    return (
+                      <tr>
+                        <td><strong>Selisih (Asset - (Liability + Equity))</strong></td>
+                        <td colSpan={3} className="text-right"><strong>{fmt(diff)}</strong></td>
+                      </tr>
+                    );
+                  })()}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

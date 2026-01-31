@@ -2,9 +2,9 @@
 import { useEffect, useState } from 'react';
 import { listSettings } from '../../api/settings';
 import type { LaravelPaginator, Setting, SettingQuery, SettingScope } from '../../types/settings';
-import SettingsForm from '../../components/settings/SettingsForm';
-import PreferenceToggles from '../../components/settings/PreferenceToggles';
-import BackupRestorePanel from '../../components/settings/BackupRestorePanel';
+// import SettingsForm from '../../components/settings/SettingsForm';
+// import PreferenceToggles from '../../components/settings/PreferenceToggles';
+// import BackupRestorePanel from '../../components/settings/BackupRestorePanel';
 import { useAuth } from '../../store/auth';
 
 export default function SettingsIndex() {
@@ -35,11 +35,11 @@ export default function SettingsIndex() {
     };
   }, [query]);
 
-  const defaultScope: SettingScope = hasRole('superadmin')
-    ? 'GLOBAL'
-    : hasRole('admin_cabang')
-    ? 'BRANCH'
-    : 'USER';
+  // const defaultScope: SettingScope = hasRole('superadmin')
+  //   ? 'GLOBAL'
+  //   : hasRole('admin_cabang')
+  //   ? 'BRANCH'
+  //   : 'USER';
 
   if (!canAccess) {
     return (
@@ -64,7 +64,7 @@ export default function SettingsIndex() {
 
       {/* Cards Grid (stacked mobile-first) */}
       <div>
-        <div className="card" style={{ marginBottom: 16 }}>
+        {/* <div className="card" style={{ marginBottom: 16 }}>
           <h2 className="card-title">Numbering — Invoice</h2>
           <SettingsForm
             defaultScope={defaultScope}
@@ -72,9 +72,9 @@ export default function SettingsIndex() {
             settingKey="numbering.invoice"
             valueTemplate={{ prefix: 'INV-', pad: 6, reset: 'daily' }}
           />
-        </div>
+        </div> */}
 
-        <div className="card" style={{ marginBottom: 16 }}>
+        {/* <div className="card" style={{ marginBottom: 16 }}>
           <h2 className="card-title">Receipt Footer</h2>
           <SettingsForm
             defaultScope={defaultScope}
@@ -82,9 +82,9 @@ export default function SettingsIndex() {
             settingKey="receipt.footer"
             valueTemplate={{ line1: 'Terima kasih', line2: 'Follow @tokokue' }}
           />
-        </div>
+        </div> */}
 
-        <div className="card" style={{ marginBottom: 16 }}>
+        {/* <div className="card" style={{ marginBottom: 16 }}>
           <h2 className="card-title">UI Preferences</h2>
           <PreferenceToggles
             toggles={[
@@ -92,12 +92,12 @@ export default function SettingsIndex() {
               { key: 'ui.preferences', path: 'compactTables', label: 'Compact Tables (User)', defaultValue: false, scope: 'USER' },
             ]}
           />
-        </div>
+        </div> */}
 
-        <div className="card" style={{ marginBottom: 16 }}>
+        {/* <div className="card" style={{ marginBottom: 16 }}>
           <h2 className="card-title">Backup &amp; Restore</h2>
           <BackupRestorePanel />
-        </div>
+        </div> */}
       </div>
 
       {/* Current Settings Table */}

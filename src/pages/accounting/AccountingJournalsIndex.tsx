@@ -21,9 +21,21 @@ export default function AccountingJournalsIndex() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
+  // === NEW: state untuk POST ALL ===
+  const [postingAll, setPostingAll] = useState(false);
+  const [postAllDone, setPostAllDone] = useState(0);
+  const [postAllTotal, setPostAllTotal] = useState(0);
+
   const [editorOpen, setEditorOpen] = useState(false);
   const [lines, setLines] = useState<JournalLine[]>([]);
   const [accounts, setAccounts] = useState<{ id: number; code: string; name: string }[]>([]);
+
+  // helper refresh (biar tidak duplikasi panggilan list)
+  const refresh = useCallback(async () => {
+    const cid = getCabangId();
+    const j = await listJournals({ cabang_id: cid, status: tab, page: 1, per_page: 10 });
+    setRows(j.data);
+  }, [getCabangId, tab]);
 
   useEffect(() => {
     (async () => {
@@ -74,8 +86,7 @@ export default function AccountingJournalsIndex() {
       });
       setEditorOpen(false);
       setLines([]);
-      const j = await listJournals({ cabang_id: cid, status: tab, page: 1, per_page: 10 });
-      setRows(j.data);
+      await refresh();
     } catch {
       setErr("Gagal menyimpan jurnal (cek 422/403/409).");
     }
@@ -85,11 +96,78 @@ export default function AccountingJournalsIndex() {
     if (!confirm("Post jurnal ini? Setelah POSTED, tidak bisa diubah.")) return;
     try {
       await postJournal(id);
-      const cid = getCabangId();
-      const j = await listJournals({ cabang_id: cid, status: tab, page: 1, per_page: 10 });
-      setRows(j.data);
+      await refresh();
     } catch {
       setErr("Gagal POST jurnal (cek 409 period closed atau unbalanced).");
+    }
+  }
+
+  // === NEW: POST SEMUA (ambil semua DRAFT by paging, lalu post satu per satu) ===
+  async function onPostAll() {
+    if (!canWrite) return;
+    const cid = getCabangId();
+    if (!cid) {
+      setErr("Cabang tidak terdeteksi. Login ulang atau cek data user.");
+      return;
+    }
+
+    const ok = confirm(
+      "POST semua jurnal DRAFT untuk cabang ini?\n\nCatatan: Setelah POSTED, jurnal tidak bisa diubah."
+    );
+    if (!ok) return;
+
+    setPostingAll(true);
+    setErr(null);
+    setPostAllDone(0);
+    setPostAllTotal(0);
+
+    const failed: Array<{ id: number; reason: string }> = [];
+
+    try {
+      // 1) kumpulkan semua id DRAFT via paging
+      const ids: number[] = [];
+      let page = 1;
+      let lastPage = 1;
+
+      do {
+        const res = await listJournals({ cabang_id: cid, status: "DRAFT", page, per_page: 20 });
+        ids.push(...res.data.map((x) => x.id));
+        lastPage = res.meta?.last_page ?? 1;
+        page += 1;
+      } while (page <= lastPage);
+
+      if (ids.length === 0) {
+        setErr("Tidak ada jurnal DRAFT yang bisa di-post.");
+        return;
+      }
+
+      setPostAllTotal(ids.length);
+
+      // 2) post satu per satu (lebih aman untuk menangani error per item)
+      for (let i = 0; i < ids.length; i++) {
+        const id = ids[i];
+        try {
+          await postJournal(id);
+        } catch {
+          failed.push({ id, reason: "Gagal POST (periode closed / unbalanced / unauthorized / konflik)." });
+        } finally {
+          setPostAllDone(i + 1);
+        }
+      }
+
+      // 3) refresh tab DRAFT agar terlihat berkurang/habis
+      await refresh();
+
+      // 4) ringkasan
+      if (failed.length > 0) {
+        const sample = failed.slice(0, 8).map((x) => `#${x.id}`).join(", ");
+        setErr(
+          `POST semua selesai, tetapi ada yang gagal: ${failed.length} dari ${ids.length}. ` +
+          `Contoh ID gagal: ${sample}${failed.length > 8 ? ", ..." : ""}`
+        );
+      }
+    } finally {
+      setPostingAll(false);
     }
   }
 
@@ -120,16 +198,39 @@ export default function AccountingJournalsIndex() {
               <button
                 className={`button ${tab === "DRAFT" ? "button-primary" : "button-outline"}`}
                 onClick={() => setTab("DRAFT")}
+                disabled={postingAll}
+                aria-disabled={postingAll}
               >
                 DRAFT
               </button>
               <button
                 className={`button ${tab === "POSTED" ? "button-primary" : "button-outline"}`}
                 onClick={() => setTab("POSTED")}
+                disabled={postingAll}
+                aria-disabled={postingAll}
               >
                 POSTED
               </button>
-              <button className="button button-primary" onClick={onCreate} disabled={!canWrite} aria-disabled={!canWrite}>
+
+              {/* NEW: Tombol POST SEMUA hanya saat tab DRAFT */}
+              {tab === "DRAFT" && (
+                <button
+                  className="button button-outline"
+                  onClick={onPostAll}
+                  disabled={!canWrite || postingAll}
+                  aria-disabled={!canWrite || postingAll}
+                  title={!canWrite ? "Tidak punya akses" : "Post semua jurnal DRAFT"}
+                >
+                  {postingAll ? `POSTING… (${postAllDone}/${postAllTotal || "?"})` : "POST SEMUA"}
+                </button>
+              )}
+
+              <button
+                className="button button-primary"
+                onClick={onCreate}
+                disabled={!canWrite || postingAll}
+                aria-disabled={!canWrite || postingAll}
+              >
                 Jurnal Baru
               </button>
             </div>
@@ -159,7 +260,12 @@ export default function AccountingJournalsIndex() {
                   <td style={{ textAlign: "center" }}>{renderStatus(r.status)}</td>
                   <td style={{ textAlign: "right" }}>
                     {r.status === "DRAFT" && (
-                      <button className="button button-outline" onClick={() => onPost(r.id)} disabled={!canWrite} aria-disabled={!canWrite}>
+                      <button
+                        className="button button-outline"
+                        onClick={() => onPost(r.id)}
+                        disabled={!canWrite || postingAll}
+                        aria-disabled={!canWrite || postingAll}
+                      >
                         POST
                       </button>
                     )}
@@ -184,7 +290,6 @@ export default function AccountingJournalsIndex() {
           <div className="card__body">
             <div className="card__title">Jurnal Baru</div>
 
-            {/* Header inputs: 3 kolom responsif */}
             <div className="form-row form-row--3" style={{ marginBottom: 12 }}>
               <div className="form-field">
                 <label className="form-label" htmlFor="je-date">Tanggal</label>
@@ -200,7 +305,6 @@ export default function AccountingJournalsIndex() {
               </div>
             </div>
 
-            {/* Editor garis jurnal */}
             <JournalEditor lines={lines} onChange={setLines} accounts={accounts} />
 
             <div className="form-actions">

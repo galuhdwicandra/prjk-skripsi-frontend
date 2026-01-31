@@ -119,3 +119,9 @@ export type ReportQuery = Partial<{
 
 // generic pagination types already exist in src/types/http.ts
 export type { Paginated, PaginatedMeta } from "./http";
+
+export type BalanceSheetAgg = {
+  Asset?: { debit: number; credit: number };
+  Liability?: { debit: number; credit: number };
+  Equity?: { debit: number; credit: number };
+};
