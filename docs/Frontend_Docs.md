@@ -1,7 +1,7 @@
 # Dokumentasi Frontend (FULL Source)
 
-_Dihasilkan otomatis: 2026-01-30 13:22:15_  
-**Root:** `/home/galuhdwicandra/projects/clone/project-order/frontend`
+_Dihasilkan otomatis: 2026-01-31 17:01:32_  
+**Root:** `/home/galuhdwicandra/workspace/clone_prime/frontend`
 
 
 ## Daftar Isi
@@ -4178,7 +4178,7 @@ function formatMoney(n: number) {
 
 ### src/components/auth/LoginForm.tsx
 
-- SHA: `4a80d6418f8f`  
+- SHA: `cb4c43e1b621`  
 - Ukuran: 4 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
@@ -4232,12 +4232,12 @@ export default function LoginForm(): React.ReactElement {
     <form
       onSubmit={onSubmit}
       className="mx-auto w-full"
-      style={{ maxWidth: "24rem" }} // ≈ max-w-sm
+      style={{ maxWidth: "26rem" }}
       autoComplete="on"
       noValidate
     >
       {/* Email */}
-      <div style={{ marginBottom: "1rem" }}>
+      <div style={{ marginBottom: "0.9rem" }}>
         <label htmlFor="email" className="block text-sm font-medium">
           Email
         </label>
@@ -4249,23 +4249,24 @@ export default function LoginForm(): React.ReactElement {
           value={form.email}
           onChange={onEmailChange}
           className="input w-full"
-          style={{ marginTop: "0.25rem" }} // mt-1
+          style={{ marginTop: "0.35rem" }}
           autoComplete="username"
           inputMode="email"
           autoCapitalize="none"
           autoCorrect="off"
           spellCheck={false}
           aria-invalid={hasError ? "true" : "false"}
+          placeholder="nama@email.com"
         />
       </div>
 
       {/* Password + toggle */}
-      <div style={{ marginBottom: "1rem" }}>
+      <div style={{ marginBottom: "0.9rem" }}>
         <label htmlFor="password" className="block text-sm font-medium">
           Password
         </label>
 
-        <div style={{ position: "relative", marginTop: "0.25rem" }}>
+        <div style={{ position: "relative", marginTop: "0.35rem" }}>
           <input
             id="password"
             name="password"
@@ -4274,12 +4275,12 @@ export default function LoginForm(): React.ReactElement {
             value={form.password}
             onChange={onPasswordChange}
             className="input w-full"
-            // beri ruang untuk tombol di kanan
-            style={{ paddingRight: "3.25rem" }}
+            style={{ paddingRight: "3.4rem" }}
             autoComplete="current-password"
             autoCapitalize="none"
             autoCorrect="off"
             aria-invalid={hasError ? "true" : "false"}
+            placeholder="••••••••"
           />
 
           <button
@@ -4288,16 +4289,18 @@ export default function LoginForm(): React.ReactElement {
               setForm((s) => ({ ...s, showPassword: !s.showPassword }))
             }
             className="button button-ghost"
-            aria-label={form.showPassword ? "Sembunyikan password" : "Tampilkan password"}
-            // posisikan di dalam input (kanan, center)
+            aria-label={
+              form.showPassword ? "Sembunyikan password" : "Tampilkan password"
+            }
             style={{
               position: "absolute",
-              right: "0.5rem",
+              right: "0.45rem",
               top: "50%",
               transform: "translateY(-50%)",
-              padding: "0.25rem 0.5rem",
+              padding: "0.28rem 0.55rem",
               fontSize: "0.75rem",
               lineHeight: 1,
+              borderRadius: "999px",
             }}
           >
             {form.showPassword ? "Hide" : "Show"}
@@ -4307,12 +4310,17 @@ export default function LoginForm(): React.ReactElement {
 
       {/* Error */}
       {form.error && (
-        <p
+        <div
           className="badge badge-danger"
-          style={{ display: "block", marginBottom: "1rem" }}
+          style={{
+            display: "block",
+            marginBottom: "0.9rem",
+            padding: "0.6rem 0.75rem",
+            borderRadius: "12px",
+          }}
         >
           {form.error}
-        </p>
+        </div>
       )}
 
       {/* Submit */}
@@ -4320,7 +4328,12 @@ export default function LoginForm(): React.ReactElement {
         type="submit"
         disabled={form.submitting}
         className="button button-primary"
-        style={{ width: "100%" }}
+        style={{
+          width: "100%",
+          borderRadius: "999px",
+          padding: "0.75rem 1rem",
+          fontWeight: 700,
+        }}
       >
         {form.submitting ? "Masuk…" : "Masuk"}
       </button>
@@ -4333,13 +4346,13 @@ export default function LoginForm(): React.ReactElement {
 
 ### src/components/cabangs/BranchFilters.tsx
 
-- SHA: `8e9ab53a1380`  
-- Ukuran: 2 KB
+- SHA: `d3556d2eea21`  
+- Ukuran: 4 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
 // src/components/cabangs/BranchFilters.tsx
-import React from "react";
+import React, { useMemo } from "react";
 import type { BranchQuery } from "../../types/branch";
 
 type Props = {
@@ -4348,50 +4361,168 @@ type Props = {
   onSearch: () => void;
 };
 
-export default function BranchFilters({ value, onChange, onSearch }: Props): React.ReactElement {
+export default function BranchFilters({
+  value,
+  onChange,
+  onSearch,
+}: Props): React.ReactElement {
+  // Default query untuk tombol reset (hanya properti yang dipakai di filter ini)
+  const resetValue = useMemo<BranchQuery>(
+    () => ({
+      ...value,
+      q: undefined,
+      kota: undefined,
+      is_active: undefined,
+      page: 1,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
+  const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>): void => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      onSearch();
+    }
+  };
+
   return (
-    <div className="form-row form-row--3">
+    <div
+      onKeyDown={onKeyDown}
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+        gap: "0.9rem",
+        alignItems: "end",
+      }}
+    >
       {/* Cari */}
       <div>
-        <label className="label" htmlFor="q">Cari</label>
+        <label className="label" htmlFor="q">
+          Cari
+        </label>
         <input
           id="q"
           className="input"
           value={value.q ?? ""}
           onChange={(e) => onChange({ ...value, q: e.target.value, page: 1 })}
-          placeholder="nama/alamat/telepon"
+          placeholder="Nama / alamat / telepon"
+          autoComplete="off"
         />
       </div>
 
       {/* Kota */}
       <div>
-        <label className="label" htmlFor="kota">Kota</label>
+        <label className="label" htmlFor="kota">
+          Kota
+        </label>
         <input
           id="kota"
           className="input"
           value={value.kota ?? ""}
-          onChange={(e) => onChange({ ...value, kota: e.target.value || undefined, page: 1 })}
-          placeholder="contoh: Bandung"
+          onChange={(e) =>
+            onChange({
+              ...value,
+              kota: e.target.value || undefined,
+              page: 1,
+            })
+          }
+          placeholder="Contoh: Bandung"
+          autoComplete="off"
         />
       </div>
 
-      {/* Hanya aktif + Apply */}
-      <div style={{ display: "flex", alignItems: "flex-end", gap: 12 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <input
-            id="branch-active"
-            type="checkbox"
-            checked={Boolean(value.is_active)}
-            onChange={(e) => onChange({ ...value, is_active: e.target.checked ? true : undefined, page: 1 })}
-            aria-label="Hanya aktif"
-          />
-          <label htmlFor="branch-active" className="text-sm">Hanya aktif</label>
+      {/* Action Group */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "0.65rem",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "0.75rem",
+          }}
+        >
+          {/* Toggle aktif */}
+          <label
+            htmlFor="branch-active"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              cursor: "pointer",
+              userSelect: "none",
+            }}
+          >
+            <input
+              id="branch-active"
+              type="checkbox"
+              checked={Boolean(value.is_active)}
+              onChange={(e) =>
+                onChange({
+                  ...value,
+                  is_active: e.target.checked ? true : undefined,
+                  page: 1,
+                })
+              }
+              aria-label="Hanya aktif"
+            />
+            <span className="text-sm" style={{ opacity: 0.9 }}>
+              Hanya aktif
+            </span>
+          </label>
+
+          {/* Reset (opsional) */}
+          <button
+            type="button"
+            className="button button-ghost"
+            onClick={() => {
+              onChange(resetValue);
+              onSearch();
+            }}
+            style={{
+              padding: "0.4rem 0.6rem",
+              borderRadius: 12,
+              fontSize: "0.85rem",
+            }}
+            title="Reset filter"
+          >
+            Reset
+          </button>
         </div>
 
-        <button className="button button-primary" onClick={onSearch}>
-          Terapkan
-        </button>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <button
+            type="button"
+            className="button button-primary"
+            onClick={onSearch}
+            style={{ width: "100%", borderRadius: 12 }}
+          >
+            Terapkan
+          </button>
+        </div>
       </div>
+
+      {/* Responsif: 2 kolom di layar sedang, 1 kolom di mobile */}
+      <style>
+        {`
+          @media (max-width: 900px) {
+            div[style*="grid-template-columns: repeat(3"] {
+              grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+          }
+          @media (max-width: 640px) {
+            div[style*="grid-template-columns: repeat(3"] {
+              grid-template-columns: 1fr !important;
+            }
+          }
+        `}
+      </style>
     </div>
   );
 }
@@ -4401,13 +4532,13 @@ export default function BranchFilters({ value, onChange, onSearch }: Props): Rea
 
 ### src/components/cabangs/BranchFormDialog.tsx
 
-- SHA: `728a01fd38e1`  
-- Ukuran: 8 KB
+- SHA: `e9e2a1be560d`  
+- Ukuran: 14 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
 // src/components/cabangs/BranchFormDialog.tsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { Branch, BranchCreatePayload } from "../../types/branch";
 
 type Props = {
@@ -4423,7 +4554,9 @@ const HARI = [
   { v: "Senin–Minggu", label: "Senin–Minggu" },
 ] as const;
 
-function parseJamOperasional(input?: string | null): { hari: string; openAt: string; closeAt: string } | null {
+function parseJamOperasional(
+  input?: string | null
+): { hari: string; openAt: string; closeAt: string } | null {
   if (!input) return null;
   // Pola: "Senin–Minggu 08:00-21:00"
   const m = input.match(/^(.+?)\s+(\d{2}:\d{2})-(\d{2}:\d{2})$/);
@@ -4432,7 +4565,12 @@ function parseJamOperasional(input?: string | null): { hari: string; openAt: str
   return { hari, openAt, closeAt };
 }
 
-export default function BranchFormDialog({ open, initial, onClose, onSubmit }: Props): React.ReactElement | null {
+export default function BranchFormDialog({
+  open,
+  initial,
+  onClose,
+  onSubmit,
+}: Props): React.ReactElement | null {
   const [form, setForm] = useState<BranchCreatePayload>({
     nama: "",
     kota: "",
@@ -4449,6 +4587,8 @@ export default function BranchFormDialog({ open, initial, onClose, onSubmit }: P
   const [openAt, setOpenAt] = useState<string>("08:00");
   const [closeAt, setCloseAt] = useState<string>("21:00");
 
+  const panelRef = useRef<HTMLDivElement | null>(null);
+
   // Gabungkan builder -> form.jam_operasional
   useEffect(() => {
     setForm((s) => ({ ...s, jam_operasional: `${hari} ${openAt}-${closeAt}` }));
@@ -4457,6 +4597,7 @@ export default function BranchFormDialog({ open, initial, onClose, onSubmit }: P
   // Inisialisasi saat dialog dibuka (create/edit)
   useEffect(() => {
     if (!open) return;
+
     if (initial) {
       setForm({
         nama: initial.nama,
@@ -4467,20 +4608,17 @@ export default function BranchFormDialog({ open, initial, onClose, onSubmit }: P
         is_active: initial.is_active,
       });
 
-      // Kalau nilai existing bisa di-parse, sinkronkan ke picker
       const parsed = parseJamOperasional(initial.jam_operasional);
       if (parsed) {
         setHari(parsed.hari);
         setOpenAt(parsed.openAt);
         setCloseAt(parsed.closeAt);
       } else {
-        // fallback default jika format lama bebas
         setHari("Senin–Minggu");
         setOpenAt("08:00");
         setCloseAt("21:00");
       }
     } else {
-      // mode tambah
       setForm({
         nama: "",
         kota: "",
@@ -4493,11 +4631,30 @@ export default function BranchFormDialog({ open, initial, onClose, onSubmit }: P
       setOpenAt("08:00");
       setCloseAt("21:00");
     }
+
     setError(null);
+
+    // fokuskan ke panel modal agar UX enak (tanpa mengubah logika)
+    setTimeout(() => {
+      panelRef.current?.focus();
+    }, 0);
   }, [open, initial]);
 
+  // Tutup dengan ESC (UX standar)
+  useEffect(() => {
+    if (!open) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !saving) {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, saving, onClose]);
+
   const valid = useMemo(() => {
-    // validasi ringan: nama/kota/alamat wajib, jam buka < jam tutup
     if (!form.nama?.trim()) return false;
     if (!form.kota?.trim()) return false;
     if (!form.alamat?.trim()) return false;
@@ -4513,7 +4670,9 @@ export default function BranchFormDialog({ open, initial, onClose, onSubmit }: P
     try {
       if (!valid) {
         setSaving(false);
-        setError("Form belum valid. Pastikan nama/kota/alamat terisi dan jam buka < jam tutup.");
+        setError(
+          "Form belum valid. Pastikan nama/kota/alamat terisi dan jam buka < jam tutup."
+        );
         return;
       }
       const ok = await onSubmit(form);
@@ -4526,129 +4685,308 @@ export default function BranchFormDialog({ open, initial, onClose, onSubmit }: P
     }
   };
 
+  const title = initial ? "Edit Cabang" : "Tambah Cabang";
+  const subtitle = initial
+    ? "Perbarui informasi cabang. Pastikan jam operasional sesuai."
+    : "Tambahkan cabang baru. Isi data dengan lengkap dan benar.";
+
   return (
     <div
-      // Backdrop modal
       style={{
         position: "fixed",
         inset: 0,
-        background: "rgba(0,0,0,0.4)",
+        zIndex: 60,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         padding: 16,
-        zIndex: 50,
+        background: "rgba(2, 6, 23, 0.55)",
+        backdropFilter: "blur(6px)",
       }}
-      aria-modal
+      aria-modal="true"
       role="dialog"
+      aria-label={title}
+      onMouseDown={(e) => {
+        // Klik backdrop untuk tutup (tanpa ganggu interaksi dalam panel)
+        if (e.target === e.currentTarget && !saving) onClose();
+      }}
     >
-      <div className="card" style={{ width: "100%", maxWidth: 640 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-          <h3 className="h3" style={{ margin: 0 }}>
-            {initial ? "Edit Cabang" : "Tambah Cabang"}
-          </h3>
-          <button className="button button-outline" onClick={onClose} disabled={saving}>
-            Tutup
-          </button>
+      <div
+        ref={panelRef}
+        tabIndex={-1}
+        className="card"
+        style={{
+          width: "100%",
+          maxWidth: 720,
+          borderRadius: 18,
+          padding: 0,
+          overflow: "hidden",
+          outline: "none",
+          boxShadow: "0 24px 80px rgba(0,0,0,0.35)",
+        }}
+      >
+        {/* Header */}
+        <div
+          style={{
+            padding: "1.1rem 1.1rem",
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            gap: 12,
+            borderBottom: "1px solid rgba(0,0,0,0.06)",
+            background:
+              "linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.00))",
+          }}
+        >
+          <div style={{ minWidth: 0 }}>
+            <div className="h3" style={{ margin: 0 }}>
+              {title}
+            </div>
+            <div className="text-sm" style={{ marginTop: 6, opacity: 0.75 }}>
+              {subtitle}
+            </div>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+            <button
+              className="button button-outline"
+              onClick={onClose}
+              disabled={saving}
+              title="Tutup"
+              style={{ borderRadius: 12 }}
+            >
+              Tutup
+            </button>
+          </div>
         </div>
 
-        {/* Form fields */}
-        <div className="form-row form-row--2" style={{ marginTop: 8 }}>
-          <input
-            className="input"
-            placeholder="Nama"
-            value={form.nama}
-            onChange={(e) => setForm({ ...form, nama: e.target.value })}
-          />
-          <input
-            className="input"
-            placeholder="Kota"
-            value={form.kota}
-            onChange={(e) => setForm({ ...form, kota: e.target.value })}
-          />
+        {/* Body */}
+        <div style={{ padding: "1.1rem" }}>
+          {/* Error banner */}
+          {error && (
+            <div
+              className="card"
+              style={{
+                padding: "0.75rem 0.9rem",
+                borderRadius: 14,
+                marginBottom: "0.9rem",
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 10,
+              }}
+            >
+              <span className="badge badge-danger">Error</span>
+              <div style={{ fontSize: 14, opacity: 0.95, lineHeight: 1.45 }}>
+                {error}
+              </div>
+            </div>
+          )}
 
-          <input
-            className="input"
-            placeholder="Alamat"
-            value={form.alamat}
-            onChange={(e) => setForm({ ...form, alamat: e.target.value })}
-            style={{ gridColumn: "1 / -1" }}
-          />
+          {/* Section: Identitas Cabang */}
+          <div style={{ marginBottom: "1rem" }}>
+            <div style={{ fontWeight: 800, letterSpacing: "-0.01em" }}>
+              Informasi Cabang
+            </div>
+            <div className="text-sm" style={{ marginTop: 4, opacity: 0.72 }}>
+              Data dasar untuk identifikasi cabang.
+            </div>
 
-          <input
-            className="input"
-            placeholder="Telepon"
-            value={form.telepon ?? ""}
-            onChange={(e) => setForm({ ...form, telepon: e.target.value })}
-          />
-        </div>
+            <div
+              style={{
+                marginTop: "0.85rem",
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "0.8rem",
+              }}
+            >
+              <div>
+                <label className="label">Nama</label>
+                <input
+                  className="input"
+                  placeholder="Contoh: Cabang Utama"
+                  value={form.nama}
+                  onChange={(e) => setForm({ ...form, nama: e.target.value })}
+                />
+              </div>
 
-        {/* Builder Jam Operasional */}
-        <div className="form-row form-row--3" style={{ marginTop: 8 }}>
+              <div>
+                <label className="label">Kota</label>
+                <input
+                  className="input"
+                  placeholder="Contoh: Bandung"
+                  value={form.kota}
+                  onChange={(e) => setForm({ ...form, kota: e.target.value })}
+                />
+              </div>
+
+              <div style={{ gridColumn: "1 / -1" }}>
+                <label className="label">Alamat</label>
+                <input
+                  className="input"
+                  placeholder="Alamat lengkap cabang"
+                  value={form.alamat}
+                  onChange={(e) => setForm({ ...form, alamat: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="label">Telepon</label>
+                <input
+                  className="input"
+                  placeholder="Opsional"
+                  value={form.telepon ?? ""}
+                  onChange={(e) => setForm({ ...form, telepon: e.target.value })}
+                />
+              </div>
+
+              <div style={{ display: "flex", alignItems: "flex-end" }}>
+                <label
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 10,
+                    userSelect: "none",
+                    padding: "0.6rem 0.75rem",
+                    borderRadius: 14,
+                    border: "1px solid rgba(0,0,0,0.08)",
+                    background: "rgba(0,0,0,0.02)",
+                    width: "100%",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={Boolean(form.is_active)}
+                    onChange={(e) =>
+                      setForm({ ...form, is_active: e.target.checked })
+                    }
+                  />
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, lineHeight: 1.2 }}>Aktif</div>
+                    <div className="text-sm" style={{ opacity: 0.7, marginTop: 2 }}>
+                      Nonaktifkan jika cabang tidak beroperasi.
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* Section Divider */}
+          <div style={{ height: 1, background: "rgba(0,0,0,0.06)", margin: "1rem 0" }} />
+
+          {/* Section: Jam Operasional */}
           <div>
-            <label className="label">Hari</label>
-            <select className="select" value={hari} onChange={(e) => setHari(e.target.value)}>
-              {HARI.map((h) => (
-                <option key={h.v} value={h.v}>
-                  {h.label}
-                </option>
-              ))}
-            </select>
-          </div>
+            <div style={{ fontWeight: 800, letterSpacing: "-0.01em" }}>Jam Operasional</div>
+            <div className="text-sm" style={{ marginTop: 4, opacity: 0.72 }}>
+              Nilai akan tersimpan sebagai format tunggal.
+            </div>
 
-          <div>
-            <label className="label">Buka</label>
-            <input
-              type="time"
-              className="input"
-              value={openAt}
-              onChange={(e) => setOpenAt(e.target.value)}
-            />
-          </div>
+            <div
+              style={{
+                marginTop: "0.85rem",
+                display: "grid",
+                gridTemplateColumns: "1.2fr 1fr 1fr",
+                gap: "0.8rem",
+              }}
+            >
+              <div>
+                <label className="label">Hari</label>
+                <select className="select" value={hari} onChange={(e) => setHari(e.target.value)}>
+                  {HARI.map((h) => (
+                    <option key={h.v} value={h.v}>
+                      {h.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          <div>
-            <label className="label">Tutup</label>
-            <input
-              type="time"
-              className="input"
-              value={closeAt}
-              onChange={(e) => setCloseAt(e.target.value)}
-            />
-          </div>
+              <div>
+                <label className="label">Buka</label>
+                <input
+                  type="time"
+                  className="input"
+                  value={openAt}
+                  onChange={(e) => setOpenAt(e.target.value)}
+                />
+              </div>
 
-          <div style={{ gridColumn: "1 / -1", fontSize: 12, opacity: 0.75 }}>
-            Tersimpan sebagai: <span style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" }}>
-              {form.jam_operasional || "-"}
-            </span>
+              <div>
+                <label className="label">Tutup</label>
+                <input
+                  type="time"
+                  className="input"
+                  value={closeAt}
+                  onChange={(e) => setCloseAt(e.target.value)}
+                />
+              </div>
+
+              <div
+                style={{
+                  gridColumn: "1 / -1",
+                  borderRadius: 14,
+                  border: "1px solid rgba(0,0,0,0.06)",
+                  background: "rgba(0,0,0,0.02)",
+                  padding: "0.75rem 0.9rem",
+                }}
+              >
+                <div className="text-sm" style={{ opacity: 0.7 }}>
+                  Tersimpan sebagai
+                </div>
+                <div
+                  style={{
+                    marginTop: 6,
+                    fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+                    fontSize: 13,
+                    opacity: 0.9,
+                    wordBreak: "break-word",
+                  }}
+                >
+                  {form.jam_operasional || "-"}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <label style={{ display: "inline-flex", alignItems: "center", gap: 8, marginTop: 8 }}>
-          <input
-            type="checkbox"
-            checked={Boolean(form.is_active)}
-            onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
-          />
-          Aktif
-        </label>
-
-        {/* Error */}
-        {error && (
-          <div className="card" style={{ display: "inline-flex", alignItems: "center", gap: 8, marginTop: 12 }}>
-            <span className="badge badge-danger">Error</span>
-            <span style={{ fontSize: 14 }}>{error}</span>
+        {/* Footer Actions */}
+        <div
+          style={{
+            padding: "1rem 1.1rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+            borderTop: "1px solid rgba(0,0,0,0.06)",
+            background: "rgba(0,0,0,0.01)",
+          }}
+        >
+          <div className="text-sm" style={{ opacity: 0.7 }}>
+            {saving ? "Menyimpan perubahan…" : valid ? "Siap disimpan." : "Lengkapi form untuk menyimpan."}
           </div>
-        )}
 
-        {/* Actions */}
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 16 }}>
-          <button className="button button-outline" onClick={onClose} disabled={saving}>
-            Batal
-          </button>
-          <button className="button button-primary" onClick={submit} disabled={saving || !valid}>
-            {saving ? "Menyimpan..." : "Simpan"}
-          </button>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+            <button className="button button-outline" onClick={onClose} disabled={saving}>
+              Batal
+            </button>
+            <button className="button button-primary" onClick={submit} disabled={saving || !valid}>
+              {saving ? "Menyimpan..." : "Simpan"}
+            </button>
+          </div>
         </div>
+
+        {/* Responsif */}
+        <style>
+          {`
+            @media (max-width: 720px) {
+              .card[style*="max-width: 720"] { border-radius: 16px !important; }
+            }
+            @media (max-width: 640px) {
+              /* Grid 2 kolom -> 1 kolom */
+              div[style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
+              div[style*="grid-template-columns: 1.2fr 1fr 1fr"] { grid-template-columns: 1fr !important; }
+            }
+          `}
+        </style>
       </div>
     </div>
   );
@@ -4659,13 +4997,13 @@ export default function BranchFormDialog({ open, initial, onClose, onSubmit }: P
 
 ### src/components/cabangs/BranchTable.tsx
 
-- SHA: `373a7aab2c97`  
-- Ukuran: 2 KB
+- SHA: `251ec04c0db4`  
+- Ukuran: 5 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
 // src/components/cabangs/BranchTable.tsx
-import React from "react";
+import React, { useMemo } from "react";
 import type { Branch } from "../../types/branch";
 
 type Props = {
@@ -4675,59 +5013,135 @@ type Props = {
   onOpenGudang: (row: Branch) => void;
 };
 
-export default function BranchTable({ items, onEdit, onDelete, onOpenGudang }: Props): React.ReactElement {
-  return (
-    <div style={{ overflowX: "auto" }}>
-      <table className="table" style={{ minWidth: 800, width: "100%" }}>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Nama</th>
-            <th>Kota</th>
-            <th>Telepon</th>
-            <th>Aktif</th>
-            <th style={{ width: 220 }}>Aksi</th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((r) => (
-            <tr key={r.id}>
-              <td>{r.id}</td>
-              <td>{r.nama}</td>
-              <td>{r.kota}</td>
-              <td>{r.telepon ?? "-"}</td>
-              <td>
-                {r.is_active ? (
-                  <span className="badge badge-success">Aktif</span>
-                ) : (
-                  <span className="badge badge-danger">Nonaktif</span>
-                )}
-              </td>
-              <td>
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  <button className="button button-outline" onClick={() => onOpenGudang(r)}>
-                    Gudang
-                  </button>
-                  <button className="button button-outline" onClick={() => onEdit(r)}>
-                    Edit
-                  </button>
-                  <button className="button button-outline" onClick={() => onDelete(r)}>
-                    Hapus
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
+export default function BranchTable({
+  items,
+  onEdit,
+  onDelete,
+  onOpenGudang,
+}: Props): React.ReactElement {
+  const minWidth = useMemo(() => 860, []);
 
-          {items.length === 0 && (
+  return (
+    <div
+      style={{
+        border: "1px solid rgba(0,0,0,0.08)",
+        borderRadius: 14,
+        overflow: "hidden",
+        background: "rgba(255,255,255,0.9)",
+      }}
+    >
+      <div style={{ overflowX: "auto" }}>
+        <table className="table" style={{ minWidth, width: "100%" }}>
+          <thead>
             <tr>
-              <td colSpan={6} style={{ textAlign: "center", opacity: 0.75, padding: "16px" }}>
-                Belum ada data.
-              </td>
+              <th style={{ width: 80 }}>ID</th>
+              <th>Nama</th>
+              <th style={{ width: 160 }}>Kota</th>
+              <th style={{ width: 180 }}>Telepon</th>
+              <th style={{ width: 120 }}>Status</th>
+              <th style={{ width: 260 }}>Aksi</th>
             </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+
+          <tbody>
+            {items.map((r) => (
+              <tr key={r.id}>
+                <td style={{ whiteSpace: "nowrap", opacity: 0.9 }}>{r.id}</td>
+
+                <td style={{ minWidth: 220 }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    <span style={{ fontWeight: 800, letterSpacing: "-0.01em" }}>{r.nama}</span>
+                    <span className="text-sm" style={{ opacity: 0.7 }}>
+                      Cabang ID #{r.id}
+                    </span>
+                  </div>
+                </td>
+
+                <td style={{ whiteSpace: "nowrap" }}>{r.kota}</td>
+
+                <td style={{ whiteSpace: "nowrap" }}>{r.telepon ?? "-"}</td>
+
+                <td style={{ whiteSpace: "nowrap" }}>
+                  {r.is_active ? (
+                    <span className="badge badge-success">Aktif</span>
+                  ) : (
+                    <span className="badge badge-danger">Nonaktif</span>
+                  )}
+                </td>
+
+                <td>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 8,
+                      alignItems: "center",
+                      justifyContent: "flex-start",
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <button
+                      className="button button-outline"
+                      onClick={() => onOpenGudang(r)}
+                      style={{ borderRadius: 999, padding: "0.45rem 0.75rem" }}
+                      title="Buka manajemen gudang untuk cabang ini"
+                    >
+                      Gudang
+                    </button>
+
+                    <button
+                      className="button button-outline"
+                      onClick={() => onEdit(r)}
+                      style={{ borderRadius: 999, padding: "0.45rem 0.75rem" }}
+                      title="Edit data cabang"
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      className="button button-outline"
+                      onClick={() => onDelete(r)}
+                      style={{
+                        borderRadius: 999,
+                        padding: "0.45rem 0.75rem",
+                        borderColor: "rgba(239,68,68,0.35)",
+                      }}
+                      title="Hapus cabang"
+                    >
+                      Hapus
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+
+            {items.length === 0 && (
+              <tr>
+                <td colSpan={6} style={{ padding: "22px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 6,
+                      textAlign: "center",
+                      opacity: 0.8,
+                    }}
+                  >
+                    <div style={{ fontWeight: 800, letterSpacing: "-0.01em" }}>
+                      Belum ada data cabang
+                    </div>
+                    <div className="text-sm" style={{ opacity: 0.75 }}>
+                      Silakan klik tombol <strong>Tambah Cabang</strong> untuk membuat data baru.
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
     </div>
   );
 }
@@ -5274,12 +5688,13 @@ export default function SubmitCashDialog({
 
 ### src/components/category/CategoryFilters.tsx
 
-- SHA: `acc6064ea307`  
-- Ukuran: 3 KB
+- SHA: `83d54199da74`  
+- Ukuran: 4 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
-import { useEffect, useState } from "react";
+// src/components/category/CategoryFilters.tsx
+import { useEffect, useMemo, useState } from "react";
 import type { CategoryQuery, SortCategory } from "../../types/category";
 
 type Props = {
@@ -5294,10 +5709,10 @@ const SORT_OPTIONS: { label: string; value: SortCategory }[] = [
   { label: "Terlama", value: "created_at" },
 ];
 
-export default function CategoryFilters({ value, onChange }: Props) {
+export default function CategoryFilters({ value, onChange }: Props): React.ReactElement {
   const [search, setSearch] = useState(value.search ?? "");
   const [isActive, setIsActive] = useState<boolean | undefined>(value.is_active);
-  const [sort, setSort] = useState<SortCategory>(value.sort ?? "nama");
+  const [sort, setSort] = useState<SortCategory>((value.sort as SortCategory) ?? "nama");
 
   useEffect(() => {
     setSearch(value.search ?? "");
@@ -5305,27 +5720,75 @@ export default function CategoryFilters({ value, onChange }: Props) {
     setSort((value.sort as SortCategory) ?? "nama");
   }, [value]);
 
+  const softText: React.CSSProperties = { color: "var(--color-text-soft)" };
+
+  const gridStyle: React.CSSProperties = useMemo(
+    () => ({
+      display: "grid",
+      gridTemplateColumns: "1.3fr 0.8fr 0.9fr",
+      gap: "0.85rem",
+      alignItems: "end",
+    }),
+    []
+  );
+
+  const labelStyle: React.CSSProperties = useMemo(
+    () => ({
+      fontSize: 12,
+      fontWeight: 700,
+      marginBottom: 6,
+      letterSpacing: ".02em",
+      ...softText,
+    }),
+    [softText]
+  );
+
+  const actionsStyle: React.CSSProperties = useMemo(
+    () => ({
+      display: "flex",
+      justifyContent: "flex-end",
+      gap: "0.6rem",
+      flexWrap: "wrap",
+      marginTop: "0.9rem",
+    }),
+    []
+  );
+
+  const apply = () => {
+    onChange({ ...value, search, sort, is_active: isActive, page: 1 });
+  };
+
+  const reset = () => {
+    setSearch("");
+    setIsActive(undefined);
+    setSort("nama");
+    onChange({ page: 1, per_page: value.per_page ?? 10, sort: "nama" });
+  };
+
   return (
     <div>
-      {/* Grid form, responsif, tanpa Tailwind */}
-      <div className="form-row form-row--3" style={{ marginBottom: 12 }}>
-        {/* Pencarian */}
+      <div style={gridStyle}>
+        {/* Search */}
         <div>
-          <div className="muted" style={{ fontSize: 12, marginBottom: 6 }}>Pencarian</div>
+          <div style={labelStyle}>Pencarian</div>
           <input
             className="input"
             placeholder="Cari nama/slug…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") onChange({ ...value, search, page: 1 });
+              if (e.key === "Enter") apply();
             }}
+            style={{ width: "100%" }}
           />
+          <div style={{ ...softText, fontSize: 12, marginTop: 6 }}>
+            Tekan <b>Enter</b> atau klik <b>Terapkan</b>.
+          </div>
         </div>
 
         {/* Status */}
         <div>
-          <div className="muted" style={{ fontSize: 12, marginBottom: 6 }}>Status</div>
+          <div style={labelStyle}>Status</div>
           <select
             className="select"
             value={String(isActive)}
@@ -5333,8 +5796,10 @@ export default function CategoryFilters({ value, onChange }: Props) {
               const v = e.target.value;
               const next = v === "undefined" ? undefined : v === "true";
               setIsActive(next);
+              // status: langsung apply (tetap pola Anda)
               onChange({ ...value, is_active: next, page: 1 });
             }}
+            style={{ width: "100%" }}
           >
             <option value="undefined">Semua</option>
             <option value="true">Aktif</option>
@@ -5344,15 +5809,17 @@ export default function CategoryFilters({ value, onChange }: Props) {
 
         {/* Sort */}
         <div>
-          <div className="muted" style={{ fontSize: 12, marginBottom: 6 }}>Urutkan</div>
+          <div style={labelStyle}>Urutkan</div>
           <select
             className="select"
             value={sort}
             onChange={(e) => {
               const s = e.target.value as SortCategory;
               setSort(s);
+              // sort: langsung apply (tetap pola Anda)
               onChange({ ...value, sort: s, page: 1 });
             }}
+            style={{ width: "100%" }}
           >
             {SORT_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
@@ -5363,28 +5830,25 @@ export default function CategoryFilters({ value, onChange }: Props) {
         </div>
       </div>
 
-      {/* Actions */}
-      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-        <button
-          className="button"
-          onClick={() => {
-            setSearch("");
-            setIsActive(undefined);
-            setSort("nama");
-            onChange({ page: 1, per_page: value.per_page ?? 10 });
-          }}
-        >
+      <div style={actionsStyle}>
+        <button className="button button-outline" onClick={reset} type="button">
           Reset
         </button>
-        <button
-          className="button button-primary"
-          onClick={() =>
-            onChange({ ...value, search, sort, is_active: isActive, page: 1 })
-          }
-        >
+        <button className="button button-primary" onClick={apply} type="button">
           Terapkan
         </button>
       </div>
+
+      {/* Responsif: 1 kolom di layar kecil */}
+      <style>
+        {`
+          @media (max-width: 860px) {
+            .category-filters-grid-fallback {
+              display: block !important;
+            }
+          }
+        `}
+      </style>
     </div>
   );
 }
@@ -5394,29 +5858,58 @@ export default function CategoryFilters({ value, onChange }: Props) {
 
 ### src/components/category/CategoryFormDialog.tsx
 
-- SHA: `1d8d802f8a22`  
-- Ukuran: 6 KB
+- SHA: `2c1535416f35`  
+- Ukuran: 12 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
 // src/components/category/CategoryFormDialog.tsx
-import React, { useEffect, useState } from "react";
-import type { Category, CategoryCreatePayload, CategoryUpdatePayload } from "../../types/category";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import type {
+  Category,
+  CategoryCreatePayload,
+  CategoryUpdatePayload,
+} from "../../types/category";
 import { slugify } from "../../lib/slug";
 
 type Props = {
   open: boolean;
   initial?: Category | null;
   onClose: () => void;
-  onSubmit: (payload: CategoryCreatePayload | CategoryUpdatePayload) => Promise<boolean>;
+  onSubmit: (
+    payload: CategoryCreatePayload | CategoryUpdatePayload
+  ) => Promise<boolean>;
 };
 
-export default function CategoryFormDialog({ open, initial, onClose, onSubmit }: Props) {
+export default function CategoryFormDialog({
+  open,
+  initial,
+  onClose,
+  onSubmit,
+}: Props) {
   const [nama, setNama] = useState("");
   const [deskripsi, setDeskripsi] = useState<string>("");
   const [isActive, setIsActive] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string[]> | null>(null);
+
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  const firstInputRef = useRef<HTMLInputElement | null>(null);
+
+  const isEdit = Boolean(initial);
+  const title = isEdit ? "Edit Kategori" : "Tambah Kategori";
+  const subtitle = isEdit
+    ? "Perbarui informasi kategori dengan rapi."
+    : "Buat kategori baru untuk pengelompokan produk.";
+
+  const fieldError = useMemo(() => {
+    const get = (k: string) => (errors?.[k] ? errors?.[k].join(", ") : "");
+    return {
+      nama: get("nama"),
+      deskripsi: get("deskripsi"),
+      _error: get("_error"),
+    };
+  }, [errors]);
 
   useEffect(() => {
     if (open) {
@@ -5424,8 +5917,32 @@ export default function CategoryFormDialog({ open, initial, onClose, onSubmit }:
       setDeskripsi(initial?.deskripsi ?? "");
       setIsActive(initial?.is_active ?? true);
       setErrors(null);
+      setSubmitting(false);
     }
   }, [open, initial]);
+
+  // UX: lock scroll + esc close + auto focus
+  useEffect(() => {
+    if (!open) return;
+
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+
+    // fokus input pertama
+    window.setTimeout(() => {
+      firstInputRef.current?.focus();
+    }, 0);
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open, onClose]);
 
   if (!open) return null;
 
@@ -5435,9 +5952,7 @@ export default function CategoryFormDialog({ open, initial, onClose, onSubmit }:
     setErrors(null);
 
     const nextSlug =
-      initial && initial.nama.trim() === nama.trim()
-        ? initial.slug
-        : slugify(nama);
+      initial && initial.nama.trim() === nama.trim() ? initial.slug : slugify(nama);
 
     const payload: CategoryCreatePayload | CategoryUpdatePayload = initial
       ? { nama, deskripsi: deskripsi || null, is_active: isActive, slug: nextSlug }
@@ -5447,7 +5962,11 @@ export default function CategoryFormDialog({ open, initial, onClose, onSubmit }:
       const ok = await onSubmit(payload);
       if (ok) onClose();
     } catch (err) {
-      const e = err as { status?: number; message?: string; errors?: Record<string, string[]> };
+      const e = err as {
+        status?: number;
+        message?: string;
+        errors?: Record<string, string[]>;
+      };
       if (e?.errors) setErrors(e.errors);
       else setErrors({ _error: [e?.message ?? "Gagal menyimpan."] });
     } finally {
@@ -5455,134 +5974,295 @@ export default function CategoryFormDialog({ open, initial, onClose, onSubmit }:
     }
   };
 
+  const onOverlayMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    // klik di luar dialog menutup modal
+    if (e.target === e.currentTarget) onClose();
+  };
+
   return (
     <div
-      className="modal-overlay"
+      onMouseDown={onOverlayMouseDown}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="category-dialog-title"
       style={{
         position: "fixed",
         inset: 0,
-        zIndex: 50,
+        zIndex: 80,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: 16,
-        background: "rgba(0,0,0,0.4)",
+        padding: "1rem",
+        background: "rgba(0,0,0,0.45)",
+        backdropFilter: "blur(2px)",
       }}
-      role="dialog"
-      aria-modal="true"
     >
       <div
+        ref={dialogRef}
         className="card"
         style={{
           width: "100%",
-          maxWidth: 640,
-          background: "#fff",
-          borderRadius: 16,
-          border: "1px solid var(--border, #e5e7eb)",
-          boxShadow: "var(--shadow-md, 0 4px 16px rgba(0,0,0,0.08))",
+          maxWidth: 720,
+          borderRadius: "var(--radius-xl)",
+          overflow: "hidden",
+          boxShadow: "0 24px 80px rgba(0,0,0,0.22)",
         }}
       >
+        {/* Header */}
         <div
-          className="card-header"
           style={{
+            padding: "1rem 1.25rem",
+            borderBottom: "1px solid var(--color-border)",
             display: "flex",
-            alignItems: "center",
+            alignItems: "flex-start",
             justifyContent: "space-between",
-            padding: "16px 20px",
-            borderBottom: "1px solid var(--border, #e5e7eb)",
+            gap: "1rem",
           }}
         >
-          <h3 className="h3" style={{ margin: 0 }}>
-            {initial ? "Edit Kategori" : "Tambah Kategori"}
-          </h3>
+          <div style={{ minWidth: 0 }}>
+            <div
+              id="category-dialog-title"
+              style={{
+                margin: 0,
+                fontWeight: 900,
+                letterSpacing: "-0.015em",
+                fontSize: "1.1rem",
+                lineHeight: 1.2,
+              }}
+            >
+              {title}
+            </div>
+            <div
+              style={{
+                marginTop: ".25rem",
+                color: "var(--color-text-soft)",
+                fontSize: ".9rem",
+              }}
+            >
+              {subtitle}
+            </div>
+          </div>
+
           <button
             type="button"
             className="button button-ghost"
             onClick={onClose}
             aria-label="Tutup dialog"
+            style={{
+              borderRadius: "999px",
+              padding: ".5rem .7rem",
+              lineHeight: 1,
+            }}
           >
             ✕
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ padding: 20 }}>
-          <div className="form-row">
-            <label className="label" htmlFor="nama">
-              Nama<span style={{ color: "#DC2626" }}>*</span>
-            </label>
-            <input
-              id="nama"
-              className="input"
-              value={nama}
-              onChange={(e) => setNama(e.target.value)}
-              required
-            />
-            {errors?.nama && (
-              <div className="form-error" style={{ color: "#DC2626", fontSize: 12, marginTop: 6 }}>
-                {errors.nama.join(", ")}
+        {/* Body */}
+        <form onSubmit={handleSubmit} style={{ padding: "1.25rem" }}>
+          {/* Error global */}
+          {fieldError._error ? (
+            <div
+              role="alert"
+              style={{
+                marginBottom: "1rem",
+                padding: ".85rem 1rem",
+                borderRadius: "var(--radius-md)",
+                border: "1px solid rgba(220,38,38,.25)",
+                background: "rgba(220,38,38,.06)",
+                color: "var(--color-danger)",
+                fontWeight: 700,
+              }}
+            >
+              {fieldError._error}
+            </div>
+          ) : null}
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1.2fr .8fr",
+              gap: "1rem",
+            }}
+          >
+            {/* Nama */}
+            <div style={{ minWidth: 0 }}>
+              <label
+                htmlFor="nama"
+                style={{
+                  display: "block",
+                  fontSize: ".9rem",
+                  fontWeight: 700,
+                }}
+              >
+                Nama <span style={{ color: "var(--color-danger)" }}>*</span>
+              </label>
+              <input
+                ref={firstInputRef}
+                id="nama"
+                className="input"
+                value={nama}
+                onChange={(e) => setNama(e.target.value)}
+                required
+                placeholder="Contoh: Minuman"
+                aria-invalid={fieldError.nama ? "true" : "false"}
+                style={{
+                  width: "100%",
+                  marginTop: ".4rem",
+                  borderColor: fieldError.nama ? "rgba(220,38,38,.45)" : undefined,
+                }}
+              />
+              {fieldError.nama ? (
+                <div
+                  style={{
+                    marginTop: ".4rem",
+                    color: "var(--color-danger)",
+                    fontSize: ".85rem",
+                  }}
+                >
+                  {fieldError.nama}
+                </div>
+              ) : (
+                <div
+                  style={{
+                    marginTop: ".4rem",
+                    color: "var(--color-text-soft)",
+                    fontSize: ".85rem",
+                  }}
+                >
+                  Nama kategori harus jelas dan singkat.
+                </div>
+              )}
+            </div>
+
+            {/* Aktif */}
+            <div
+              style={{
+                border: "1px solid var(--color-border)",
+                borderRadius: "var(--radius-lg)",
+                padding: ".9rem 1rem",
+                background: "rgba(0,0,0,0.01)",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                gap: ".5rem",
+              }}
+            >
+              <div style={{ fontWeight: 800 }}>Status</div>
+              <label
+                htmlFor="is_active"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: ".6rem",
+                  cursor: "pointer",
+                  userSelect: "none",
+                }}
+              >
+                <input
+                  id="is_active"
+                  type="checkbox"
+                  checked={isActive}
+                  onChange={(e) => setIsActive(e.target.checked)}
+                />
+                <span style={{ fontWeight: 700 }}>Aktif</span>
+              </label>
+              <div style={{ color: "var(--color-text-soft)", fontSize: ".85rem" }}>
+                Nonaktifkan jika kategori tidak dipakai sementara.
               </div>
-            )}
+            </div>
           </div>
 
-          <div className="form-row" style={{ marginTop: 12 }}>
-            <label className="label" htmlFor="deskripsi">Deskripsi</label>
+          {/* Deskripsi */}
+          <div style={{ marginTop: "1rem" }}>
+            <label
+              htmlFor="deskripsi"
+              style={{
+                display: "block",
+                fontSize: ".9rem",
+                fontWeight: 700,
+              }}
+            >
+              Deskripsi
+            </label>
             <textarea
               id="deskripsi"
               className="textarea"
-              rows={3}
+              rows={4}
               value={deskripsi}
               onChange={(e) => setDeskripsi(e.target.value)}
+              placeholder="Opsional. Catatan singkat tentang kategori ini."
+              aria-invalid={fieldError.deskripsi ? "true" : "false"}
+              style={{
+                width: "100%",
+                marginTop: ".4rem",
+                borderColor: fieldError.deskripsi
+                  ? "rgba(220,38,38,.45)"
+                  : undefined,
+              }}
             />
-            {errors?.deskripsi && (
-              <div className="form-error" style={{ color: "#DC2626", fontSize: 12, marginTop: 6 }}>
-                {errors.deskripsi.join(", ")}
+            {fieldError.deskripsi ? (
+              <div
+                style={{
+                  marginTop: ".4rem",
+                  color: "var(--color-danger)",
+                  fontSize: ".85rem",
+                }}
+              >
+                {fieldError.deskripsi}
               </div>
-            )}
+            ) : null}
           </div>
 
+          {/* Footer actions */}
           <div
-            className="form-row"
-            style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 8 }}
-          >
-            <input
-              id="is_active"
-              type="checkbox"
-              checked={isActive}
-              onChange={(e) => setIsActive(e.target.checked)}
-            />
-            <label htmlFor="is_active" className="label" style={{ margin: 0 }}>
-              Aktif
-            </label>
-          </div>
-
-          {errors?._error && (
-            <div
-              className="alert alert-danger"
-              style={{ marginTop: 12 }}
-              role="alert"
-            >
-              {errors._error.join(", ")}
-            </div>
-          )}
-
-          <div
-            className="dialog-actions"
             style={{
               display: "flex",
-              justifyContent: "flex-end",
-              gap: 8,
-              marginTop: 16,
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: ".75rem",
+              flexWrap: "wrap",
+              marginTop: "1.25rem",
+              paddingTop: "1rem",
+              borderTop: "1px solid var(--color-border)",
             }}
           >
-            <button type="button" className="button" onClick={onClose}>
-              Batal
-            </button>
-            <button type="submit" className="button button-primary" disabled={submitting}>
-              {submitting ? "Menyimpan…" : "Simpan"}
-            </button>
+            <div style={{ color: "var(--color-text-soft)", fontSize: ".9rem" }}>
+              Slug dibuat otomatis dari nama kategori.
+            </div>
+
+            <div style={{ display: "flex", gap: ".6rem", flexWrap: "wrap" }}>
+              <button
+                type="button"
+                className="button button-outline"
+                onClick={onClose}
+                disabled={submitting}
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                className="button button-primary"
+                disabled={submitting}
+                style={{ minWidth: 120 }}
+              >
+                {submitting ? "Menyimpan…" : "Simpan"}
+              </button>
+            </div>
           </div>
         </form>
       </div>
+
+      {/* Responsif: modal jadi 1 kolom pada layar kecil */}
+      <style>
+        {`
+          @media (max-width: 720px) {
+            form > div[style*="grid-template-columns"] {
+              grid-template-columns: 1fr !important;
+            }
+          }
+        `}
+      </style>
     </div>
   );
 }
@@ -5592,8 +6272,8 @@ export default function CategoryFormDialog({ open, initial, onClose, onSubmit }:
 
 ### src/components/category/CategoryTable.tsx
 
-- SHA: `9a3726e6167c`  
-- Ukuran: 2 KB
+- SHA: `69543f7547dd`  
+- Ukuran: 5 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -5607,58 +6287,129 @@ type Props = {
 };
 
 export default function CategoryTable({ rows, onEdit, onDelete }: Props) {
+  const softText: React.CSSProperties = { color: "var(--color-text-soft)" };
+
+  const thBase: React.CSSProperties = {
+    whiteSpace: "nowrap",
+  };
+
+  const tdBase: React.CSSProperties = {
+    verticalAlign: "top",
+  };
+
+  const mono: React.CSSProperties = {
+    fontFamily:
+      'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+    fontSize: 12,
+  };
+
+  const clamp2: React.CSSProperties = {
+    display: "-webkit-box",
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: "vertical",
+    overflow: "hidden",
+  };
+
   return (
-    <div style={{ overflowX: "auto" }}>
-      <table className="table">
+    <div
+      style={{
+        overflowX: "auto",
+        border: "1px solid var(--color-border)",
+        borderRadius: "var(--radius-md)",
+      }}
+    >
+      <table className="table" style={{ margin: 0 }}>
         <thead>
           <tr>
-            <th style={{ width: 64 }}>#</th>
-            <th>Nama</th>
-            <th>Slug</th>
-            <th>Deskripsi</th>
-            <th style={{ width: 112 }}>Status</th>
-            <th style={{ width: 160 }}>Aksi</th>
+            <th style={{ ...thBase, width: 64, textAlign: "right" }}>#</th>
+            <th style={thBase}>Nama</th>
+            <th style={{ ...thBase, width: 220 }}>Slug</th>
+            <th style={thBase}>Deskripsi</th>
+            <th style={{ ...thBase, width: 120, textAlign: "center" }}>Status</th>
+            <th style={{ ...thBase, width: 180 }}>Aksi</th>
           </tr>
         </thead>
+
         <tbody>
           {rows.length === 0 ? (
             <tr>
-              <td colSpan={6}>
-                <div className="empty" style={{ textAlign: "center" }}>
-                  Belum ada data
+              <td colSpan={6} style={{ padding: "1rem" }}>
+                <div
+                  style={{
+                    padding: "1rem",
+                    textAlign: "center",
+                    border: "1px dashed var(--color-border)",
+                    borderRadius: "var(--radius-md)",
+                    background: "var(--color-surface)",
+                  }}
+                >
+                  <div style={{ fontWeight: 800 }}>Belum ada data</div>
+                  <div style={{ ...softText, marginTop: ".25rem" }}>
+                    Silakan tambah kategori baru untuk mulai mengisi data.
+                  </div>
                 </div>
               </td>
             </tr>
           ) : (
             rows.map((r, i) => (
               <tr key={r.id}>
-                <td>{i + 1}</td>
-                <td>
-                  <div className="font-medium">{r.nama}</div>
-                  {/* Sub-informasi untuk layar kecil tetap berguna tanpa utilitas responsive */}
-                  <div className="muted" style={{ fontSize: 12 }}>{r.slug}</div>
+                <td style={{ ...tdBase, textAlign: "right", ...softText }}>
+                  {i + 1}
                 </td>
-                <td>{r.slug}</td>
-                <td>
+
+                <td style={tdBase}>
+                  <div style={{ fontWeight: 800, lineHeight: 1.25 }}>
+                    {r.nama}
+                  </div>
+                  <div style={{ ...softText, marginTop: ".25rem", ...mono }}>
+                    {r.slug}
+                  </div>
+                </td>
+
+                <td style={{ ...tdBase, ...mono }}>
+                  {r.slug}
+                </td>
+
+                <td style={tdBase}>
                   {r.deskripsi ? (
-                    <span>{r.deskripsi}</span>
+                    <div style={{ ...clamp2, lineHeight: 1.45 }}>
+                      {r.deskripsi}
+                    </div>
                   ) : (
-                    <span className="muted">—</span>
+                    <span style={softText}>—</span>
                   )}
                 </td>
-                <td>
-                  <span className={`badge ${r.is_active ? "badge-success" : "badge-danger"}`}>
+
+                <td style={{ ...tdBase, textAlign: "center" }}>
+                  <span
+                    className={`badge ${
+                      r.is_active ? "badge-success" : "badge-danger"
+                    }`}
+                    style={{ display: "inline-flex", justifyContent: "center", minWidth: 84 }}
+                  >
                     {r.is_active ? "Aktif" : "Nonaktif"}
                   </span>
                 </td>
-                <td>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <button className="button" onClick={() => onEdit(r)}>
-                      Edit
-                    </button>
+
+                <td style={tdBase}>
+                  <div style={{ display: "flex", gap: ".5rem", flexWrap: "wrap" }}>
                     <button
                       className="button button-outline"
+                      onClick={() => onEdit(r)}
+                      style={{ paddingInline: ".9rem" }}
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      className="button"
                       onClick={() => onDelete(r)}
+                      style={{
+                        paddingInline: ".9rem",
+                        borderColor: "rgba(220,38,38,.25)",
+                        color: "var(--color-danger)",
+                        background: "rgba(220,38,38,.06)",
+                      }}
                     >
                       Hapus
                     </button>
@@ -5678,22 +6429,23 @@ export default function CategoryTable({ rows, onEdit, onDelete }: Props) {
 
 ### src/components/customers/CustomerSelect.tsx
 
-- SHA: `4eb1a6b22261`  
-- Ukuran: 5 KB
+- SHA: `27cb17ef5d5c`  
+- Ukuran: 8 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
-import { useEffect, useRef, useState } from "react";
+// src/components/customers/CustomerSelect.tsx
+import { useEffect, useMemo, useRef, useState } from "react";
 import { listCustomers } from "../../api/customers";
 import type { Customer } from "../../types/customers";
 
 type Props = {
-    branchId: number | string;
-    value: Customer | null;
-    onChange: (c: Customer | null) => void;
-    placeholder?: string;
-    disabled?: boolean;
-    className?: string;
+  branchId: number | string;
+  value: Customer | null;
+  onChange: (c: Customer | null) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  className?: string;
 };
 
 /**
@@ -5702,125 +6454,262 @@ type Props = {
  * - Ketik nama / no HP => fetch 10 teratas
  * - Klik salah satu => onChange(Customer)
  * - Nilai terpilih ditampilkan sebagai "Nama (No HP)"
+ *
+ * Catatan:
+ * - UI dirapikan agar konsisten dengan design system index.css (card/input/button/badge).
+ * - Logika utama tidak diubah.
  */
 export default function CustomerSelect({
-    branchId,
-    value,
-    onChange,
-    placeholder = "Cari nama / no HP terdaftar…",
-    disabled = false,
-    className = "",
-}: Props) {
-    const [q, setQ] = useState("");
-    const [open, setOpen] = useState(false);
-    const [rows, setRows] = useState<Customer[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const timer = useRef<number | null>(null);
-    const wrapRef = useRef<HTMLDivElement>(null);
+  branchId,
+  value,
+  onChange,
+  placeholder = "Cari nama / no HP terdaftar…",
+  disabled = false,
+  className = "",
+}: Props): React.ReactElement {
+  const [q, setQ] = useState("");
+  const [open, setOpen] = useState(false);
+  const [rows, setRows] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-    // tutup dropdown saat klik di luar
-    useEffect(() => {
-        function onDocClick(e: MouseEvent) {
-            if (!wrapRef.current) return;
-            if (!wrapRef.current.contains(e.target as Node)) setOpen(false);
+  const timer = useRef<number | null>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  // tutup dropdown saat klik di luar
+  useEffect(() => {
+    function onDocClick(e: MouseEvent) {
+      if (!wrapRef.current) return;
+      if (!wrapRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, []);
+
+  // fetch dengan debounce ketika q berubah
+  useEffect(() => {
+    if (!q) {
+      setRows([]);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    if (timer.current) window.clearTimeout(timer.current);
+
+    timer.current = window.setTimeout(async () => {
+      try {
+        const res = await listCustomers({
+          q,
+          cabang_id: branchId,
+          per_page: 10,
+          page: 1,
+        });
+        setRows(res.data ?? []);
+      } catch (err: unknown) {
+        let msg = "Gagal memuat pelanggan";
+        if (typeof err === "object" && err !== null) {
+          // @ts-expect-error akses opsional
+          msg = err?.message ?? msg;
         }
-        document.addEventListener("mousedown", onDocClick);
-        return () => document.removeEventListener("mousedown", onDocClick);
-    }, []);
+        setError(msg);
+      } finally {
+        setLoading(false);
+      }
+    }, 250);
 
-    // fetch dengan debounce ketika q berubah
-    useEffect(() => {
-        if (!q) {
-            setRows([]);
-            setLoading(false);
-            setError(null);
-            return;
-        }
-        setLoading(true);
-        setError(null);
-        if (timer.current) window.clearTimeout(timer.current);
-        timer.current = window.setTimeout(async () => {
-            try {
-                const res = await listCustomers({
-                    q,
-                    cabang_id: branchId,
-                    per_page: 10,
-                    page: 1,
-                });
-                // asumsikan respons { data: Customer[] }
-                setRows(res.data ?? []);
-            } catch (err: any) {
-                setError(err?.message ?? "Gagal memuat pelanggan");
-            } finally {
-                setLoading(false);
-            }
-        }, 250);
-        return () => {
-            if (timer.current) window.clearTimeout(timer.current);
-        };
-    }, [q, branchId]);
+    return () => {
+      if (timer.current) window.clearTimeout(timer.current);
+    };
+  }, [q, branchId]);
 
-    const displayText =
-        value ? `${value.nama ?? "-"}${value.phone ? ` (${value.phone})` : ""}` : q;
+  const displayText = useMemo(() => {
+    if (value) {
+      const nama = value.nama ?? "-";
+      const phone = value.phone ? ` (${value.phone})` : "";
+      return `${nama}${phone}`;
+    }
+    return q;
+  }, [value, q]);
 
-    return (
-        <div ref={wrapRef} className={`relative ${className}`}>
-            <input
-                className="input w-full"
-                placeholder={placeholder}
-                value={displayText}
-                onChange={(e) => {
-                    setQ(e.target.value);
-                    onChange(null);
-                    setOpen(true);
-                }}
-                onFocus={() => setOpen(true)}
-                disabled={disabled}
-            />
+  const showEmpty = !loading && !error && rows.length === 0 && Boolean(q);
 
-            {open && (
-                <div
-                    className="absolute z-20 mt-1 w-full max-h-64 overflow-auto rounded-md border bg-white shadow"
-                    role="listbox"
-                >
-                    {loading && (
-                        <div className="px-3 py-2 text-sm text-gray-500">Memuat…</div>
-                    )}
-                    {error && (
-                        <div className="px-3 py-2 text-sm text-red-600">{error}</div>
-                    )}
-                    {!loading && !error && rows.length === 0 && q && (
-                        <div className="px-3 py-2 text-sm text-gray-500">
-                            Tidak ada hasil untuk “{q}”
-                        </div>
-                    )}
-                    {!loading &&
-                        !error &&
-                        rows.map((c) => (
-                            <button
-                                key={c.id}
-                                type="button"
-                                className="flex w-full cursor-pointer flex-col items-start gap-0.5 px-3 py-2 text-left hover:bg-gray-100"
-                                onMouseDown={(e) => e.preventDefault()} // agar input tidak blur sebelum click
-                                onClick={() => {
-                                    onChange(c);
-                                    setOpen(false);
-                                    setQ("");
-                                }}
-                            >
-                                <span className="text-sm font-medium">
-                                    {c.nama ?? "(tanpa nama)"}
-                                </span>
-                                <span className="text-xs text-gray-600">
-                                    {c.phone ?? "-"} • {c.alamat ?? "-"}
-                                </span>
-                            </button>
-                        ))}
-                </div>
-            )}
+  return (
+    <div ref={wrapRef} className={`relative ${className}`}>
+      {/* Input + indikator */}
+      <div style={{ position: "relative" }}>
+        <input
+          className="input w-full"
+          placeholder={placeholder}
+          value={displayText}
+          onChange={(e) => {
+            setQ(e.target.value);
+            onChange(null);
+            setOpen(true);
+          }}
+          onFocus={() => setOpen(true)}
+          disabled={disabled}
+          aria-expanded={open ? "true" : "false"}
+          aria-autocomplete="list"
+          aria-haspopup="listbox"
+        />
+
+        {/* Indicator kanan (loading / selected) */}
+        <div
+          style={{
+            position: "absolute",
+            right: "0.6rem",
+            top: "50%",
+            transform: "translateY(-50%)",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.4rem",
+            pointerEvents: "none",
+          }}
+        >
+          {loading ? (
+            <span className="badge" style={{ height: 22 }}>
+              Loading
+            </span>
+          ) : value ? (
+            <span className="badge" style={{ height: 22 }}>
+              Selected
+            </span>
+          ) : null}
         </div>
-    );
+      </div>
+
+      {/* Dropdown */}
+      {open && (
+        <div
+          className="card"
+          role="listbox"
+          style={{
+            position: "absolute",
+            zIndex: 30,
+            marginTop: "0.5rem",
+            width: "100%",
+            maxHeight: "16rem",
+            overflow: "auto",
+            padding: "0.35rem",
+            borderRadius: "14px",
+          }}
+        >
+          {/* Status: loading / error / empty */}
+          {loading && (
+            <div
+              style={{
+                padding: "0.6rem 0.75rem",
+                fontSize: "0.9rem",
+                opacity: 0.75,
+              }}
+            >
+              Memuat…
+            </div>
+          )}
+
+          {error && (
+            <div
+              className="badge badge-danger"
+              style={{
+                display: "block",
+                padding: "0.6rem 0.75rem",
+                borderRadius: "12px",
+                margin: "0.35rem",
+              }}
+            >
+              {error}
+            </div>
+          )}
+
+          {showEmpty && (
+            <div
+              style={{
+                padding: "0.6rem 0.75rem",
+                fontSize: "0.9rem",
+                opacity: 0.75,
+              }}
+            >
+              Tidak ada hasil untuk “{q}”
+            </div>
+          )}
+
+          {/* List */}
+          {!loading &&
+            !error &&
+            rows.map((c) => {
+              const nama = c.nama ?? "(tanpa nama)";
+              const phone = c.phone ?? "-";
+              const alamat = c.alamat ?? "-";
+
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  className="button button-ghost"
+                  onMouseDown={(e) => e.preventDefault()} // agar input tidak blur sebelum click
+                  onClick={() => {
+                    onChange(c);
+                    setOpen(false);
+                    setQ("");
+                  }}
+                  style={{
+                    width: "100%",
+                    textAlign: "left",
+                    padding: "0.65rem 0.75rem",
+                    borderRadius: "12px",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "flex-start",
+                    gap: "0.25rem",
+                    // hover visual halus tanpa mengandalkan tailwind
+                    background: "transparent",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      width: "100%",
+                      gap: "0.75rem",
+                    }}
+                  >
+                    <span style={{ fontWeight: 700, fontSize: "0.95rem" }}>
+                      {nama}
+                    </span>
+                    <span className="badge" style={{ height: 22 }}>
+                      {phone}
+                    </span>
+                  </div>
+
+                  <div style={{ fontSize: "0.85rem", opacity: 0.75 }}>
+                    {alamat}
+                  </div>
+                </button>
+              );
+            })}
+
+          {/* Footer hint */}
+          {!loading && !error && rows.length > 0 && (
+            <div
+              style={{
+                marginTop: "0.25rem",
+                padding: "0.45rem 0.65rem 0.35rem 0.65rem",
+                fontSize: "0.8rem",
+                opacity: 0.65,
+              }}
+            >
+              Tip: ketik minimal 2–3 huruf agar hasil lebih relevan.
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 ```
@@ -5828,30 +6717,82 @@ export default function CustomerSelect({
 
 ### src/components/customers/CustomerStageBadge.tsx
 
-- SHA: `09b7c89ec579`  
-- Ukuran: 722 B
+- SHA: `d25516d37b75`  
+- Ukuran: 2 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
 // src/components/customers/CustomerStageBadge.tsx
-import { memo } from 'react';
-import type { CustomerStage } from '../../types/customers';
+import { memo } from "react";
+import type { CustomerStage } from "../../types/customers";
 
-type StageInfo = { label: string; className: string };
+type StageInfo = {
+  label: string;
+  className: string;
+  title: string;
+};
 
 const STAGE_INFO: Record<CustomerStage, StageInfo> = {
-  LEAD:   { label: 'Lead',   className: 'badge badge-warning' },
-  ACTIVE: { label: 'Active', className: 'badge badge-success' },
-  CHURN:  { label: 'Churn',  className: 'badge badge-danger' },
+  LEAD: {
+    label: "Lead",
+    className: "badge badge-warning",
+    title: "Prospek (belum aktif transaksi rutin)",
+  },
+  ACTIVE: {
+    label: "Active",
+    className: "badge badge-success",
+    title: "Pelanggan aktif",
+  },
+  CHURN: {
+    label: "Churn",
+    className: "badge badge-danger",
+    title: "Pelanggan tidak aktif / berhenti",
+  },
 } as const;
 
 interface Props {
   stage: CustomerStage;
 }
 
-function CustomerStageBadge({ stage }: Props) {
-  const info = STAGE_INFO[stage]; // terjamin valid oleh tipe
-  return <span className={info.className}>{info.label}</span>;
+function CustomerStageBadge({ stage }: Props): React.ReactElement {
+  // Defensive UI: kalau suatu saat backend nambah enum baru tapi frontend belum update,
+  // badge tetap tampil rapi (tidak memecahkan UI).
+  const info = STAGE_INFO[stage] ?? {
+    label: String(stage ?? "Unknown"),
+    className: "badge",
+    title: "Status pelanggan",
+  };
+
+  return (
+    <span
+      className={info.className}
+      title={info.title}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "0.35rem",
+        padding: "0.28rem 0.55rem",
+        borderRadius: "999px",
+        fontSize: "0.78rem",
+        lineHeight: 1,
+        whiteSpace: "nowrap",
+      }}
+    >
+      {/* titik indikator kecil agar lebih “modern” dan terbaca cepat */}
+      <span
+        aria-hidden="true"
+        style={{
+          width: 7,
+          height: 7,
+          borderRadius: 999,
+          background: "currentColor",
+          opacity: 0.55,
+        }}
+      />
+      {info.label}
+    </span>
+  );
 }
 
 export default memo(CustomerStageBadge);
@@ -5861,16 +6802,21 @@ export default memo(CustomerStageBadge);
 
 ### src/components/customers/CustomerTable.tsx
 
-- SHA: `e918bbe783c3`  
-- Ukuran: 6 KB
+- SHA: `0baa61d0c8f4`  
+- Ukuran: 10 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
 // src/components/customers/CustomerTable.tsx
-import { useEffect, useMemo, useState } from 'react';
-import type { Customer, CustomerQuery, CustomerStage, LaravelPaginator } from '../../types/customers';
-import { listCustomers } from '../../api/customers';
-import CustomerStageBadge from './CustomerStageBadge';
+import { useEffect, useMemo, useState } from "react";
+import type {
+  Customer,
+  CustomerQuery,
+  CustomerStage,
+  LaravelPaginator,
+} from "../../types/customers";
+import { listCustomers } from "../../api/customers";
+import CustomerStageBadge from "./CustomerStageBadge";
 
 interface Props {
   onRowClick?: (c: Customer) => void;
@@ -5879,13 +6825,17 @@ interface Props {
 }
 
 // ✅ Selaras backend
-const stages: CustomerStage[] = ['LEAD', 'ACTIVE', 'CHURN'];
+const stages: CustomerStage[] = ["LEAD", "ACTIVE", "CHURN"];
 
 // ✅ Helper tanpa `any`: dukung backend yang kadang kirim `nama` atau `name`
 type CustomerRow = Customer & { nama?: string; name?: string };
-const getDisplayName = (c: CustomerRow) => c.nama ?? c.name ?? '';
+const getDisplayName = (c: CustomerRow) => c.nama ?? c.name ?? "";
 
-export default function CustomerTable({ onRowClick, canCreate = false, onCreate }: Props) {
+export default function CustomerTable({
+  onRowClick,
+  canCreate = false,
+  onCreate,
+}: Props): React.ReactElement {
   const [query, setQuery] = useState<CustomerQuery>({ page: 1, per_page: 10 });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -5893,6 +6843,7 @@ export default function CustomerTable({ onRowClick, canCreate = false, onCreate 
 
   useEffect(() => {
     let cancelled = false;
+
     (async () => {
       setLoading(true);
       setError(null);
@@ -5900,11 +6851,12 @@ export default function CustomerTable({ onRowClick, canCreate = false, onCreate 
         const data = await listCustomers(query);
         if (!cancelled) setRows(data);
       } catch {
-        if (!cancelled) setError('Failed to load customers');
+        if (!cancelled) setError("Failed to load customers");
       } finally {
         if (!cancelled) setLoading(false);
       }
     })();
+
     return () => {
       cancelled = true;
     };
@@ -5914,143 +6866,281 @@ export default function CustomerTable({ onRowClick, canCreate = false, onCreate 
   const page = rows?.current_page ?? 1;
   const lastPage = rows?.last_page ?? 1;
 
+  const canPrev = Boolean(rows) && page > 1 && !loading;
+  const canNext = Boolean(rows) && page < lastPage && !loading;
+
   return (
-    <div className="section">
-      {/* Filter Toolbar */}
-      <div className="card">
-        <div className="form-row form-row--3">
-          <div>
-            <label className="form-label">Search (name/phone/email)</label>
-            <input
-              className="input"
-              placeholder="e.g. Andi / 08xx / mail@"
-              value={query.q ?? ''}
-              onChange={(ev) => setQuery((q) => ({ ...q, q: ev.target.value, page: 1 }))}
-            />
-          </div>
-
-          <div>
-            <label className="form-label">Stage</label>
-            <select
-              className="select"
-              value={query.stage ?? ''}
-              onChange={(ev) =>
-                setQuery((q) => ({
-                  ...q,
-                  stage: (ev.target.value as CustomerStage) || undefined,
-                  page: 1,
-                }))
-              }
+    <div>
+      {/* Toolbar (Filters + Actions) */}
+      <div className="card" style={{ padding: "1rem" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-end",
+            justifyContent: "space-between",
+            gap: "1rem",
+            flexWrap: "wrap",
+          }}
+        >
+          {/* Filters */}
+          <div style={{ flex: "1 1 640px", minWidth: 260 }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "2fr 1fr 1fr 1fr",
+                gap: "0.85rem",
+              }}
             >
-              <option value="">All</option>
-              {stages.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
+              <div style={{ minWidth: 220 }}>
+                <label className="form-label">Search</label>
+                <input
+                  className="input w-full"
+                  placeholder="Nama / 08xx / email"
+                  value={query.q ?? ""}
+                  onChange={(ev) =>
+                    setQuery((q) => ({ ...q, q: ev.target.value, page: 1 }))
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="form-label">Stage</label>
+                <select
+                  className="select w-full"
+                  value={query.stage ?? ""}
+                  onChange={(ev) =>
+                    setQuery((q) => ({
+                      ...q,
+                      stage:
+                        (ev.target.value as CustomerStage) || undefined,
+                      page: 1,
+                    }))
+                  }
+                >
+                  <option value="">All</option>
+                  {stages.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="form-label">From</label>
+                <input
+                  type="date"
+                  className="input w-full"
+                  value={query.from ?? ""}
+                  onChange={(ev) =>
+                    setQuery((q) => ({
+                      ...q,
+                      from: ev.target.value || undefined,
+                      page: 1,
+                    }))
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="form-label">To</label>
+                <input
+                  type="date"
+                  className="input w-full"
+                  value={query.to ?? ""}
+                  onChange={(ev) =>
+                    setQuery((q) => ({
+                      ...q,
+                      to: ev.target.value || undefined,
+                      page: 1,
+                    }))
+                  }
+                />
+              </div>
+            </div>
+
+            {/* mini helper */}
+            <div style={{ marginTop: "0.75rem", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+              <span className="badge">Tip</span>
+              <span style={{ fontSize: "0.9rem", opacity: 0.75 }}>
+                Klik baris tabel untuk membuka detail customer.
+              </span>
+              {loading ? (
+                <span className="badge" style={{ opacity: 0.8 }}>
+                  Loading…
+                </span>
+              ) : null}
+            </div>
           </div>
 
-          <div className="form-row">
-            <div>
-              <label className="form-label">From</label>
-              <input
-                type="date"
-                className="input"
-                value={query.from ?? ''}
-                onChange={(ev) => setQuery((q) => ({ ...q, from: ev.target.value || undefined, page: 1 }))}
-              />
-            </div>
-            <div>
-              <label className="form-label">To</label>
-              <input
-                type="date"
-                className="input"
-                value={query.to ?? ''}
-                onChange={(ev) => setQuery((q) => ({ ...q, to: ev.target.value || undefined, page: 1 }))}
-              />
-            </div>
+          {/* Actions */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.6rem",
+              justifyContent: "flex-end",
+              flex: "0 1 auto",
+            }}
+          >
+            {canCreate ? (
+              <button
+                type="button"
+                className="button button-primary"
+                onClick={() => onCreate?.()}
+                disabled={loading}
+              >
+                + New Customer
+              </button>
+            ) : null}
+
+            <button
+              type="button"
+              className="button button-outline"
+              onClick={() => setQuery((q) => ({ ...q, page: 1 }))}
+              disabled={loading}
+              title="Reset ke halaman 1"
+            >
+              Reset
+            </button>
           </div>
         </div>
 
-        {canCreate ? (
-          <div className="actions-right">
-            <button className="button button-primary" onClick={() => onCreate?.()} disabled={loading}>
-              New Customer
-            </button>
+        {/* Responsive: grid jadi 1 kolom di layar kecil */}
+        <style>
+          {`
+            @media (max-width: 900px) {
+              .card div[style*="grid-template-columns: 2fr 1fr 1fr 1fr"] {
+                grid-template-columns: 1fr !important;
+              }
+            }
+          `}
+        </style>
+      </div>
+
+      {/* Table + Pagination dalam 1 card agar tidak terpecah */}
+      <div className="card" style={{ padding: "0.75rem 0.75rem 0.5rem 0.75rem" }}>
+        <div style={{ overflowX: "auto" }}>
+          <table className="table" style={{ minWidth: 860 }}>
+            <thead>
+              <tr>
+                <th className="text-left">Name</th>
+                <th className="text-left">Phone</th>
+                <th className="text-left">Email</th>
+                <th className="text-left">Stage</th>
+                <th className="text-left">Last Order</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td className="text-center muted" colSpan={5}>
+                    Loading…
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td className="text-center danger" colSpan={5}>
+                    {error}
+                  </td>
+                </tr>
+              ) : rows ? (
+                rows.data.map((c) => {
+                  const row = c as CustomerRow;
+
+                  return (
+                    <tr
+                      key={c.id}
+                      onClick={() => onRowClick?.(c)}
+                      style={{
+                        cursor: onRowClick ? "pointer" : "default",
+                      }}
+                      title={onRowClick ? "Open customer detail" : undefined}
+                    >
+                      <td className="font-medium">{getDisplayName(row)}</td>
+                      <td>{row.phone}</td>
+                      <td>{row.email ?? "-"}</td>
+                      <td>
+                        <CustomerStageBadge stage={row.stage} />
+                      </td>
+                      <td>
+                        {row.last_order_at
+                          ? new Date(row.last_order_at).toLocaleString()
+                          : "-"}
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : null}
+
+              {rows && empty && !loading && !error ? (
+                <tr>
+                  <td className="text-center muted" colSpan={5}>
+                    No customers found.
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Divider halus */}
+        <div
+          style={{
+            height: 1,
+            background: "rgba(2,6,23,0.06)",
+            margin: "0.75rem 0.25rem",
+          }}
+        />
+
+        {/* Pagination */}
+        <div
+          className="toolbar"
+          style={{
+            padding: "0 0.25rem 0.25rem 0.25rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "0.75rem",
+            flexWrap: "wrap",
+          }}
+        >
+          <div className="muted text-xs">
+            Page {page} / {lastPage}
+            {rows ? (
+              <span style={{ marginLeft: "0.5rem", opacity: 0.8 }}>
+                • Total: {rows.total ?? rows.data.length}
+              </span>
+            ) : null}
           </div>
-        ) : null}
-      </div>
 
-      {/* Table */}
-      <div className="card">
-        <table className="table">
-          <thead>
-            <tr>
-              <th className="text-left">Name</th>
-              <th className="text-left">Phone</th>
-              <th className="text-left">Email</th>
-              <th className="text-left">Stage</th>
-              <th className="text-left">Last Order</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td className="text-center muted" colSpan={5}>
-                  Loading…
-                </td>
-              </tr>
-            ) : error ? (
-              <tr>
-                <td className="text-center danger" colSpan={5}>
-                  {error}
-                </td>
-              </tr>
-            ) : rows ? (
-              rows.data.map((c) => {
-                const row = c as CustomerRow;
-                return (
-                  <tr key={c.id} onClick={() => onRowClick?.(c)}>
-                    <td className="font-medium">{getDisplayName(row)}</td>
-                    <td>{row.phone}</td>
-                    <td>{row.email ?? '-'}</td>
-                    <td>
-                      <CustomerStageBadge stage={row.stage} />
-                    </td>
-                    <td>{row.last_order_at ? new Date(row.last_order_at).toLocaleString() : '-'}</td>
-                  </tr>
-                );
-              })
-            ) : null}
-
-            {rows && empty && !loading && !error ? (
-              <tr>
-                <td className="text-center muted" colSpan={5}>
-                  No customers found.
-                </td>
-              </tr>
-            ) : null}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination */}
-      <div className="card">
-        <div className="toolbar">
-          <div className="muted text-xs">Page {page} / {lastPage}</div>
-          <div className="toolbar-actions">
+          <div
+            className="toolbar-actions"
+            style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}
+          >
             <button
               className="button button-outline"
-              disabled={!rows || page <= 1 || loading}
-              onClick={() => setQuery((q) => ({ ...q, page: Math.max(1, (q.page ?? 1) - 1) }))}
+              disabled={!canPrev}
+              onClick={() =>
+                setQuery((q) => ({
+                  ...q,
+                  page: Math.max(1, (q.page ?? 1) - 1),
+                }))
+              }
             >
               Prev
             </button>
+
             <button
               className="button button-outline"
-              disabled={!rows || page >= lastPage || loading}
-              onClick={() => setQuery((q) => ({ ...q, page: Math.min(lastPage, (q.page ?? 1) + 1) }))}
+              disabled={!canNext}
+              onClick={() =>
+                setQuery((q) => ({
+                  ...q,
+                  page: Math.min(lastPage, (q.page ?? 1) + 1),
+                }))
+              }
             >
               Next
             </button>
@@ -6066,13 +7156,13 @@ export default function CustomerTable({ onRowClick, canCreate = false, onCreate 
 
 ### src/components/customers/CustomerTimeline.tsx
 
-- SHA: `9a4f28c8a438`  
-- Ukuran: 2 KB
+- SHA: `34d9a26fb707`  
+- Ukuran: 6 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
 // src/components/customers/CustomerTimeline.tsx
-import type { CustomerTimelineEvent } from '../../types/customers';
+import type { CustomerTimelineEvent } from "../../types/customers";
 
 interface Props {
   items: CustomerTimelineEvent[];
@@ -6080,59 +7170,225 @@ interface Props {
   error?: string | null;
 }
 
-export default function CustomerTimeline({ items, loading, error }: Props) {
+function formatEventType(v: string): string {
+  // UI helper saja (tidak mengubah data/logika)
+  return v
+    .replaceAll("_", " ")
+    .trim()
+    .replace(/\s+/g, " ")
+    .toUpperCase();
+}
+
+export default function CustomerTimeline({
+  items,
+  loading,
+  error,
+}: Props): React.ReactElement {
   if (loading) {
-    return <div className="text-sm text-muted">Loading timeline…</div>;
+    return (
+      <div
+        className="text-sm"
+        style={{
+          padding: "0.75rem",
+          border: "1px dashed var(--border)",
+          borderRadius: "14px",
+          color: "var(--muted-foreground)",
+          background: "rgba(2,6,23,0.02)",
+        }}
+      >
+        Loading timeline…
+      </div>
+    );
   }
+
   if (error) {
-    return <div className="text-sm text-danger">{error}</div>;
+    return (
+      <div
+        className="text-sm"
+        style={{
+          padding: "0.75rem",
+          border: "1px solid rgba(239,68,68,0.30)",
+          borderRadius: "14px",
+          background: "rgba(239,68,68,0.06)",
+          color: "var(--danger, #ef4444)",
+        }}
+      >
+        {error}
+      </div>
+    );
   }
+
   if (items.length === 0) {
-    return <div className="text-sm text-muted">No timeline yet.</div>;
+    return (
+      <div
+        className="text-sm"
+        style={{
+          padding: "0.75rem",
+          border: "1px dashed var(--border)",
+          borderRadius: "14px",
+          color: "var(--muted-foreground)",
+          background: "rgba(2,6,23,0.02)",
+        }}
+      >
+        No timeline yet.
+      </div>
+    );
   }
 
   return (
-    <ol
-      className="mt-2"
-      style={{
-        borderLeft: '1px solid var(--border)',
-        paddingLeft: 12,
-      }}
-    >
-      {items.map((ev) => (
-        <li key={ev.id} style={{ marginBottom: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-            <span
-              aria-hidden
+    <div style={{ marginTop: "0.75rem" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "1rem",
+          marginBottom: "0.75rem",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <span className="badge" style={{ height: 26 }}>
+            Activity
+          </span>
+          <span style={{ fontSize: "0.95rem", opacity: 0.8 }}>
+            Riwayat aktivitas pelanggan (terbaru ke terlama).
+          </span>
+        </div>
+
+        <span
+          className="badge"
+          style={{
+            height: 26,
+            opacity: 0.85,
+          }}
+          title="Jumlah event"
+        >
+          {items.length} items
+        </span>
+      </div>
+
+      <ol
+        style={{
+          position: "relative",
+          listStyle: "none",
+          margin: 0,
+          padding: 0,
+        }}
+      >
+        {items.map((ev, idx) => {
+          const isLast = idx === items.length - 1;
+          const happened = new Date(ev.happened_at);
+
+          return (
+            <li
+              key={ev.id}
               style={{
-                marginTop: 2,
-                width: 8,
-                height: 8,
-                borderRadius: 9999,
-                background: 'var(--muted-foreground)',
-                flex: '0 0 auto',
+                position: "relative",
+                display: "grid",
+                gridTemplateColumns: "28px 1fr",
+                columnGap: "0.75rem",
+                paddingBottom: isLast ? 0 : "0.85rem",
               }}
-            />
-            <div>
+            >
+              {/* Rail (dot + line) */}
+              <div style={{ position: "relative" }} aria-hidden>
+                <span
+                  style={{
+                    position: "absolute",
+                    top: "0.55rem",
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    width: 12,
+                    height: 12,
+                    borderRadius: 9999,
+                    background: "var(--background)",
+                    border: "2px solid var(--muted-foreground)",
+                    boxShadow: "0 0 0 4px rgba(2,6,23,0.04)",
+                  }}
+                />
+                {!isLast ? (
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: "1.2rem",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                      width: 2,
+                      height: "calc(100% - 1.2rem)",
+                      background: "var(--border)",
+                      borderRadius: 999,
+                    }}
+                  />
+                ) : null}
+              </div>
+
+              {/* Content card */}
               <div
-                className="text-xs"
-                style={{ textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted-foreground)' }}
+                className="card"
+                style={{
+                  padding: "0.85rem 0.9rem",
+                  borderRadius: "16px",
+                }}
               >
-                {ev.event_type}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    justifyContent: "space-between",
+                    gap: "0.75rem",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <div style={{ minWidth: 220 }}>
+                    <div
+                      className="text-xs"
+                      style={{
+                        textTransform: "uppercase",
+                        letterSpacing: "0.08em",
+                        color: "var(--muted-foreground)",
+                        marginBottom: "0.25rem",
+                      }}
+                    >
+                      {formatEventType(ev.event_type)}
+                    </div>
+
+                    {ev.title ? (
+                      <div style={{ fontWeight: 750, lineHeight: 1.25 }}>
+                        {ev.title}
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <div
+                    className="text-xs"
+                    style={{
+                      color: "var(--muted-foreground)",
+                      whiteSpace: "nowrap",
+                    }}
+                    title={happened.toISOString()}
+                  >
+                    {happened.toLocaleString()}
+                  </div>
+                </div>
+
+                {ev.note ? (
+                  <div
+                    className="text-sm"
+                    style={{
+                      marginTop: "0.5rem",
+                      lineHeight: 1.55,
+                      opacity: 0.92,
+                    }}
+                  >
+                    {ev.note}
+                  </div>
+                ) : null}
               </div>
-
-              {ev.title ? <div style={{ fontWeight: 600 }}>{ev.title}</div> : null}
-
-              {ev.note ? <div className="text-sm">{ev.note}</div> : null}
-
-              <div className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
-                {new Date(ev.happened_at).toLocaleString()}
-              </div>
-            </div>
-          </div>
-        </li>
-      ))}
-    </ol>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
   );
 }
 
@@ -6962,8 +8218,8 @@ export default function DamageClaimDialog({ open, onClose, onSubmit }: Props): R
 
 ### src/components/delivery/DeliveryStatusStepper.tsx
 
-- SHA: `85fd6629f215`  
-- Ukuran: 1 KB
+- SHA: `49b209e34ebf`  
+- Ukuran: 4 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -6971,43 +8227,146 @@ export default function DamageClaimDialog({ open, onClose, onSubmit }: Props): R
 import React from "react";
 import type { DeliveryStatus } from "../../types/delivery";
 
-const ORDER: DeliveryStatus[] = [
-  "REQUESTED", "ASSIGNED", "PICKED_UP", "ON_ROUTE", "DELIVERED"
-];
+const ORDER: DeliveryStatus[] = ["REQUESTED", "ASSIGNED", "PICKED_UP", "ON_ROUTE", "DELIVERED"];
 
 type Props = {
   status: DeliveryStatus;
 };
 
+function labelOf(s: DeliveryStatus): string {
+  switch (s) {
+    case "REQUESTED":
+      return "Request";
+    case "ASSIGNED":
+      return "Assigned";
+    case "PICKED_UP":
+      return "Picked";
+    case "ON_ROUTE":
+      return "On Route";
+    case "DELIVERED":
+      return "Done";
+    default:
+      return s;
+  }
+}
+
 export default function DeliveryStatusStepper({ status }: Props): React.ReactElement {
   const idx = ORDER.indexOf(status as DeliveryStatus);
 
-  // helper kecil untuk memilih varian badge
-  const badgeClassFor = (i: number): string => {
-    if (i < idx) return "badge badge-success";     // sudah lewat
-    if (i === idx) return "badge";                 // posisi saat ini (netral/brand default)
-    return "badge";                                // belum dicapai (netral)
-  };
-
   const isTerminalBad = status === "FAILED" || status === "CANCELLED";
 
-  return (
-    <div>
-      {/* Step badges + separator sederhana (tanpa util baru) */}
-      {ORDER.map((s, i) => (
-        <React.Fragment key={s}>
-          <span className={badgeClassFor(i)}>{s}</span>
-          {i < ORDER.length - 1 && <span>{' '}›{' '}</span>}
-        </React.Fragment>
-      ))}
+  // Untuk status terminal buruk: tampilkan badge tegas, tidak perlu stepper
+  if (isTerminalBad) {
+    return (
+      <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+        <span
+          className="badge badge-danger"
+          style={{ borderRadius: "999px", padding: "0.3rem 0.6rem", fontSize: "0.78rem" }}
+        >
+          {status}
+        </span>
+      </div>
+    );
+  }
 
-      {/* Status terminal */}
-      {isTerminalBad && (
-        <>
-          {' '}
-          <span className="badge badge-danger">{status}</span>
-        </>
-      )}
+  // Jika status tidak ditemukan di ORDER (defensif): tampilkan badge netral
+  if (idx === -1) {
+    return (
+      <span className="badge" style={{ borderRadius: "999px", padding: "0.3rem 0.6rem", fontSize: "0.78rem" }}>
+        {status}
+      </span>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "0.65rem",
+        flexWrap: "wrap",
+        lineHeight: 1.2,
+      }}
+      aria-label={`Delivery status: ${status}`}
+    >
+      {/* Stepper bar */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "0.45rem",
+          flexWrap: "nowrap",
+        }}
+      >
+        {ORDER.map((s, i) => {
+          const done = i < idx;
+          const current = i === idx;
+          const upcoming = i > idx;
+
+          const dotStyle: React.CSSProperties = {
+            width: 12,
+            height: 12,
+            borderRadius: 999,
+            border: "1px solid rgba(0,0,0,0.18)",
+            background: "rgba(0,0,0,0.06)",
+          };
+
+          if (done) {
+            dotStyle.background = "rgba(16,185,129,0.95)"; // hijau halus
+            dotStyle.border = "1px solid rgba(16,185,129,0.35)";
+          }
+          if (current) {
+            dotStyle.background = "rgba(59,130,246,0.95)"; // biru halus
+            dotStyle.border = "1px solid rgba(59,130,246,0.35)";
+            dotStyle.boxShadow = "0 0 0 4px rgba(59,130,246,0.18)";
+          }
+          if (upcoming) {
+            dotStyle.background = "rgba(0,0,0,0.05)";
+            dotStyle.border = "1px solid rgba(0,0,0,0.12)";
+          }
+
+          const lineStyle: React.CSSProperties = {
+            width: 18,
+            height: 2,
+            borderRadius: 999,
+            background: "rgba(0,0,0,0.10)",
+          };
+
+          if (i < idx) lineStyle.background = "rgba(16,185,129,0.55)";
+          if (i === idx - 1) lineStyle.background = "rgba(59,130,246,0.35)";
+
+          return (
+            <React.Fragment key={s}>
+              <span
+                title={s}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  ...dotStyle,
+                }}
+                aria-current={current ? "step" : undefined}
+              />
+              {i < ORDER.length - 1 && <span aria-hidden="true" style={lineStyle} />}
+            </React.Fragment>
+          );
+        })}
+      </div>
+
+      {/* Label status saat ini (lebih rapi daripada menampilkan semua badge) */}
+      <span
+        className="badge"
+        style={{
+          borderRadius: "999px",
+          padding: "0.3rem 0.6rem",
+          fontSize: "0.78rem",
+          border: "1px solid rgba(0,0,0,0.10)",
+          background: "rgba(0,0,0,0.03)",
+        }}
+        title={status}
+      >
+        {labelOf(status)}
+      </span>
     </div>
   );
 }
@@ -7017,8 +8376,8 @@ export default function DeliveryStatusStepper({ status }: Props): React.ReactEle
 
 ### src/components/delivery/DeliveryTabs.tsx
 
-- SHA: `ee1368f321a5`  
-- Ukuran: 1 KB
+- SHA: `44ff05df7aaf`  
+- Ukuran: 2 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -7027,15 +8386,16 @@ import React from "react";
 import type { DeliveryStatus } from "../../types/delivery";
 
 type Tab = { key: DeliveryStatus | "ALL"; label: string };
+
 const TABS: Tab[] = [
-  { key: "ALL",        label: "Semua" },
-  { key: "REQUESTED",  label: "Requested" },
-  { key: "ASSIGNED",   label: "Assigned" },
-  { key: "PICKED_UP",  label: "Picked" },
-  { key: "ON_ROUTE",   label: "On Route" },
-  { key: "DELIVERED",  label: "Delivered" },
-  { key: "FAILED",     label: "Failed" },
-  { key: "CANCELLED",  label: "Cancelled" },
+  { key: "ALL", label: "Semua" },
+  { key: "REQUESTED", label: "Requested" },
+  { key: "ASSIGNED", label: "Assigned" },
+  { key: "PICKED_UP", label: "Picked" },
+  { key: "ON_ROUTE", label: "On Route" },
+  { key: "DELIVERED", label: "Delivered" },
+  { key: "FAILED", label: "Failed" },
+  { key: "CANCELLED", label: "Cancelled" },
 ];
 
 type Props = {
@@ -7046,22 +8406,54 @@ type Props = {
 export default function DeliveryTabs({ value, onChange }: Props): React.ReactElement {
   return (
     <div aria-label="Delivery tabs" role="tablist">
-      {TABS.map((t) => {
-        const active = value === t.key;
-        return (
-          <button
-            key={t.key}
-            role="tab"
-            aria-selected={active}
-            aria-pressed={active}
-            onClick={() => onChange(t.key)}
-            className={`button ${active ? "button-primary" : "button-ghost"}`}
-            style={{ marginRight: 8, marginBottom: 8 }}
-          >
-            {t.label}
-          </button>
-        );
-      })}
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "0.5rem",
+          alignItems: "center",
+        }}
+      >
+        {TABS.map((t) => {
+          const active = value === t.key;
+
+          return (
+            <button
+              key={t.key}
+              role="tab"
+              aria-selected={active}
+              aria-pressed={active}
+              onClick={() => onChange(t.key)}
+              className={`button ${active ? "button-primary" : "button-ghost"}`}
+              style={{
+                borderRadius: "999px",
+                padding: "0.45rem 0.85rem",
+                fontSize: "0.85rem",
+                fontWeight: active ? 700 : 600,
+                lineHeight: 1.1,
+                // aktif: lebih “solid”, non-aktif: lebih “subtle”
+                border: active ? "1px solid rgba(0,0,0,0.06)" : "1px solid rgba(0,0,0,0.08)",
+                background: active ? undefined : "rgba(0,0,0,0.02)",
+                opacity: active ? 1 : 0.9,
+                transition: "transform 120ms ease, opacity 120ms ease",
+              }}
+            >
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Fokus & hover halus (tanpa sentuh index.css) */}
+      <style>
+        {`
+          [role="tab"] { outline: none; }
+          [role="tab"]:active { transform: scale(0.98); }
+          [role="tab"]:focus-visible {
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25);
+          }
+        `}
+      </style>
     </div>
   );
 }
@@ -7510,8 +8902,8 @@ export default function PeriodFilter({ value, onChange, className }: Props): Rea
 
 ### src/components/inventory/ReceiveLotForm.tsx
 
-- SHA: `44789fa82bb0`  
-- Ukuran: 16 KB
+- SHA: `7b8c7bf8f52a`  
+- Ukuran: 22 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -7521,24 +8913,25 @@ import { getAuthToken } from "../../api/client";
 import { receiveStockLot, type ReceiveStockLotPayload } from "../../api/stocks";
 
 /** ====== Util BASE & headers (selaras dengan src/api/stocks.ts) ====== */
-const RAW = (import.meta.env as any).VITE_API_URL ?? (import.meta.env as any).VITE_API_BASE_URL;
+const RAW =
+  (import.meta.env as any).VITE_API_URL ?? (import.meta.env as any).VITE_API_BASE_URL;
 if (!RAW) throw new Error("VITE_API_URL / VITE_API_BASE_URL belum diset.");
 const BASE = RAW.replace(/\/+$/, "");
 
 function authHeaders() {
-    const token = getAuthToken();
-    if (!token) throw new Error("Auth token tidak ditemukan.");
-    return { Authorization: `Bearer ${token}` };
+  const token = getAuthToken();
+  if (!token) throw new Error("Auth token tidak ditemukan.");
+  return { Authorization: `Bearer ${token}` };
 }
 function toQuery(q?: Record<string, unknown>) {
-    if (!q) return "";
-    const p = new URLSearchParams();
-    Object.entries(q).forEach(([k, v]) => {
-        if (v === undefined || v === null || v === "") return;
-        if (typeof v === "boolean") p.append(k, v ? "1" : "0");
-        else p.append(k, String(v));
-    });
-    return p.toString() ? `?${p.toString()}` : "";
+  if (!q) return "";
+  const p = new URLSearchParams();
+  Object.entries(q).forEach(([k, v]) => {
+    if (v === undefined || v === null || v === "") return;
+    if (typeof v === "boolean") p.append(k, v ? "1" : "0");
+    else p.append(k, String(v));
+  });
+  return p.toString() ? `?${p.toString()}` : "";
 }
 
 /** ====== Types lokal untuk dropdown & pencarian ====== */
@@ -7546,322 +8939,615 @@ type Warehouse = { id: number; nama: string };
 type VariantSummary = { id: number; sku: string; nama: string };
 
 type Props = {
-    defaultGudangId?: number;
-    defaultVariantId?: number;
-    onSuccess?: (lotId: number) => void;
+  defaultGudangId?: number;
+  defaultVariantId?: number;
+  onSuccess?: (lotId: number) => void;
 };
 
-export default function ReceiveLotForm({ defaultGudangId, defaultVariantId, onSuccess }: Props) {
-    const { user } = useAuth();
+export default function ReceiveLotForm({
+  defaultGudangId,
+  defaultVariantId,
+  onSuccess,
+}: Props): React.ReactElement {
+  const { user } = useAuth();
 
-    /** ====== State Gudang ====== */
-    const cabangId = useMemo(() => Number(user?.cabang_id ?? 0), [user?.cabang_id]);
-    const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
-    const [gudangId, setGudangId] = useState<number | "">(defaultGudangId ?? "");
+  /** ====== State Gudang ====== */
+  const cabangId = useMemo(() => Number(user?.cabang_id ?? 0), [user?.cabang_id]);
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+  const [gudangId, setGudangId] = useState<number | "">(defaultGudangId ?? "");
 
-    /** ====== State Varian (autocomplete) ====== */
-    const [variantQuery, setVariantQuery] = useState("");
-    const [variantOpts, setVariantOpts] = useState<VariantSummary[]>([]);
-    const [variantLoading, setVariantLoading] = useState(false);
-    const [variantId, setVariantId] = useState<number | "">(defaultVariantId ?? "");
-    const [variantPicked, setVariantPicked] = useState<VariantSummary | null>(null);
+  /** ====== State Varian (autocomplete) ====== */
+  const [variantQuery, setVariantQuery] = useState("");
+  const [variantOpts, setVariantOpts] = useState<VariantSummary[]>([]);
+  const [variantLoading, setVariantLoading] = useState(false);
+  const [variantId, setVariantId] = useState<number | "">(defaultVariantId ?? "");
+  const [variantPicked, setVariantPicked] = useState<VariantSummary | null>(null);
 
-    /** ====== Form fields lain ====== */
-    const [qty, setQty] = useState<number | string>("");
-    function incQty(delta: number) {
-        setQty((prev) => {
-            const cur = typeof prev === "number" ? prev : 0;
-            const next = Math.max(0, cur + delta);
-            return next;
-        });
-    }
-    const [lotNo, setLotNo] = useState("");
-    const [autoLot, setAutoLot] = useState(true);
-    const [receivedAt, setReceivedAt] = useState<string>(() => {
-        // default: hari ini
-        const d = new Date();
-        const mm = String(d.getMonth() + 1).padStart(2, "0");
-        const dd = String(d.getDate()).padStart(2, "0");
-        return `${d.getFullYear()}-${mm}-${dd}`;
+  // UI dropdown control (tanpa ubah logika API)
+  const [variantOpen, setVariantOpen] = useState(false);
+  const variantBoxRef = useRef<HTMLDivElement | null>(null);
+
+  /** ====== Form fields lain ====== */
+  const [qty, setQty] = useState<number | string>("");
+  function incQty(delta: number) {
+    setQty((prev) => {
+      const cur = typeof prev === "number" ? prev : Number(prev) || 0;
+      const next = Math.max(0, cur + delta);
+      return next;
     });
-    const [expiresAt, setExpiresAt] = useState<string>("");
-    const [unitCost, setUnitCost] = useState<number | string>("");
-    const [note, setNote] = useState("");
+  }
 
-    const [busy, setBusy] = useState(false);
-    const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const [lotNo, setLotNo] = useState("");
+  const [autoLot, setAutoLot] = useState(true);
+  const [receivedAt, setReceivedAt] = useState<string>(() => {
+    const d = new Date();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${d.getFullYear()}-${mm}-${dd}`;
+  });
+  const [expiresAt, setExpiresAt] = useState<string>("");
+  const [unitCost, setUnitCost] = useState<number | string>("");
+  const [note, setNote] = useState("");
 
-    /** ====== Load Gudang (dropdown) ====== */
-    useEffect(() => {
-        let on = true;
-        if (!cabangId) return;
-        (async () => {
-            // GET /warehouses?cabang_id=...&per_page=50
-            const url = `${BASE}/gudangs${toQuery({ cabang_id: cabangId, per_page: 50 })}`;
-            const res = await fetch(url, { headers: authHeaders() });
-            const json = await res.json();
-            if (!on) return;
-            const rows = Array.isArray(json?.data) ? json.data : Array.isArray(json) ? json : [];
-            const list: Warehouse[] = rows.map((w: any) => ({ id: Number(w.id), nama: String(w.nama ?? w.name ?? `Gudang #${w.id}`) }));
-            setWarehouses(list);
-            // preselect
-            if (!defaultGudangId && list.length > 0) setGudangId(list[0].id);
-        })().catch(() => {
-            if (on) setWarehouses([]);
-        });
-        return () => { on = false; };
-    }, [cabangId, defaultGudangId]);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
-    /** ====== Pencarian Varian (autocomplete) ====== */
-    const debounceRef = useRef<number | undefined>(undefined);
-    const canSearchVariant = useMemo(() => String(variantQuery).trim().length >= 2 && Number(gudangId) > 0, [variantQuery, gudangId]);
+  /** ====== Load Gudang (dropdown) ====== */
+  useEffect(() => {
+    let on = true;
+    if (!cabangId) return;
 
-    useEffect(() => {
-        if (!canSearchVariant) {
-            setVariantOpts([]);
-            return;
-        }
+    (async () => {
+      const url = `${BASE}/gudangs${toQuery({ cabang_id: cabangId, per_page: 50 })}`;
+      const res = await fetch(url, { headers: authHeaders() });
+      const json = await res.json();
+      if (!on) return;
+
+      const rows = Array.isArray(json?.data) ? json.data : Array.isArray(json) ? json : [];
+      const list: Warehouse[] = rows.map((w: any) => ({
+        id: Number(w.id),
+        nama: String(w.nama ?? w.name ?? `Gudang #${w.id}`),
+      }));
+
+      setWarehouses(list);
+
+      // preselect kalau tidak ada default dari querystring
+      if (!defaultGudangId && list.length > 0) setGudangId(list[0].id);
+    })().catch(() => {
+      if (on) setWarehouses([]);
+    });
+
+    return () => {
+      on = false;
+    };
+  }, [cabangId, defaultGudangId]);
+
+  /** ====== Fetch varian (dipakai untuk prefetch & search) ====== */
+  async function fetchVariants(q: string): Promise<void> {
+    if (Number(gudangId) <= 0) {
+      setVariantOpts([]);
+      setVariantLoading(false);
+      return;
+    }
+
+    setVariantLoading(true);
+    try {
+      const url = `${BASE}/variants${toQuery({
+        q: q.trim(), // boleh kosong untuk prefetch daftar awal
+        warehouse_id: Number(gudangId),
+        per_page: 12,
+        page: 1,
+      })}`;
+
+      const res = await fetch(url, { headers: authHeaders() });
+      const json = await res.json();
+
+      const raw = json?.data ?? json;
+      const arr = Array.isArray(raw) ? raw : [];
+
+      const list: VariantSummary[] = arr.map((v: any) => ({
+        id: Number(v.id),
+        sku: String(v.sku ?? v.SKU ?? ""),
+        nama: String(v.nama ?? v.name ?? ""),
+      }));
+
+      setVariantOpts(list);
+    } catch {
+      setVariantOpts([]);
+    } finally {
+      setVariantLoading(false);
+    }
+  }
+
+  /** ====== Pencarian Varian (autocomplete + prefetch saat fokus) ====== */
+  const debounceRef = useRef<number | undefined>(undefined);
+
+  const typedEnough = useMemo(
+    () => String(variantQuery).trim().length >= 2 && Number(gudangId) > 0,
+    [variantQuery, gudangId]
+  );
+
+  useEffect(() => {
+    // dropdown tidak dibuka -> jangan fetch apa-apa
+    if (!variantOpen) {
+      // kalau user belum memenuhi syarat 2 huruf, kosongkan (tetap sesuai perilaku lama)
+      if (!typedEnough) setVariantOpts([]);
+      setVariantLoading(false);
+      return;
+    }
+
+    // dropdown dibuka tapi gudang belum dipilih
+    if (Number(gudangId) <= 0) {
+      setVariantOpts([]);
+      setVariantLoading(false);
+      return;
+    }
+
+    // jika user mengetik >=2 huruf -> search debounced (perilaku lama)
+    if (typedEnough) {
+      if (debounceRef.current) window.clearTimeout(debounceRef.current);
+
+      debounceRef.current = window.setTimeout(() => {
+        fetchVariants(variantQuery);
+      }, 250) as unknown as number;
+
+      return () => {
         if (debounceRef.current) window.clearTimeout(debounceRef.current);
-        setVariantLoading(true);
-        // debounce 250ms
-        debounceRef.current = window.setTimeout(async () => {
-            try {
-                // GET /variants?q=...&gudang_id=...&per_page=12&page=1
-                const url = `${BASE}/variants${toQuery({ q: variantQuery.trim(), warehouse_id: Number(gudangId), per_page: 12, page: 1 })}`;
-                const res = await fetch(url, { headers: authHeaders() });
-                const json = await res.json();
-                const raw = json?.data ?? json;
-                const arr = Array.isArray(raw) ? raw : [];
-                const list: VariantSummary[] = arr.map((v: any) => ({
-                    id: Number(v.id),
-                    sku: String(v.sku ?? v.SKU ?? ""),
-                    nama: String(v.nama ?? v.name ?? ""),
-                }));
-                setVariantOpts(list);
-            } catch {
-                setVariantOpts([]);
-            } finally {
-                setVariantLoading(false);
-            }
-        }, 250) as unknown as number;
-
-        return () => { if (debounceRef.current) window.clearTimeout(debounceRef.current); };
-    }, [variantQuery, gudangId, canSearchVariant]);
-
-    /** ====== Generator Lot No otomatis ====== */
-    function genLotNo(dt: string, sku: string): string {
-        // LOT-YYYYMMDD-SKU-RAND4
-        const yyyymmdd = dt.replaceAll("-", "");
-        const rand = Math.random().toString().slice(2, 6); // 4 digit
-        const cleanSku = sku.replace(/[^A-Za-z0-9]/g, "").slice(0, 12) || "SKU";
-        return `LOT-${yyyymmdd}-${cleanSku}-${rand}`;
+      };
     }
 
-    // Saat varian dipilih atau tanggal terima berubah → isi lot otomatis bila mode auto
-    useEffect(() => {
-        if (!autoLot) return;
-        if (!receivedAt) return;
-        const sku = variantPicked?.sku || "";
-        if (!sku) return;
-        setLotNo(genLotNo(receivedAt, sku));
-    }, [autoLot, receivedAt, variantPicked?.sku]);
+    // jika belum mengetik (atau <2 huruf) tapi dropdown terbuka -> prefetch daftar awal
+    // supaya user bisa lihat varian tersedia tanpa menebak
+    fetchVariants("");
 
-    /** ====== Validasi Submit ====== */
-    const canSubmit = useMemo(() => {
-        return cabangId > 0 && Number(gudangId) > 0 && Number(variantId) > 0 && Number(qty) > 0 && !!receivedAt && !busy;
-    }, [cabangId, gudangId, variantId, qty, receivedAt, busy]);
+    return;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [variantQuery, gudangId, variantOpen, typedEnough]);
 
-    /** ====== Submit ====== */
-    async function onSubmit(e: React.FormEvent) {
-        e.preventDefault();
-        if (!canSubmit) return;
-        setBusy(true);
-        setMsg(null);
-        try {
-            const payload: ReceiveStockLotPayload = {
-                cabang_id: cabangId,
-                gudang_id: Number(gudangId),
-                product_variant_id: Number(variantId),
-                qty: Number(qty),
-                lot_no: autoLot ? (lotNo || null) : (lotNo || null),
-                received_at: receivedAt || null,
-                expires_at: expiresAt || null,
-                unit_cost: unitCost === "" ? null : Number(unitCost),
-                note: note || null,
-                ref_type: "PURCHASE",
-                ref_id: null,
-            };
-            const res = await receiveStockLot(payload);
-            setMsg({ type: "ok", text: `Berhasil: Lot #${res.data.id} ditambahkan.` });
-            // reset kuantitas & input fleksibel, pertahankan gudang & varian agar cepat input batch
-            setQty("");
-            if (autoLot && variantPicked?.sku) setLotNo(genLotNo(receivedAt, variantPicked.sku));
-            else setLotNo("");
-            setExpiresAt("");
-            setUnitCost("");
-            setNote("");
-            if (onSuccess) onSuccess(res.data.id);
-        } catch (err: any) {
-            setMsg({ type: "err", text: err?.message || "Gagal menyimpan lot." });
-        } finally {
-            setBusy(false);
-        }
+  /** ====== Click outside untuk menutup dropdown varian (UI only) ====== */
+  useEffect(() => {
+    function onDocClick(e: MouseEvent) {
+      const el = variantBoxRef.current;
+      if (!el) return;
+      if (e.target instanceof Node && !el.contains(e.target)) setVariantOpen(false);
     }
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, []);
 
-    /** ====== Render ====== */
+  /** ====== Generator Lot No otomatis ====== */
+  function genLotNo(dt: string, sku: string): string {
+    const yyyymmdd = dt.replaceAll("-", "");
+    const rand = Math.random().toString().slice(2, 6);
+    const cleanSku = sku.replace(/[^A-Za-z0-9]/g, "").slice(0, 12) || "SKU";
+    return `LOT-${yyyymmdd}-${cleanSku}-${rand}`;
+  }
+
+  /** ====== Auto lot ketika varian / tanggal berubah ====== */
+  useEffect(() => {
+    if (!autoLot) return;
+    if (!receivedAt) return;
+    const sku = variantPicked?.sku || "";
+    if (!sku) return;
+    setLotNo(genLotNo(receivedAt, sku));
+  }, [autoLot, receivedAt, variantPicked?.sku]);
+
+  /** ====== Validasi Submit ====== */
+  const canSubmit = useMemo(() => {
     return (
-        <form className="card" onSubmit={onSubmit} style={{ padding: 16 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Penerimaan Stok (Lot)</div>
+      cabangId > 0 &&
+      Number(gudangId) > 0 &&
+      Number(variantId) > 0 &&
+      Number(qty) > 0 &&
+      !!receivedAt &&
+      !busy
+    );
+  }, [cabangId, gudangId, variantId, qty, receivedAt, busy]);
 
-            {msg && (
-                <div className={`alert ${msg.type === "err" ? "alert-danger" : "alert-success"}`} style={{ marginBottom: 12 }}>
-                    {msg.text}
-                </div>
+  /** ====== Submit ====== */
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!canSubmit) return;
+
+    setBusy(true);
+    setMsg(null);
+
+    try {
+      const payload: ReceiveStockLotPayload = {
+        cabang_id: cabangId,
+        gudang_id: Number(gudangId),
+        product_variant_id: Number(variantId),
+        qty: Number(qty),
+        lot_no: autoLot ? (lotNo || null) : (lotNo || null),
+        received_at: receivedAt || null,
+        expires_at: expiresAt || null,
+        unit_cost: unitCost === "" ? null : Number(unitCost),
+        note: note || null,
+        ref_type: "PURCHASE",
+        ref_id: null,
+      };
+
+      const res = await receiveStockLot(payload);
+
+      setMsg({ type: "ok", text: `Berhasil: Lot #${res.data.id} ditambahkan.` });
+
+      // reset field tertentu (tetap pertahankan gudang & varian untuk input batch)
+      setQty("");
+      if (autoLot && variantPicked?.sku) setLotNo(genLotNo(receivedAt, variantPicked.sku));
+      else setLotNo("");
+      setExpiresAt("");
+      setUnitCost("");
+      setNote("");
+
+      if (onSuccess) onSuccess(res.data.id);
+    } catch (err: any) {
+      setMsg({ type: "err", text: err?.message || "Gagal menyimpan lot." });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** ====== Helper pilih varian ====== */
+  function pickVariant(v: VariantSummary) {
+    setVariantPicked(v);
+    setVariantId(v.id);
+    setVariantQuery(`${v.sku} — ${v.nama}`);
+    setVariantOpen(false);
+
+    if (autoLot && receivedAt) setLotNo(genLotNo(receivedAt, v.sku));
+    setQty((prev) => (prev === "" || Number(prev) === 0 ? 1 : prev));
+  }
+
+  /** ====== Render ====== */
+  return (
+    <form onSubmit={onSubmit} style={{ display: "grid", gap: 16 }}>
+      {/* Info / alert */}
+      {msg && (
+        <div
+          className={`alert ${msg.type === "err" ? "alert-danger" : "alert-success"}`}
+          style={{ marginBottom: 4 }}
+        >
+          {msg.text}
+        </div>
+      )}
+
+      {/* Section: Lokasi & Varian */}
+      <section style={{ display: "grid", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+          <div style={{ fontWeight: 700 }}>Lokasi & Varian</div>
+          <span className="badge" style={{ opacity: 0.9 }}>
+            Cabang #{cabangId || "-"}
+          </span>
+        </div>
+
+        <div className="rl-grid">
+          {/* Gudang */}
+          <div style={{ display: "grid", gap: 6 }}>
+            <label className="text-sm font-medium">Gudang</label>
+            <select
+              className="input"
+              value={gudangId}
+              onChange={(e) => {
+                const next = e.target.value ? Number(e.target.value) : "";
+                setGudangId(next);
+                // reset varian saat gudang berubah (ini tetap sesuai behavior lama)
+                setVariantPicked(null);
+                setVariantId("");
+                setVariantQuery("");
+                setVariantOpts([]);
+                setVariantOpen(false);
+              }}
+              required
+            >
+              {warehouses.length === 0 ? (
+                <option value="">Memuat gudang…</option>
+              ) : (
+                warehouses.map((w) => (
+                  <option key={w.id} value={w.id}>
+                    {w.nama}
+                  </option>
+                ))
+              )}
+            </select>
+            <div style={{ fontSize: 12, opacity: 0.75 }}>
+              Gudang menentukan konteks stok yang akan diterima.
+            </div>
+          </div>
+
+          {/* Varian autocomplete */}
+          <div ref={variantBoxRef} style={{ display: "grid", gap: 6, position: "relative" }}>
+            <label className="text-sm font-medium">Cari Varian (SKU/Nama)</label>
+            <input
+              className="input"
+              type="text"
+              placeholder={Number(gudangId) > 0 ? "Klik untuk lihat varian, atau ketik SKU/Nama…" : "Pilih gudang terlebih dahulu"}
+              value={variantQuery}
+              onChange={(e) => {
+                setVariantQuery(e.target.value);
+                setVariantPicked(null);
+                setVariantId("");
+                setVariantOpen(true);
+              }}
+              onFocus={() => {
+                setVariantOpen(true);
+                // prefetch langsung terasa cepat (tanpa menunggu useEffect tick)
+                if (Number(gudangId) > 0 && String(variantQuery).trim().length < 2) {
+                  fetchVariants("");
+                }
+              }}
+              disabled={Number(gudangId) <= 0}
+            />
+
+            {/* Hint status */}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {variantPicked ? (
+                <span className="badge" style={{ background: "rgba(0,0,0,.04)" }}>
+                  Dipilih: {variantPicked.sku}
+                </span>
+              ) : (
+                <span className="badge" style={{ background: "rgba(0,0,0,.04)", opacity: 0.9 }}>
+                  Belum pilih varian
+                </span>
+              )}
+              {variantLoading ? (
+                <span className="badge" style={{ background: "rgba(0,0,0,.04)", opacity: 0.9 }}>
+                  Mencari…
+                </span>
+              ) : null}
+            </div>
+
+            {/* Dropdown hasil */}
+            {variantOpen && (variantLoading || variantOpts.length > 0) && (
+              <div
+                className="card"
+                style={{
+                  position: "absolute",
+                  top: "calc(100% + 8px)",
+                  left: 0,
+                  right: 0,
+                  zIndex: 50,
+                  padding: 10,
+                  maxHeight: 240,
+                  overflow: "auto",
+                }}
+              >
+                {variantLoading && (
+                  <div className="alert" style={{ marginBottom: 8 }}>
+                    Memuat varian…
+                  </div>
+                )}
+
+                {!variantLoading && variantOpts.length > 0 ? (
+                  <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 8 }}>
+                    {variantOpts.map((v) => (
+                      <li
+                        key={v.id}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: 10,
+                          padding: "8px 6px",
+                          borderRadius: 12,
+                          border: "1px solid rgba(0,0,0,0.06)",
+                          background: "rgba(0,0,0,0.01)",
+                        }}
+                      >
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontWeight: 700, lineHeight: 1.2 }}>{v.sku}</div>
+                          <div
+                            style={{
+                              fontSize: 12,
+                              opacity: 0.8,
+                              marginTop: 2,
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}
+                          >
+                            {v.nama}
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          className="button button-primary"
+                          onClick={() => pickVariant(v)}
+                          style={{ borderRadius: 999, padding: "0.5rem 0.75rem" }}
+                        >
+                          Pilih
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+
+                {/* jika dropdown terbuka, query belum cukup, dan hasil kosong */}
+                {!variantLoading && variantOpts.length === 0 && (
+                  <div className="alert" style={{ opacity: 0.9 }}>
+                    {String(variantQuery).trim().length >= 2
+                      ? "Tidak ada varian ditemukan."
+                      : "Mulai ketik untuk mempersempit, atau pilih dari daftar jika tersedia."}
+                  </div>
+                )}
+              </div>
             )}
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                {/* Gudang: dropdown dari API */}
-                <div>
-                    <label>Gudang</label>
-                    <select
-                        value={gudangId}
-                        onChange={(e) => setGudangId(e.target.value ? Number(e.target.value) : "")}
-                        required
-                    >
-                        {warehouses.map((w) => (
-                            <option key={w.id} value={w.id}>{w.nama}</option>
-                        ))}
-                    </select>
-                </div>
+            <input type="hidden" value={variantId || ""} />
+          </div>
+        </div>
+      </section>
 
-                {/* Varian: autocomplete, pilih → ID otomatis */}
-                <div>
-                    <label>Cari Varian (SKU/Nama)</label>
-                    <input
-                        type="text"
-                        placeholder="Ketik minimal 2 huruf…"
-                        value={variantQuery}
-                        onChange={(e) => {
-                            setVariantQuery(e.target.value);
-                            setVariantPicked(null);
-                            setVariantId("");
-                        }}
-                    />
-                    {variantLoading && <div className="alert" style={{ marginTop: 6 }}>Mencari varian…</div>}
-                    {!variantLoading && variantOpts.length > 0 && (
-                        <div className="card" style={{ marginTop: 6, padding: 8, maxHeight: 180, overflow: "auto" }}>
-                            <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
-                                {variantOpts.map((v) => (
-                                    <li
-                                        key={v.id}
-                                        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0" }}
-                                    >
-                                        <div>
-                                            <div style={{ fontWeight: 600 }}>{v.sku}</div>
-                                            <div style={{ fontSize: 12, opacity: .85 }}>{v.nama}</div>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            className="button"
-                                            onClick={() => {
-                                                setVariantPicked(v);
-                                                setVariantId(v.id);
-                                                setVariantQuery(`${v.sku} — ${v.nama}`);
-                                                if (autoLot && receivedAt) setLotNo(genLotNo(receivedAt, v.sku));
-                                                // set qty default 1 saat varian dipilih jika belum diisi
-                                                setQty((prev) => (prev === "" || Number(prev) === 0 ? 1 : prev));
-                                            }}
-                                        >
-                                            Pilih
-                                        </button>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
-                    <input type="hidden" value={variantId || ""} />
-                </div>
+      {/* Section: Kuantitas & Lot */}
+      <section style={{ display: "grid", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+          <div style={{ fontWeight: 700 }}>Kuantitas & Lot</div>
+          <span
+            className="badge"
+            style={{ cursor: "pointer" }}
+            onClick={() => setAutoLot((v) => !v)}
+            title="Klik untuk toggle mode lot"
+          >
+            Lot: {autoLot ? "Auto" : "Manual"}
+          </span>
+        </div>
 
-                {/* Qty dengan tombol cepat */}
-                <div>
-                    <label>Qty</label>
-                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                        <div style={{ display: "flex", gap: 4 }}>
-                            <button type="button" className="button" onClick={() => incQty(-10)}>-10</button>
-                            <button type="button" className="button" onClick={() => incQty(-5)}>-5</button>
-                            <button type="button" className="button" onClick={() => incQty(-1)}>-1</button>
-                        </div>
-                        <input
-                            type="number"
-                            min={1}
-                            step={1}
-                            value={qty}
-                            onChange={(e) => setQty(e.target.value === "" ? "" : Math.max(1, Number(e.target.value)))}
-                            required
-                            style={{ width: 120, textAlign: "center" }}
-                        />
-                        <div style={{ display: "flex", gap: 4 }}>
-                            <button type="button" className="button" onClick={() => incQty(+1)}>+1</button>
-                            <button type="button" className="button" onClick={() => incQty(+5)}>+5</button>
-                            <button type="button" className="button" onClick={() => incQty(+10)}>+10</button>
-                        </div>
-                    </div>
-                    <div style={{ fontSize: 12, opacity: .75, marginTop: 4 }}>
-                        Gunakan tombol cepat atau ketik manual. Minimal 1.
-                    </div>
-                </div>
+        <div className="rl-grid">
+          {/* Qty */}
+          <div style={{ display: "grid", gap: 6 }}>
+            <label className="text-sm font-medium">Qty</label>
 
-                {/* Lot No (auto / editable) */}
-                <div>
-                    <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        Lot No
-                        <span className="badge" style={{ cursor: "pointer" }} onClick={() => setAutoLot((v) => !v)}>
-                            {autoLot ? "Auto" : "Manual"}
-                        </span>
-                    </label>
-                    <input
-                        type="text"
-                        value={lotNo}
-                        onChange={(e) => setLotNo(e.target.value)}
-                        disabled={autoLot}
-                        placeholder={autoLot ? "Terisi otomatis saat pilih varian & tanggal" : "Isi manual (opsional)"}
-                    />
-                </div>
-
-                {/* Tanggal terima & kadaluarsa */}
-                <div>
-                    <label>Tanggal Terima</label>
-                    <input type="date" value={receivedAt} onChange={(e) => setReceivedAt(e.target.value)} required />
-                </div>
-                <div>
-                    <label>Kadaluarsa (opsional)</label>
-                    <input type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} />
-                </div>
-
-                {/* Biaya & Catatan */}
-                <div>
-                    <label>Unit Cost (opsional)</label>
-                    <input
-                        type="number"
-                        min={0}
-                        step="0.01"
-                        value={unitCost}
-                        onChange={(e) => setUnitCost(e.target.value === "" ? "" : Number(e.target.value))}
-                    />
-                </div>
-                <div>
-                    <label>Catatan (opsional)</label>
-                    <input type="text" value={note} onChange={(e) => setNote(e.target.value)} />
-                </div>
-            </div>
-
-            <div style={{ marginTop: 12, display: "flex", justifyContent: "flex-end", gap: 8 }}>
-                <button type="submit" className="button" disabled={!canSubmit || busy}>
-                    {busy ? "Menyimpan…" : "Simpan Lot"}
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                <button type="button" className="button button-ghost" onClick={() => incQty(-10)}>
+                  -10
                 </button>
+                <button type="button" className="button button-ghost" onClick={() => incQty(-5)}>
+                  -5
+                </button>
+                <button type="button" className="button button-ghost" onClick={() => incQty(-1)}>
+                  -1
+                </button>
+              </div>
+
+              <input
+                className="input"
+                type="number"
+                min={1}
+                step={1}
+                value={qty}
+                onChange={(e) => setQty(e.target.value === "" ? "" : Math.max(1, Number(e.target.value)))}
+                required
+                style={{ width: 140, textAlign: "center" }}
+                placeholder="0"
+              />
+
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                <button type="button" className="button button-ghost" onClick={() => incQty(+1)}>
+                  +1
+                </button>
+                <button type="button" className="button button-ghost" onClick={() => incQty(+5)}>
+                  +5
+                </button>
+                <button type="button" className="button button-ghost" onClick={() => incQty(+10)}>
+                  +10
+                </button>
+              </div>
             </div>
-        </form>
-    );
+
+            <div style={{ fontSize: 12, opacity: 0.75 }}>
+              Minimal 1. Tombol cepat hanya membantu input, tidak mengubah logika transaksi.
+            </div>
+          </div>
+
+          {/* Lot No */}
+          <div style={{ display: "grid", gap: 6 }}>
+            <label className="text-sm font-medium">Lot No</label>
+            <input
+              className="input"
+              type="text"
+              value={lotNo}
+              onChange={(e) => setLotNo(e.target.value)}
+              disabled={autoLot}
+              placeholder={autoLot ? "Terisi otomatis saat pilih varian & tanggal" : "Isi manual (opsional)"}
+            />
+            <div style={{ fontSize: 12, opacity: 0.75 }}>
+              Mode Auto menghasilkan format LOT-YYYYMMDD-SKU-XXXX.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Section: Tanggal & Biaya */}
+      <section style={{ display: "grid", gap: 10 }}>
+        <div style={{ fontWeight: 700 }}>Tanggal & Biaya</div>
+
+        <div className="rl-grid">
+          <div style={{ display: "grid", gap: 6 }}>
+            <label className="text-sm font-medium">Tanggal Terima</label>
+            <input
+              className="input"
+              type="date"
+              value={receivedAt}
+              onChange={(e) => setReceivedAt(e.target.value)}
+              required
+            />
+          </div>
+
+          <div style={{ display: "grid", gap: 6 }}>
+            <label className="text-sm font-medium">Kadaluarsa (opsional)</label>
+            <input className="input" type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} />
+          </div>
+
+          <div style={{ display: "grid", gap: 6 }}>
+            <label className="text-sm font-medium">Unit Cost (opsional)</label>
+            <input
+              className="input"
+              type="number"
+              min={0}
+              step="0.01"
+              value={unitCost}
+              onChange={(e) => setUnitCost(e.target.value === "" ? "" : Number(e.target.value))}
+              placeholder="0"
+            />
+          </div>
+
+          <div style={{ display: "grid", gap: 6 }}>
+            <label className="text-sm font-medium">Catatan (opsional)</label>
+            <input
+              className="input"
+              type="text"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Contoh: barang datang dari supplier A"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Actions */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 12,
+          flexWrap: "wrap",
+          borderTop: "1px solid rgba(0,0,0,0.06)",
+          paddingTop: 12,
+        }}
+      >
+        <div style={{ fontSize: 12, opacity: 0.75 }}>
+          Pastikan gudang & varian sudah benar sebelum menyimpan lot.
+        </div>
+
+        <button
+          type="submit"
+          className="button button-primary"
+          disabled={!canSubmit || busy}
+          style={{ borderRadius: 999, padding: "0.7rem 1rem", minWidth: 160 }}
+        >
+          {busy ? "Menyimpan…" : "Simpan Lot"}
+        </button>
+      </div>
+
+      {/* Responsif grid helper */}
+      <style>
+        {`
+          .rl-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+          }
+          @media (max-width: 900px) {
+            .rl-grid {
+              grid-template-columns: 1fr;
+            }
+          }
+        `}
+      </style>
+    </form>
+  );
 }
 
 ```
@@ -7920,8 +9606,8 @@ export default function ProtectedLayout(_: ProtectedLayoutProps): React.ReactEle
 
 ### src/components/nav/Sidebar.tsx
 
-- SHA: `11c014955293`  
-- Ukuran: 6 KB
+- SHA: `dc119e4f31b3`  
+- Ukuran: 5 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -7929,7 +9615,12 @@ export default function ProtectedLayout(_: ProtectedLayoutProps): React.ReactEle
 import React, { useEffect, useMemo, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../../store/auth";
-import { filterMenuByRole, GROUP_ORDER, groupOf, type GroupKey } from "../../nav-config";
+import {
+  filterMenuByRole,
+  GROUP_ORDER,
+  groupOf,
+  type GroupKey,
+} from "../../nav-config";
 
 type SidebarProps = {
   open: boolean;
@@ -7942,7 +9633,6 @@ export default function Sidebar({ open, onClose }: SidebarProps): React.ReactEle
   const { hasRole } = useAuth();
   const items = filterMenuByRole(hasRole); // data asli (bukan dummy)
 
-  // Kelompokkan item berdasarkan group yang didefinisikan di nav-config.ts
   const sections = useMemo(
     () =>
       GROUP_ORDER
@@ -7954,7 +9644,6 @@ export default function Sidebar({ open, onClose }: SidebarProps): React.ReactEle
     [items]
   );
 
-  // Inisialisasi grup yang dibuka (default: Umum & POS terbuka)
   const defaultOpen: Record<GroupKey, boolean> = GROUP_ORDER.reduce((acc, g) => {
     acc[g as GroupKey] = g === "Umum" || g === "POS";
     return acc;
@@ -7962,7 +9651,6 @@ export default function Sidebar({ open, onClose }: SidebarProps): React.ReactEle
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(defaultOpen);
 
-  // Restore dari localStorage
   useEffect(() => {
     try {
       const raw = localStorage.getItem(LS_KEY);
@@ -7974,7 +9662,6 @@ export default function Sidebar({ open, onClose }: SidebarProps): React.ReactEle
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Simpan ke localStorage
   useEffect(() => {
     try {
       localStorage.setItem(LS_KEY, JSON.stringify(openGroups));
@@ -7988,108 +9675,96 @@ export default function Sidebar({ open, onClose }: SidebarProps): React.ReactEle
   return (
     <>
       {open && (
-        <div
+        <button
+          type="button"
+          className="sidebar-overlay"
           onClick={onClose}
-          aria-hidden="true"
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.28)", zIndex: 39 }}
+          aria-label="Tutup sidebar"
         />
       )}
 
       <aside
         aria-label="Navigasi"
-        className="sidebar"
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          bottom: 0,
-          width: 280,
-          transform: open ? "translateX(0)" : "translateX(-100%)",
-          transition: "transform .2s ease",
-          zIndex: 40,
-          background: "#fff",
-          overflowY: "auto",
-          WebkitOverflowScrolling: "touch",
-        }}
+        className={"sidebar" + (open ? " sidebar--open" : "")}
       >
-        {/* Brand */}
-        <div className="sidebar-brand" style={{ padding: "16px 20px", fontWeight: 700, fontSize: 16 }}>
-          POS Prime <span style={{ opacity: 0.6, fontWeight: 500 }}>Katalog</span>
+        {/* Brand (sticky) */}
+        <div className="sidebar-brand">
+          <div className="sidebar-brand__left">
+            <div className="sidebar-brand__logo" aria-hidden="true">
+              P
+            </div>
+            <div className="sidebar-brand__text">
+              <div className="sidebar-brand__title">POS Prime</div>
+              <div className="sidebar-brand__subtitle">Katalog & Sistem POS</div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="sidebar-brand__close button button-ghost"
+            onClick={onClose}
+            aria-label="Tutup"
+            title="Tutup"
+          >
+            ✕
+          </button>
         </div>
 
-        {/* Dropdown (grouped) — clean, tanpa rounded */}
+        {/* Menu */}
         <nav className="nav" aria-label="Menu utama">
-          <div className="navlist" style={{ paddingBottom: 16 }}>
+          <div className="navlist">
             {sections.map((sec) => {
               const isOpen = !!openGroups[sec.group];
+
               return (
-                <div key={sec.group}>
-                  {/* Header Grup sebagai tombol dropdown */}
+                <section className="navsection" key={sec.group}>
                   <button
                     type="button"
+                    className="navgroup"
                     onClick={() => toggleGroup(sec.group)}
                     aria-expanded={isOpen}
                     aria-controls={`grp-${sec.group}`}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      width: "100%",
-                      padding: "12px 20px",
-                      fontSize: 12,
-                      textTransform: "uppercase",
-                      letterSpacing: 0.6,
-                      color: "rgba(0,0,0,.62)",
-                      fontWeight: 700,
-                      background: "transparent",
-                      border: 0,
-                      cursor: "pointer",
-                    }}
                     title={sec.group}
                   >
-                    <span style={{ flex: 1, textAlign: "left" }}>{sec.group}</span>
-                    {/* Chevron sederhana */}
+                    <span className="navgroup__title">{sec.group}</span>
                     <span
+                      className={"navgroup__chev" + (isOpen ? " is-open" : "")}
                       aria-hidden="true"
-                      style={{
-                        display: "inline-block",
-                        transition: "transform .15s ease",
-                        transform: isOpen ? "rotate(90deg)" : "rotate(0deg)",
-                      }}
                     >
                       ▶
                     </span>
                   </button>
 
-                  {/* Isi grup */}
-                  <div id={`grp-${sec.group}`} role="region" aria-label={sec.group}>
-                    {isOpen &&
-                      sec.items.map((item) => (
-                        <NavLink
-                          key={item.key}
-                          to={item.to}
-                          className={({ isActive }) => "navitem" + (isActive ? " is-active" : "")}
-                          onClick={onClose}
-                          title={item.label}
-                          style={{
-                            display: "block",
-                            padding: "10px 28px 10px 28px", // agak menjorok agar hierarki terasa
-                            fontSize: 14,
-                            textDecoration: "none",
-                            color: "inherit",
-                          }}
-                        >
-                          <span>{item.label}</span>
-                        </NavLink>
-                      ))}
+                  <div
+                    id={`grp-${sec.group}`}
+                    role="region"
+                    aria-label={sec.group}
+                    className={"navgroup__items" + (isOpen ? " is-open" : "")}
+                  >
+                    {sec.items.map((item) => (
+                      <NavLink
+                        key={item.key}
+                        to={item.to}
+                        className={({ isActive }) => "navitem" + (isActive ? " is-active" : "")}
+                        onClick={onClose}
+                        title={item.label}
+                      >
+                        <span className="navitem__label">{item.label}</span>
+                      </NavLink>
+                    ))}
                   </div>
-
-                  {/* Pemisah antar grup (jarak vertikal tipis) */}
-                  <div style={{ height: 6 }} />
-                </div>
+                </section>
               );
             })}
           </div>
         </nav>
+
+        {/* Footer kecil (opsional, tetap UI-only) */}
+        <div className="sidebar-footer">
+          <div className="sidebar-footer__hint">
+            © {new Date().getFullYear()} POS Prime
+          </div>
+        </div>
       </aside>
     </>
   );
@@ -8100,8 +9775,8 @@ export default function Sidebar({ open, onClose }: SidebarProps): React.ReactEle
 
 ### src/components/nav/Topbar.tsx
 
-- SHA: `fb28a8fe25c5`  
-- Ukuran: 4 KB
+- SHA: `d5615a262d40`  
+- Ukuran: 2 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -8116,7 +9791,6 @@ type TopbarProps = {
 export default function Topbar({ onMenuClick, onLogout }: TopbarProps): React.ReactElement {
   const { user, logout } = useAuth();
 
-  // inisial user (data asli, bukan dummy)
   const initials =
     (user?.name ?? "")
       .split(" ")
@@ -8125,100 +9799,57 @@ export default function Topbar({ onMenuClick, onLogout }: TopbarProps): React.Re
       .slice(0, 2)
       .join("") || "U";
 
-  // role asli (pastikan sudah ada di auth store)
   const roleLabel = user?.role ?? "";
 
   const doLogout = () => {
-    if (onLogout) { onLogout(); return; }
+    if (onLogout) {
+      onLogout();
+      return;
+    }
     void logout();
   };
 
   return (
-    <header
-      style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 40,
-        height: 64,
-        borderBottom: "1px solid rgba(0,0,0,.08)",
-        background: "rgba(255,255,255,.9)",
-        backdropFilter: "blur(8px)",
-        boxShadow: "0 1px 8px rgba(0,0,0,.06)",
-      }}
-    >
-      <div
-        style={{
-          height: "100%",
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          padding: "0 16px",
-          maxWidth: 1200,
-          margin: "0 auto",
-        }}
-      >
-        {/* Kiri: tombol menu + brand */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+    <header className="topbar" aria-label="Topbar">
+      <div className="topbar__inner">
+        {/* Left: menu + brand */}
+        <div className="topbar__left">
           <button
             type="button"
             onClick={onMenuClick}
-            className="button button-ghost"
-            style={{ paddingLeft: 12, paddingRight: 12 }}
+            className="button button-ghost topbar__menuBtn"
             aria-label="Buka menu"
             title="Menu"
           >
-            {/* ikon hamburger sederhana */}
-            <span aria-hidden style={{ display: "inline-block", width: 22, color: "#334155" }}>
-              <span style={{ display: "block", height: 2, borderRadius: 2, background: "currentColor" }} />
-              <span style={{ margin: "5px 0", display: "block", height: 2, borderRadius: 2, background: "currentColor" }} />
-              <span style={{ display: "block", height: 2, borderRadius: 2, background: "currentColor" }} />
+            <span className="topbar__hamburger" aria-hidden="true">
+              <span />
+              <span />
+              <span />
             </span>
           </button>
 
-          <div style={{ fontWeight: 700, letterSpacing: ".02em", color: "#1f2937" }}>
-            POS Prime <span style={{ opacity: 0.6 }}>Katalog</span>
+          <div className="topbar__brand" title="POS Prime">
+            <span className="topbar__brandMuted">Sistem</span>
+            <span className="topbar__brandTitle">POS Prime</span>
           </div>
         </div>
 
-        {/* Tengah: spacer (tempat search nanti jika diperlukan) */}
-        <div style={{ flex: 1, minWidth: 40 }} />
+        {/* Middle: placeholder (search nanti) */}
+        <div className="topbar__center" />
 
-        {/* Kanan: avatar inisial + nama + role (badge) + keluar */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
-          <span
-            aria-hidden
-            style={{
-              display: "inline-flex",
-              height: 36,
-              width: 36,
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: "9999px",
-              background: "var(--color-primary)",
-              color: "#fff",
-              fontWeight: 600,
-              fontSize: 12,
-              boxShadow: "0 2px 6px rgba(0,0,0,.12)",
-              flex: "0 0 auto",
-            }}
-          >
+        {/* Right: user */}
+        <div className="topbar__right">
+          <span className="topbar__avatar" aria-hidden="true">
             {initials}
           </span>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-            <span
-              title={user?.name}
-              style={{
-                maxWidth: 180,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {user?.name}
+          <div className="topbar__user">
+            <span className="topbar__name" title={user?.name}>
+              {user?.name ?? "-"}
             </span>
+
             {roleLabel ? (
-              <span className="badge" style={{ textTransform: "capitalize", whiteSpace: "nowrap" }}>
+              <span className="badge topbar__role" style={{ textTransform: "capitalize" }}>
                 {roleLabel}
               </span>
             ) : null}
@@ -8226,7 +9857,7 @@ export default function Topbar({ onMenuClick, onLogout }: TopbarProps): React.Re
 
           <button
             onClick={doLogout}
-            className="button button-outline"
+            className="button button-outline topbar__logout"
             title="Keluar"
             aria-label="Keluar"
           >
@@ -8243,112 +9874,213 @@ export default function Topbar({ onMenuClick, onLogout }: TopbarProps): React.Re
 
 ### src/components/pos/CartPanel.tsx
 
-- SHA: `3b5c39626e9c`  
-- Ukuran: 4 KB
+- SHA: `a44aa5bd62f4`  
+- Ukuran: 6 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
 // src/components/pos/CartPanel.tsx
-import React from 'react';
-import { useCart } from '../../store/cart';
-import { rupiah } from '../../utils/rupiah';
+import React from "react";
+import { useCart } from "../../store/cart";
+import { rupiah } from "../../utils/rupiah";
 
 export default function CartPanel(): React.ReactElement {
   const { items, setQty, remove, quote, quoting, error } = useCart();
 
-  return (
-    <div className="card">
-      <div className="card-title">Keranjang</div>
+  const itemCount = items.reduce((acc, it) => acc + (Number.isFinite(it.qty) ? it.qty : 0), 0);
 
+  return (
+    <div>
+      {/* Header */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          justifyContent: "space-between",
+          gap: 12,
+          marginBottom: 10,
+        }}
+      >
+        <div>
+          <div className="card-title" style={{ marginBottom: 2 }}>
+            Keranjang
+          </div>
+          <div className="muted" style={{ fontSize: 12 }}>
+            {items.length === 0 ? "Belum ada item" : `${items.length} item • ${itemCount} qty`}
+          </div>
+        </div>
+
+        {/* Status kecil saat recalculation */}
+        {quoting ? (
+          <span className="badge" style={{ opacity: 0.8 }}>
+            Hitung ulang…
+          </span>
+        ) : null}
+      </div>
+
+      {/* Body */}
       {items.length === 0 ? (
         <div className="empty-state">Belum ada item</div>
       ) : (
-        <div className="table-responsive">
-          <table className="table" style={{ tableLayout: 'fixed' }}>
-            <colgroup>
-              <col/>
-              <col style={{ width: 88 }}/>
-              <col style={{ width: 120 }}/>
-              <col style={{ width: 88 }}/>
-            </colgroup>
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th className="text-center">Qty</th>
-                <th className="text-right">Harga</th>
-                <th className="text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((row) => (
-                <tr key={row.variant_id}>
-                  <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {row.name ?? `Var#${row.variant_id}`}
-                  </td>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+          }}
+        >
+          {items.map((row) => {
+            const label = row.name ?? `Var#${row.variant_id}`;
+            const price = row.price_hint ? rupiah(row.price_hint) : "-";
 
-                  <td className="text-center">
-                    <input
-                      type="number"
-                      min={1}
-                      value={row.qty}
-                      className="input text-right"
-                      style={{ width: 68 }}
-                      onChange={(e) => setQty(row.variant_id, Math.max(1, Number(e.target.value)))}
-                      aria-label={`Qty ${row.name ?? `Var#${row.variant_id}`}`}
-                    />
-                  </td>
+            return (
+              <div
+                key={row.variant_id}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr auto",
+                  gap: 10,
+                  padding: "10px 10px",
+                  borderRadius: 14,
+                  border: "1px solid rgba(0,0,0,0.06)",
+                  background: "rgba(0,0,0,0.01)",
+                }}
+              >
+                {/* Left: name + price */}
+                <div style={{ minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontWeight: 600,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      marginBottom: 4,
+                    }}
+                    title={label}
+                  >
+                    {label}
+                  </div>
 
-                  <td className="text-right mono" style={{ whiteSpace: 'nowrap' }}>
-                    {row.price_hint ? rupiah(row.price_hint) : '-'}
-                  </td>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 10,
+                    }}
+                  >
+                    <span className="muted" style={{ fontSize: 12 }}>
+                      Harga
+                    </span>
+                    <span className="mono" style={{ whiteSpace: "nowrap" }}>
+                      {price}
+                    </span>
+                  </div>
+                </div>
 
-                  <td className="text-right">
-                    <button
-                      className="button button-ghost"
-                      style={{ padding: '4px 8px' }}
-                      onClick={() => remove(row.variant_id)}
-                      aria-label={`Hapus ${row.name ?? `Var#${row.variant_id}`}`}
-                    >
-                      Hapus
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                {/* Right: qty + delete */}
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "flex-end",
+                    gap: 8,
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <input
+                    type="number"
+                    min={1}
+                    value={row.qty}
+                    className="input text-right"
+                    style={{
+                      width: 78,
+                      height: 36,
+                      padding: "6px 10px",
+                      borderRadius: 12,
+                    }}
+                    onChange={(e) =>
+                      setQty(row.variant_id, Math.max(1, Number(e.target.value)))
+                    }
+                    aria-label={`Qty ${label}`}
+                  />
+
+                  <button
+                    className="button button-ghost"
+                    style={{
+                      padding: "6px 10px",
+                      borderRadius: 999,
+                      fontSize: 12,
+                      lineHeight: 1,
+                      opacity: 0.9,
+                    }}
+                    onClick={() => remove(row.variant_id)}
+                    aria-label={`Hapus ${label}`}
+                    type="button"
+                  >
+                    Hapus
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
-      <div className="divider" />
+      <div className="divider" style={{ margin: "14px 0" }} />
 
-      <div>
-        {quoting ? (
-          <div className="muted">Hitung ulang…</div>
-        ) : quote ? (
-          <div aria-live="polite">
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-              <span>Subtotal</span>
-              <span className="mono">{rupiah(quote.totals.subtotal)}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-              <span>Diskon</span>
-              <span className="mono">{rupiah(quote.totals.discount)}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-              <span>PPN</span>
-              <span className="mono">{rupiah(quote.totals.tax)}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600 }}>
-              <span>Total</span>
-              <span className="mono">{rupiah(quote.totals.grand_total)}</span>
-            </div>
+      {/* Totals */}
+      <div aria-live="polite">
+        {quote ? (
+          <div>
+            <Row label="Subtotal" value={rupiah(quote.totals.subtotal)} />
+            <Row label="Diskon" value={rupiah(quote.totals.discount)} />
+            <Row label="PPN" value={rupiah(quote.totals.tax)} />
+            <div className="divider" style={{ margin: "10px 0" }} />
+            <Row
+              label="Total"
+              value={rupiah(quote.totals.grand_total)}
+              strong
+              bigger
+            />
           </div>
         ) : (
           <div className="muted">Tambahkan item untuk melihat total.</div>
         )}
 
-        {error && <div className="alert alert-danger" style={{ marginTop: 8 }}>{error}</div>}
+        {error && (
+          <div className="alert alert-danger" style={{ marginTop: 10 }}>
+            {error}
+          </div>
+        )}
       </div>
+    </div>
+  );
+}
+
+function Row(props: {
+  label: string;
+  value: string;
+  strong?: boolean;
+  bigger?: boolean;
+}): React.ReactElement {
+  const { label, value, strong, bigger } = props;
+  return (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "baseline",
+        gap: 10,
+        marginBottom: bigger ? 0 : 6,
+        fontWeight: strong ? 700 : 500,
+        fontSize: bigger ? 16 : 13,
+      }}
+    >
+      <span style={{ opacity: strong ? 0.9 : 0.78 }}>{label}</span>
+      <span className="mono" style={{ whiteSpace: "nowrap" }}>
+        {value}
+      </span>
     </div>
   );
 }
@@ -8358,19 +10090,19 @@ export default function CartPanel(): React.ReactElement {
 
 ### src/components/pos/CheckoutDialog.tsx
 
-- SHA: `a96f66ae8581`  
-- Ukuran: 15 KB
+- SHA: `75bc309bdcc3`  
+- Ukuran: 20 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
 // src/components/pos/CheckoutDialog.tsx
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { useCart } from '../../store/cart';
-import type { CheckoutPayload, PaymentMethod, Order, CashPosition } from '../../types/pos';
-import { checkout } from '../../api/pos';
+import React, { useMemo, useState, useEffect, useCallback } from "react";
+import { useCart } from "../../store/cart";
+import type { CheckoutPayload, PaymentMethod, Order, CashPosition } from "../../types/pos";
+import { checkout } from "../../api/pos";
 
-import CustomerSelect from '../customers/CustomerSelect';
-import type { Customer } from '../../types/customers';
+import CustomerSelect from "../customers/CustomerSelect";
+import type { Customer } from "../../types/customers";
 
 type Props = {
   open: boolean;
@@ -8380,23 +10112,20 @@ type Props = {
   onSuccess: (order: Order) => void;
 };
 
-type PayMode = 'FULL' | 'DP' | 'PENDING';
+type PayMode = "FULL" | "DP" | "PENDING";
 
-const FF_XENDIT = import.meta.env.VITE_FEATURE_XENDIT === 'true';
+const FF_XENDIT = import.meta.env.VITE_FEATURE_XENDIT === "true";
 
-const payMethods: PaymentMethod[] = FF_XENDIT
-  ? ['CASH', 'TRANSFER', 'QRIS', 'XENDIT']
-  : ['CASH', 'TRANSFER', 'QRIS'];
+const payMethods: PaymentMethod[] = FF_XENDIT ? ["CASH", "TRANSFER", "QRIS", "XENDIT"] : ["CASH", "TRANSFER", "QRIS"];
 
 const CASH_POSITIONS: { label: string; value: CashPosition }[] = [
-  { label: 'Konsumen', value: 'CUSTOMER' },
-  { label: 'Kasir', value: 'CASHIER' },
-  { label: 'Sales', value: 'SALES' },
-  { label: 'Admin', value: 'ADMIN' },
+  { label: "Konsumen", value: "CUSTOMER" },
+  { label: "Kasir", value: "CASHIER" },
+  { label: "Sales", value: "SALES" },
+  { label: "Admin", value: "ADMIN" },
 ];
 
-const toIDR = (n: number) =>
-  (n ?? 0).toLocaleString('id-ID', { style: 'currency', currency: 'IDR' });
+const toIDR = (n: number) => (n ?? 0).toLocaleString("id-ID", { style: "currency", currency: "IDR" });
 
 const toFloat = (v: unknown): number => {
   const n = Number(v);
@@ -8415,23 +10144,23 @@ export default function CheckoutDialog({
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
   // Customer (opsional)
-  const [nama, setNama] = useState('');
-  const [phone, setPhone] = useState('');
-  const [alamat, setAlamat] = useState('');
+  const [nama, setNama] = useState("");
+  const [phone, setPhone] = useState("");
+  const [alamat, setAlamat] = useState("");
 
   // Mode pembayaran: FULL / DP / PENDING
-  const [mode, setMode] = useState<PayMode>('FULL');
+  const [mode, setMode] = useState<PayMode>("FULL");
 
   // Metode & nominal
-  const [method, setMethod] = useState<PaymentMethod>('CASH');
+  const [method, setMethod] = useState<PaymentMethod>("CASH");
   const grand = useMemo(() => toFloat(quote?.totals?.grand_total ?? 0), [quote]);
 
   // Nominal untuk FULL & DP
   const [bayar, setBayar] = useState<number>(grand); // untuk FULL
   const [dpAmount, setDpAmount] = useState<number>(0); // untuk DP
 
-  // ✅ Pindahkan hook ke DALAM komponen
-  const [cashPosition, setCashPosition] = useState<CashPosition>('CASHIER');
+  // Posisi Uang
+  const [cashPosition, setCashPosition] = useState<CashPosition>("CASHIER");
 
   // State proses
   const [loading, setLoading] = useState(false);
@@ -8451,20 +10180,20 @@ export default function CheckoutDialog({
 
   // Validasi per mode
   const fullValid = useMemo(() => {
-    if (mode !== 'FULL') return true;
+    if (mode !== "FULL") return true;
     if (!totalReady) return false;
     if (bayar < 0) return false;
-    return bayar >= grand; // izinkan >= total (CASH dapat kembalian)
+    return bayar >= grand;
   }, [mode, bayar, grand, totalReady]);
 
   const dpValid = useMemo(() => {
-    if (mode !== 'DP') return true;
+    if (mode !== "DP") return true;
     if (!totalReady) return false;
-    return dpAmount > 0 && dpAmount < grand; // DP harus > 0 dan < total
+    return dpAmount > 0 && dpAmount < grand;
   }, [mode, dpAmount, grand, totalReady]);
 
   const pendingValid = useMemo(() => {
-    if (mode !== 'PENDING') return true;
+    if (mode !== "PENDING") return true;
     return totalReady;
   }, [mode, totalReady]);
 
@@ -8472,30 +10201,30 @@ export default function CheckoutDialog({
 
   // Kembalian (hanya FULL + CASH)
   const change = useMemo(() => {
-    if (mode !== 'FULL' || method !== 'CASH') return 0;
+    if (mode !== "FULL" || method !== "CASH") return 0;
     return Math.max(0, bayar - grand);
   }, [mode, method, bayar, grand]);
 
   useEffect(() => {
     if (selectedCustomer) {
-      setNama((v) => v || selectedCustomer.nama || '');
-      setPhone((v) => v || selectedCustomer.phone || '');
-      setAlamat((v) => v || selectedCustomer.alamat || '');
+      setNama((v) => v || selectedCustomer.nama || "");
+      setPhone((v) => v || selectedCustomer.phone || "");
+      setAlamat((v) => v || selectedCustomer.alamat || "");
     }
   }, [selectedCustomer]);
 
   // Alasan tombol disable (UX)
   const disableReason = useMemo(() => {
-    if (!hasItems) return 'Tambahkan item ke keranjang.';
-    if (!totalReady) return 'Total belum siap. Coba lagi.';
-    if (mode === 'FULL') {
-      if (bayar < 0) return 'Nominal bayar tidak boleh negatif.';
+    if (!hasItems) return "Tambahkan item ke keranjang.";
+    if (!totalReady) return "Total belum siap. Coba lagi.";
+    if (mode === "FULL") {
+      if (bayar < 0) return "Nominal bayar tidak boleh negatif.";
       if (!fullValid) {
-        if (method === 'CASH') return 'Nominal bayar harus ≥ total.';
-        return 'Nominal bayar minimal sama dengan total.';
+        if (method === "CASH") return "Nominal bayar harus ≥ total.";
+        return "Nominal bayar minimal sama dengan total.";
       }
     }
-    if (mode === 'DP' && !dpValid) return 'Nominal DP harus > 0 dan < total.';
+    if (mode === "DP" && !dpValid) return "Nominal DP harus > 0 dan < total.";
     return null;
   }, [hasItems, totalReady, mode, bayar, method, fullValid, dpValid]);
 
@@ -8509,38 +10238,36 @@ export default function CheckoutDialog({
         branch_id: branchId,
         warehouse_id: warehouseId,
         customer_id: selectedCustomer?.id,
-        customer: (nama || phone || alamat || selectedCustomer)
+        customer: nama || phone || alamat || selectedCustomer
           ? {
-            nama: nama || selectedCustomer?.nama || '',
-            phone: phone || selectedCustomer?.phone || '',
-            alamat: alamat || selectedCustomer?.alamat || '',
-          }
+              nama: nama || selectedCustomer?.nama || "",
+              phone: phone || selectedCustomer?.phone || "",
+              alamat: alamat || selectedCustomer?.alamat || "",
+            }
           : undefined,
         cash_position: cashPosition,
       };
 
-      // Kirim payment sesuai mode
-      if (mode === 'FULL') {
+      if (mode === "FULL") {
         payload.payment = { method, amount: bayar };
-      } else if (mode === 'DP') {
+      } else if (mode === "DP") {
         payload.payment = { method, amount: dpAmount };
-      } // PENDING: tanpa payment
+      }
 
       const order = await checkout(payload);
 
-      // Jika metode XENDIT: cari payment pending dan buka link invoice dari ref_no
-      if (FF_XENDIT && method === 'XENDIT') {
-        const xp = order.payments?.find(p => p.method === 'XENDIT' && p.status === 'PENDING');
-        const link = xp?.ref_no; // backend mengirimkan URL invoice di ref_no
+      if (FF_XENDIT && method === "XENDIT") {
+        const xp = order.payments?.find((p) => p.method === "XENDIT" && p.status === "PENDING");
+        const link = xp?.ref_no;
         if (link && /^https?:\/\//i.test(link)) {
-          window.open(link, '_blank', 'noopener,noreferrer');
+          window.open(link, "_blank", "noopener,noreferrer");
         }
       }
 
       clear();
       onSuccess(order);
     } catch (e) {
-      const msg = (e as Error)?.message || 'Gagal memproses pembayaran.';
+      const msg = (e as Error)?.message || "Gagal memproses pembayaran.";
       setErr(msg);
     } finally {
       setLoading(false);
@@ -8567,19 +10294,19 @@ export default function CheckoutDialog({
   // Keyboard: Enter submit, Esc tutup
   useEffect(() => {
     const onKey = (ev: KeyboardEvent) => {
-      if (ev.key === 'Escape') {
+      if (ev.key === "Escape") {
         if (!loading) onClose();
         return;
       }
-      if (ev.key === 'Enter') {
+      if (ev.key === "Enter") {
         if (formValid && !loading) {
           ev.preventDefault();
           void submit();
         }
       }
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [formValid, loading, submit, onClose]);
 
   if (!open) return null;
@@ -8593,230 +10320,396 @@ export default function CheckoutDialog({
     setDpAmount(n < 0 ? 0 : n);
   };
 
+  const showMethodBlock = mode !== "PENDING";
+  const rightTitle =
+    mode === "PENDING" ? "Ringkasan (Pending)" : mode === "DP" ? "Ringkasan (DP)" : "Ringkasan (Full)";
+
   return (
     <div className="modal-overlay">
-      <div
-        className="modal card"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="dialog-title"
-      >
-        <div className="modal-header">
-          <h3 id="dialog-title" className="modal-title">Bayar</h3>
-          <button className="button button-ghost" onClick={onClose} disabled={loading}>Tutup</button>
+      <style>{`
+        /* Layout rapi khusus CheckoutDialog */
+        .pos-checkout.modal{
+          width: min(1040px, calc(100vw - 28px));
+          max-height: calc(100dvh - 28px);
+          overflow: auto;
+          border-radius: 18px;
+        }
+
+        .pos-checkout__header{
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+          gap: 12px;
+          position: sticky;
+          top: 0;
+          z-index: 2;
+          background: rgba(255,255,255,0.92);
+          backdrop-filter: blur(8px);
+          border-bottom: 1px solid rgba(0,0,0,0.06);
+          padding-bottom: 10px;
+          margin-bottom: 12px;
+        }
+
+        .pos-checkout__titlewrap{
+          display:flex;
+          flex-direction:column;
+          gap: 4px;
+          min-width: 0;
+        }
+
+        .pos-checkout__subtitle{
+          font-size: 12px;
+          opacity: .72;
+        }
+
+        .pos-checkout__body{
+          display:grid;
+          gap: 12px;
+        }
+
+        @media (min-width: 980px){
+          .pos-checkout__body{
+            grid-template-columns: minmax(0, 1fr) 360px;
+            align-items:start;
+          }
+        }
+
+        .pos-checkout__left{
+          display:flex;
+          flex-direction:column;
+          gap: 12px;
+          min-width: 0;
+        }
+
+        .pos-checkout__right{
+          display:flex;
+          flex-direction:column;
+          gap: 12px;
+        }
+
+        @media (min-width: 980px){
+          .pos-checkout__right{
+            position: sticky;
+            top: 68px;
+          }
+        }
+
+        .pos-checkout__actions{
+          display:flex;
+          gap: 10px;
+          justify-content:flex-end;
+          align-items:center;
+          margin-top: 2px;
+        }
+
+        .pos-checkout__actions .button{
+          border-radius: 999px;
+        }
+
+        .pos-checkout__primary{
+          min-width: 220px;
+        }
+
+        @media (max-width: 520px){
+          .pos-checkout__actions{
+            flex-direction: column-reverse;
+            align-items: stretch;
+          }
+          .pos-checkout__primary{
+            min-width: unset;
+            width: 100%;
+          }
+        }
+
+        .pos-checkout__hint{
+          margin-top: 6px;
+        }
+
+        .pos-chiprow{
+          display:flex;
+          align-items:center;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+      `}</style>
+
+      <div className="modal card pos-checkout" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
+        {/* Header */}
+        <div className="pos-checkout__header">
+          <div className="pos-checkout__titlewrap">
+            <h3 id="dialog-title" className="modal-title" style={{ margin: 0 }}>
+              Bayar
+            </h3>
+            <div className="pos-chiprow">
+              <span className="badge badge-success">Cabang #{branchId}</span>
+              <span className="badge badge-info">Gudang #{warehouseId}</span>
+              <span className="badge badge-warning">
+                Mode: {mode === "FULL" ? "Full" : mode === "DP" ? "DP" : "Pending"}
+              </span>
+              {showMethodBlock && <span className="badge badge-secondary">Metode: {method}</span>}
+            </div>
+            <div className="pos-checkout__subtitle">Tekan Enter untuk proses, Esc untuk tutup.</div>
+          </div>
+
+          <button className="button button-ghost" onClick={onClose} disabled={loading}>
+            Tutup
+          </button>
         </div>
 
-        {/* Customer (opsional) */}
-        <div className="card soft">
-          <div className="form-row">
-            <div className="form-field" style={{ width: '100%' }}>
-              <label className="label">Pelanggan Terdaftar</label>
-              <CustomerSelect
-                branchId={branchId}
-                value={selectedCustomer}
-                onChange={setSelectedCustomer}
-              />
-              <div className="muted text-xs" style={{ marginTop: 6 }}>
-                Pilih pelanggan untuk mem-prefill nama/HP/alamat. Data ini akan di-snapshot ke order.
-              </div>
-            </div>
-          </div>
-
-          <div className="form-row form-row--2">
-            <div className="form-field">
-              <label className="label">Nama (opsional)</label>
-              <input
-                className="input"
-                placeholder="Nama pelanggan"
-                value={nama}
-                onChange={(e) => setNama(e.target.value)}
-                autoFocus
-              />
-            </div>
-            <div className="form-field">
-              <label className="label">HP (opsional)</label>
-              <input
-                className="input"
-                placeholder="08xx / 62xx"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                inputMode="tel"
-              />
-            </div>
-          </div>
-          <div className="form-row">
-            <div className="form-field">
-              <label className="label">Alamat (opsional)</label>
-              <input
-                className="input"
-                placeholder="Alamat"
-                value={alamat}
-                onChange={(e) => setAlamat(e.target.value)}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Posisi Uang */}
-        <div className="card soft">
-          <div className="form-row">
-            <div className="form-field" style={{ width: '100%' }}>
-              <label className="label">Posisi Uang</label>
-              <select
-                className="select"
-                value={cashPosition}
-                onChange={(e) => setCashPosition(e.target.value as CashPosition)}
-                aria-label="Posisi uang saat ini"
-              >
-                {CASH_POSITIONS.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
-              <div className="muted text-xs" style={{ marginTop: 6 }}>
-                Menandai siapa yang memegang uang cash untuk pesanan ini.
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Mode Pembayaran */}
-        <div className="card soft">
-          <div className="form-row form-row--3">
-            <label className="checkbox">
-              <input
-                type="radio"
-                name="paymode"
-                value="FULL"
-                checked={mode === 'FULL'}
-                onChange={() => setMode('FULL')}
-              />
-              <span>Full</span>
-            </label>
-            <label className="checkbox">
-              <input
-                type="radio"
-                name="paymode"
-                value="DP"
-                checked={mode === 'DP'}
-                onChange={() => setMode('DP')}
-              />
-              <span>Down Payment</span>
-            </label>
-            <label className="checkbox">
-              <input
-                type="radio"
-                name="paymode"
-                value="PENDING"
-                checked={mode === 'PENDING'}
-                onChange={() => setMode('PENDING')}
-              />
-              <span>Pending</span>
-            </label>
-          </div>
-        </div>
-
-        {/* Metode & Nominal (kecuali PENDING) */}
-        {mode !== 'PENDING' && (
-          <div className="card soft">
-            <div className="form-row form-row--2">
-              <div className="form-field">
-                <label className="label">Metode</label>
-                <select
-                  className="select"
-                  value={method}
-                  onChange={(e) => setMethod(e.target.value as PaymentMethod)}
-                  aria-label="Metode pembayaran"
-                >
-                  {payMethods.map((m) => (
-                    <option key={m} value={m}>{m}</option>
-                  ))}
-                </select>
-                {method === 'XENDIT' && FF_XENDIT && (
+        {/* Body */}
+        <div className="pos-checkout__body">
+          {/* Left column */}
+          <div className="pos-checkout__left">
+            {/* Customer (opsional) */}
+            <div className="card soft">
+              <div className="form-row">
+                <div className="form-field" style={{ width: "100%" }}>
+                  <label className="label">Pelanggan Terdaftar</label>
+                  <CustomerSelect branchId={branchId} value={selectedCustomer} onChange={setSelectedCustomer} />
                   <div className="muted text-xs" style={{ marginTop: 6 }}>
-                    Setelah klik <em>Proses Bayar</em>, Anda akan diarahkan ke halaman pembayaran Xendit.
+                    Pilih pelanggan untuk mem-prefill nama/HP/alamat. Data ini akan di-snapshot ke order.
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-row form-row--2">
+                <div className="form-field">
+                  <label className="label">Nama (opsional)</label>
+                  <input
+                    className="input"
+                    placeholder="Nama pelanggan"
+                    value={nama}
+                    onChange={(e) => setNama(e.target.value)}
+                    autoFocus
+                  />
+                </div>
+                <div className="form-field">
+                  <label className="label">HP (opsional)</label>
+                  <input
+                    className="input"
+                    placeholder="08xx / 62xx"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    inputMode="tel"
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-field">
+                  <label className="label">Alamat (opsional)</label>
+                  <input className="input" placeholder="Alamat" value={alamat} onChange={(e) => setAlamat(e.target.value)} />
+                </div>
+              </div>
+            </div>
+
+            {/* Posisi Uang */}
+            <div className="card soft">
+              <div className="form-row">
+                <div className="form-field" style={{ width: "100%" }}>
+                  <label className="label">Posisi Uang</label>
+                  <select
+                    className="select"
+                    value={cashPosition}
+                    onChange={(e) => setCashPosition(e.target.value as CashPosition)}
+                    aria-label="Posisi uang saat ini"
+                  >
+                    {CASH_POSITIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="muted text-xs" style={{ marginTop: 6 }}>
+                    Menandai siapa yang memegang uang cash untuk pesanan ini.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Mode Pembayaran */}
+            <div className="card soft">
+              <div className="form-row form-row--3">
+                <label className="checkbox">
+                  <input
+                    type="radio"
+                    name="paymode"
+                    value="FULL"
+                    checked={mode === "FULL"}
+                    onChange={() => setMode("FULL")}
+                  />
+                  <span>Full</span>
+                </label>
+
+                <label className="checkbox">
+                  <input
+                    type="radio"
+                    name="paymode"
+                    value="DP"
+                    checked={mode === "DP"}
+                    onChange={() => setMode("DP")}
+                  />
+                  <span>Down Payment</span>
+                </label>
+
+                <label className="checkbox">
+                  <input
+                    type="radio"
+                    name="paymode"
+                    value="PENDING"
+                    checked={mode === "PENDING"}
+                    onChange={() => setMode("PENDING")}
+                  />
+                  <span>Pending</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Metode & Nominal (kecuali PENDING) */}
+            {showMethodBlock && (
+              <div className="card soft">
+                <div className="form-row form-row--2">
+                  <div className="form-field">
+                    <label className="label">Metode</label>
+                    <select
+                      className="select"
+                      value={method}
+                      onChange={(e) => setMethod(e.target.value as PaymentMethod)}
+                      aria-label="Metode pembayaran"
+                    >
+                      {payMethods.map((m) => (
+                        <option key={m} value={m}>
+                          {m}
+                        </option>
+                      ))}
+                    </select>
+
+                    {method === "XENDIT" && FF_XENDIT && (
+                      <div className="muted text-xs" style={{ marginTop: 6 }}>
+                        Setelah klik <em>Proses Bayar</em>, Anda akan diarahkan ke halaman pembayaran Xendit.
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="form-field">
+                    <label className="label">{mode === "FULL" ? "Nominal Bayar" : "Nominal DP"}</label>
+                    {mode === "FULL" ? (
+                      <input
+                        type="number"
+                        className="input text-right"
+                        min={0}
+                        step="0.01"
+                        value={Number.isFinite(bayar) ? bayar : 0}
+                        onChange={(e) => onBayarChange(e.target.value)}
+                        inputMode="decimal"
+                        aria-label="Nominal bayar (Full)"
+                      />
+                    ) : (
+                      <input
+                        type="number"
+                        className="input text-right"
+                        min={0}
+                        step="0.01"
+                        value={Number.isFinite(dpAmount) ? dpAmount : 0}
+                        onChange={(e) => onDpChange(e.target.value)}
+                        inputMode="decimal"
+                        aria-label="Nominal DP"
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Actions (desktop tetap di bawah kiri agar natural setelah isi form) */}
+            <div className="card soft">
+              {!formValid && disableReason && (
+                <div className="alert alert-warning" style={{ marginBottom: 10 }}>
+                  {disableReason}
+                </div>
+              )}
+
+              {err && (
+                <div className="alert alert-danger" role="alert" style={{ marginBottom: 10 }}>
+                  {err}
+                </div>
+              )}
+
+              <div className="pos-checkout__actions">
+                <button className="button button-outline" onClick={onClose} disabled={loading}>
+                  Batal
+                </button>
+                <button
+                  className="button button-primary pos-checkout__primary"
+                  onClick={() => void submit()}
+                  disabled={loading || !formValid}
+                  aria-disabled={loading || !formValid}
+                >
+                  {loading ? "Memproses…" : mode === "PENDING" ? "Simpan (Belum Bayar)" : "Proses Bayar"}
+                </button>
+              </div>
+
+              <div className="muted text-xs pos-checkout__hint">
+                Tekan <kbd className="kbd">Enter</kbd> untuk submit, <kbd className="kbd">Esc</kbd> untuk tutup.
+              </div>
+            </div>
+          </div>
+
+          {/* Right column: Ringkasan sticky */}
+          <div className="pos-checkout__right">
+            <div className="card soft">
+              <div style={{ fontWeight: 800, marginBottom: 10 }}>{rightTitle}</div>
+
+              <div className="kv-grid">
+                <div className="kv">
+                  <span className="kv-key">Total</span>
+                  <span className="kv-val">
+                    <strong>{toIDR(grand)}</strong>
+                  </span>
+                </div>
+
+                {mode === "FULL" && method === "CASH" && bayar >= grand && (
+                  <div className="kv">
+                    <span className="kv-key">Kembalian</span>
+                    <span className="kv-val">{toIDR(change)}</span>
+                  </div>
+                )}
+
+                {mode === "DP" && dpAmount > 0 && dpAmount < grand && (
+                  <div className="kv">
+                    <span className="kv-key">Sisa Tagihan</span>
+                    <span className="kv-val">{toIDR(Math.max(0, grand - dpAmount))}</span>
                   </div>
                 )}
               </div>
 
-              <div className="form-field">
-                <label className="label">{mode === 'FULL' ? 'Nominal Bayar' : 'Nominal DP'}</label>
-                {mode === 'FULL' ? (
-                  <input
-                    type="number"
-                    className="input text-right"
-                    min={0}
-                    step="0.01"
-                    value={Number.isFinite(bayar) ? bayar : 0}
-                    onChange={(e) => onBayarChange(e.target.value)}
-                    inputMode="decimal"
-                    aria-label="Nominal bayar (Full)"
-                  />
-                ) : (
-                  <input
-                    type="number"
-                    className="input text-right"
-                    min={0}
-                    step="0.01"
-                    value={Number.isFinite(dpAmount) ? dpAmount : 0}
-                    onChange={(e) => onDpChange(e.target.value)}
-                    inputMode="decimal"
-                    aria-label="Nominal DP"
-                  />
-                )}
+              <div style={{ marginTop: 10, opacity: 0.75, fontSize: 12, lineHeight: 1.55 }}>
+                • Full: pembayaran lunas (CASH bisa kembalian). <br />
+                • DP: bayar sebagian, sisa ditagihkan nanti. <br />
+                • Pending: simpan order tanpa payment.
               </div>
             </div>
-          </div>
-        )}
 
-        {/* Ringkasan */}
-        <div className="card soft">
-          <div className="kv-grid">
-            <div className="kv">
-              <span className="kv-key">Total</span>
-              <span className="kv-val"><strong>{toIDR(grand)}</strong></span>
+            {/* Status kecil agar “terlihat” ketika error / loading */}
+            <div className="card soft">
+              <div className="kv-grid">
+                <div className="kv">
+                  <span className="kv-key">Item</span>
+                  <span className="kv-val">{items?.length ?? 0}</span>
+                </div>
+                <div className="kv">
+                  <span className="kv-key">Valid</span>
+                  <span className="kv-val">{formValid ? "Ya" : "Tidak"}</span>
+                </div>
+              </div>
+
+              {!formValid && disableReason && (
+                <div className="muted text-xs" style={{ marginTop: 8 }}>
+                  {disableReason}
+                </div>
+              )}
             </div>
-
-            {mode === 'FULL' && method === 'CASH' && bayar >= grand && (
-              <div className="kv">
-                <span className="kv-key">Kembalian</span>
-                <span className="kv-val">{toIDR(change)}</span>
-              </div>
-            )}
-
-            {mode === 'DP' && dpAmount > 0 && dpAmount < grand && (
-              <div className="kv">
-                <span className="kv-key">Sisa Tagihan</span>
-                <span className="kv-val">{toIDR(Math.max(0, grand - dpAmount))}</span>
-              </div>
-            )}
           </div>
-
-          {err && <div className="alert alert-danger" role="alert">{err}</div>}
-
-          {!formValid && disableReason && (
-            <div className="muted text-sm" style={{ marginTop: 6 }}>{disableReason}</div>
-          )}
-        </div>
-
-        {/* Actions */}
-        <div className="modal-actions">
-          <button className="button button-outline" onClick={onClose} disabled={loading}>Batal</button>
-          <button
-            className="button button-primary"
-            onClick={() => void submit()}
-            disabled={loading || !formValid}
-            aria-disabled={loading || !formValid}
-          >
-            {loading
-              ? 'Memproses…'
-              : mode === 'PENDING'
-                ? 'Simpan (Belum Bayar)'
-                : 'Proses Bayar'}
-          </button>
-        </div>
-
-        <div className="muted text-xs" style={{ marginTop: 8 }}>
-          Tekan <kbd className="kbd">Enter</kbd> untuk submit, <kbd className="kbd">Esc</kbd> untuk tutup.
         </div>
       </div>
     </div>
@@ -8828,8 +10721,8 @@ export default function CheckoutDialog({
 
 ### src/components/pos/ProductGrid.tsx
 
-- SHA: `5801e0dc95ee`  
-- Ukuran: 12 KB
+- SHA: `775d0823e8ab`  
+- Ukuran: 18 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -8903,8 +10796,10 @@ type ApiErrorShape = { status?: number; message?: string; errors?: unknown };
 function isApiErrorShape(x: unknown): x is ApiErrorShape {
   if (typeof x !== "object" || x === null) return false;
   const o = x as Record<string, unknown>;
-  const okStatus = !("status" in o) || typeof o.status === "number" || typeof o.status === "undefined";
-  const okMessage = !("message" in o) || typeof o.message === "string" || typeof o.message === "undefined";
+  const okStatus =
+    !("status" in o) || typeof o.status === "number" || typeof o.status === "undefined";
+  const okMessage =
+    !("message" in o) || typeof o.message === "string" || typeof o.message === "undefined";
   return okStatus && okMessage;
 }
 
@@ -8918,44 +10813,69 @@ function getErrorMessage(e: unknown, fallback = "Gagal memuat produk."): string 
   try {
     const s = String(e);
     if (s && s !== "[object Object]") return s;
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   return fallback;
 }
 
 // ---------- Debug helpers ----------
 function hasQueryFlag(name: string): boolean {
   try {
-    return new URLSearchParams(window.location.search).getAll("debug").includes(name) ||
-      new URLSearchParams(window.location.search).has(name);
-  } catch { return false; }
+    return (
+      new URLSearchParams(window.location.search).getAll("debug").includes(name) ||
+      new URLSearchParams(window.location.search).has(name)
+    );
+  } catch {
+    return false;
+  }
 }
 function isDebugOn(): boolean {
   if (import.meta.env.DEV === true) return true;
-  try { if (localStorage.getItem("DEBUG_GRID") === "1") return true; } catch { /* ignore */ }
-  if (hasQueryFlag("grid") || hasQueryFlag("debug") && hasQueryFlag("all")) return true;
+  try {
+    if (localStorage.getItem("DEBUG_GRID") === "1") return true;
+  } catch {
+    /* ignore */
+  }
+  if (hasQueryFlag("grid") || (hasQueryFlag("debug") && hasQueryFlag("all"))) return true;
   return false;
 }
 const DEBUG = isDebugOn();
+
 function pickStatus(e: unknown): number | undefined {
   if (!isRecord(e)) return undefined;
-  const resp = isRecord(e.response) ? e.response : undefined;
-  const st = resp && isNumber((resp as Record<string, unknown>).status)
-    ? (resp as Record<string, unknown>).status as number
+  const resp = isRecord((e as Record<string, unknown>).response)
+    ? ((e as Record<string, unknown>).response as Record<string, unknown>)
     : undefined;
-  if (isNumber((e as Record<string, unknown>).status)) return (e as Record<string, unknown>).status as number;
+
+  const st =
+    resp && isNumber(resp.status)
+      ? (resp.status as number)
+      : isNumber((e as Record<string, unknown>).status)
+      ? ((e as Record<string, unknown>).status as number)
+      : undefined;
+
   return st;
 }
 function pickServerMessage(e: unknown): string | undefined {
   if (!isRecord(e)) return undefined;
-  const resp = isRecord(e.response) ? e.response : undefined;
-  const data = resp && isRecord((resp as Record<string, unknown>).data) ? (resp as Record<string, unknown>).data : undefined;
-  const msg = data && isString((data as Record<string, unknown>).message) ? (data as Record<string, unknown>).message as string : undefined;
+  const resp = isRecord((e as Record<string, unknown>).response)
+    ? ((e as Record<string, unknown>).response as Record<string, unknown>)
+    : undefined;
+
+  const data =
+    resp && isRecord(resp.data) ? (resp.data as Record<string, unknown>) : undefined;
+
+  const msg = data && isString(data.message) ? (data.message as string) : undefined;
   return msg;
 }
 function debugStart(reqId: number, q: ProductQuery) {
   if (!DEBUG) return;
   const qLog = {
-    page: q.page, per_page: q.per_page, sort: q.sort, is_active: q.is_active,
+    page: q.page,
+    per_page: q.per_page,
+    sort: q.sort,
+    is_active: q.is_active,
     gudang_id: (q as Record<string, unknown>)["gudang_id"],
     cabang_id: (q as Record<string, unknown>)["cabang_id"],
     has_search: Boolean((q as Record<string, unknown>)["search"] ?? (q as Record<string, unknown>)["q"]),
@@ -8978,6 +10898,54 @@ function debugError(reqId: number, err: unknown) {
   console.log("status (detected):", pickStatus(err));
   console.log("server message (detected):", pickServerMessage(err));
   console.groupEnd();
+}
+
+function formatIDR(n: number): string {
+  if (!Number.isFinite(n)) return "0";
+  return n.toLocaleString("id-ID");
+}
+
+function getMinVariantPrice(p: Product): number | null {
+  if (!Array.isArray(p.variants) || p.variants.length === 0) return null;
+
+  const nums = p.variants
+    .map((v) => Number(v.harga ?? 0)) // ✅ akses langsung, tanpa cast Record
+    .filter((x) => Number.isFinite(x));
+
+  if (nums.length === 0) return null;
+  return Math.min(...nums);
+}
+
+
+function ProductCardSkeleton({ keyId }: { keyId: string }): React.ReactElement {
+  return (
+    <div
+      key={keyId}
+      className="pg-card"
+      aria-hidden="true"
+      style={{
+        border: "1px solid var(--color-border)",
+        borderRadius: "var(--radius-lg)",
+        background: "var(--color-surface)",
+        boxShadow: "var(--shadow-xs)",
+        padding: "10px",
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          paddingTop: "100%",
+          borderRadius: "12px",
+          background:
+            "linear-gradient(90deg, rgba(0,0,0,.04), rgba(0,0,0,.07), rgba(0,0,0,.04))",
+          backgroundSize: "200% 100%",
+          animation: "pg-shimmer 1.2s ease-in-out infinite",
+        }}
+      />
+      <div style={{ height: 10, marginTop: 10, borderRadius: 8, background: "rgba(0,0,0,.06)" }} />
+      <div style={{ height: 10, marginTop: 6, width: "60%", borderRadius: 8, background: "rgba(0,0,0,.06)" }} />
+    </div>
+  );
 }
 
 export default function ProductGrid({
@@ -9015,7 +10983,6 @@ export default function ProductGrid({
   }, [perPage, warehouseId, JSON.stringify(initialQuery ?? {})]);
 
   useEffect(() => {
-    // Jika diwajibkan punya scope gudang, tahan fetch sampai warehouseId ada
     if (requireWarehouse && !warehouseId) {
       setItems([]);
       setLastPage(1);
@@ -9029,7 +10996,6 @@ export default function ProductGrid({
     abortRef.current = ac;
 
     const myReqId = ++reqSeqRef.current;
-    console.log(`[ProductGrid] fetching #${myReqId}`, { query });
 
     setLoading(true);
     setError(null);
@@ -9052,11 +11018,11 @@ export default function ProductGrid({
         if (isAbortLike(e)) return;
         if (myReqId !== reqSeqRef.current) return;
         debugError(myReqId, e);
-        const msg = isApiErrorShape(e)
-          ? (e.message ?? "Gagal memuat produk.")
-          : getErrorMessage(e);
+
+        const msg = isApiErrorShape(e) ? e.message ?? "Gagal memuat produk." : getErrorMessage(e);
         if (lastGoodRef.current.length > 0) {
-          setError(null);
+          // tetap tampilkan data terakhir yang valid, tapi warning ditampilkan di bawah
+          setError(msg);
           return;
         }
         setError(msg);
@@ -9072,143 +11038,286 @@ export default function ProductGrid({
   }, [query, requireWarehouse, warehouseId]);
 
   const showBlockingError = Boolean(error) && items.length === 0;
-  if (showBlockingError) {
-    return (
-      <div className="card">
-        <div className="alert alert-danger text-sm">
-          Tidak dapat memuat produk. {error}
-        </div>
-      </div>
-    );
-  }
 
-  if (loading && items.length === 0) {
-    return (
-      <div className="card">
-        <div className="skeleton h-40" />
-      </div>
-    );
-  }
+  // CSS lokal ProductGrid supaya konsisten dan tidak tergantung class global yang belum ada
+  // (Tidak mengubah logika sama sekali)
+  const styles = (
+    <style>{`
+      @keyframes pg-shimmer {
+        0% { background-position: 0% 0; }
+        100% { background-position: -200% 0; }
+      }
 
-  if (!loading && items.length === 0) {
-    return (
-      <div className="card">
-        <div className="empty-state">Belum ada produk aktif.</div>
-      </div>
-    );
-  }
+      .pg-wrap { width: 100%; }
+
+      .pg-head{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+      .pg-title{
+        display:flex;
+        align-items:baseline;
+        gap: 10px;
+        min-width: 0;
+      }
+      .pg-title h3{
+        margin: 0;
+        font-size: 14px;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+      }
+      .pg-meta{
+        font-size: 12px;
+        opacity: .72;
+        white-space: nowrap;
+      }
+
+      .pg-grid{
+        display:grid;
+        gap: 12px;
+        grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      }
+
+      .pg-card{
+        display:flex;
+        flex-direction:column;
+        text-align:left;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        background: var(--color-surface);
+        box-shadow: var(--shadow-xs);
+        padding: 10px;
+        cursor:pointer;
+        transition: transform .06s ease, box-shadow .2s ease;
+      }
+      .pg-card:hover{
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-md);
+      }
+      .pg-card:active{
+        transform: translateY(0px);
+      }
+
+      .pg-thumb{
+        position:relative;
+        width:100%;
+        padding-top: 100%;
+        overflow:hidden;
+        border-radius: 12px;
+        background: rgba(0,0,0,.04);
+        border: 1px solid rgba(0,0,0,.04);
+      }
+      .pg-thumb img{
+        position:absolute;
+        inset:0;
+        width:100%;
+        height:100%;
+        object-fit:cover;
+      }
+      .pg-noimg{
+        position:absolute;
+        inset:0;
+        display:grid;
+        place-items:center;
+        font-size: 12px;
+        opacity: .6;
+      }
+
+      .pg-body{ margin-top: 10px; display:flex; flex-direction:column; gap: 6px; }
+      .pg-name{
+        font-weight: 750;
+        font-size: 13px;
+        line-height: 1.25;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow:hidden;
+        min-height: calc(13px * 1.25 * 2);
+      }
+      .pg-row{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap: 8px;
+      }
+      .pg-price{
+        font-weight: 800;
+        font-size: 12px;
+        color: var(--color-primary);
+        background: rgba(192,70,87,.10);
+        border: 1px solid rgba(192,70,87,.18);
+        padding: 4px 8px;
+        border-radius: var(--radius-pill);
+        white-space: nowrap;
+      }
+      .pg-variant{
+        font-size: 12px;
+        opacity: .7;
+        white-space: nowrap;
+      }
+
+      .pg-footer{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(0,0,0,.06);
+      }
+      .pg-pager{
+        display:flex;
+        align-items:center;
+        gap: 8px;
+      }
+      .pg-note{
+        font-size: 12px;
+        opacity: .72;
+      }
+
+      .pg-empty{
+        padding: 14px;
+        border-radius: var(--radius-lg);
+        border: 1px dashed rgba(0,0,0,.12);
+        background: rgba(255,255,255,.6);
+        color: var(--color-text-soft);
+      }
+    `}</style>
+  );
 
   return (
-    <div className="card">
-      {/* GRID PRODUK */}
-      <div
-        className="grid"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
-          gap: "12px",
-        }}
-      >
-        {items.map((p) => {
-          const fallbackPath =
-            p.media?.find((m) => m.is_primary)?.path || p.media?.[0]?.path || null;
-          const img = ensureImageUrl(p.image_url ?? null, fallbackPath);
+    <div className="pg-wrap">
+      {styles}
 
-          return (
-            <button
-              key={p.id}
-              onClick={() => onPick?.(p)}
-              className="card soft hoverable"
-              type="button"
-              style={{ padding: "10px", textAlign: "left" }}
-            >
-              {/* Image ratio square tanpa Tailwind */}
-              <div
-                style={{
-                  position: "relative",
-                  width: "100%",
-                  paddingTop: "100%", // 1:1
-                  overflow: "hidden",
-                  borderRadius: "8px",
-                  background: "var(--color-muted-bg, #f6f6f6)",
-                }}
-              >
-                {img ? (
-                  <img
-                    src={img}
-                    alt={p.nama}
-                    loading="eager"
-                    decoding="async"
-                    onError={(e) => { e.currentTarget.src = "/no-image.svg"; }}
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                      transform: "translateZ(0)",
-                    }}
-                  />
-                ) : (
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      display: "grid",
-                      placeItems: "center",
-                      fontSize: "12px",
-                      opacity: 0.6,
-                    }}
-                  >
-                    No Image
-                  </div>
-                )}
-              </div>
-
-              <div style={{ marginTop: "8px" }}>
-                <div className="text-sm clamp-2" style={{ fontWeight: 600 }}>
-                  {p.nama}
-                </div>
-                {Array.isArray(p.variants) && p.variants.length > 0 && (
-                  <div className="muted text-xs" style={{ marginTop: "4px" }}>
-                    Rp
-                    {Math.min(
-                      ...p.variants.map((v) => Number(v.harga ?? 0))
-                    ).toLocaleString("id-ID")}
-                  </div>
-                )}
-              </div>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* PAGINATION */}
-      <div className="table-footer" style={{ marginTop: "12px" }}>
-        <div className="muted text-sm">Hal. {page} / {lastPage}</div>
-        <div className="btn-group">
-          <button
-            className="button button-outline"
-            onClick={() => setPage((curr) => Math.max(1, curr - 1))}
-            disabled={page <= 1}
-            type="button"
-          >
-            ← Sebelumnya
-          </button>
-          <button
-            className="button button-outline"
-            onClick={() => setPage((curr) => Math.min(lastPage, curr + 1))}
-            disabled={page >= lastPage}
-            type="button"
-          >
-            Selanjutnya →
-          </button>
+      {showBlockingError && (
+        <div className="card">
+          <div className="alert alert-danger" style={{ fontSize: 13 }}>
+            Tidak dapat memuat produk. {error}
+          </div>
         </div>
-      </div>
+      )}
 
-      {error && items.length > 0 && (
-        <div className="alert alert-warning text-xs" style={{ marginTop: "8px" }}>
-          Terjadi kendala sementara: {error}
+      {!showBlockingError && (
+        <div className="card">
+          {/* Header kecil (rapi + informatif) */}
+          <div className="pg-head">
+            <div className="pg-title">
+              <h3>Katalog Produk</h3>
+              <span className="pg-meta">
+                Hal. {page} / {lastPage}
+                {warehouseId ? ` • Gudang #${warehouseId}` : ""}
+              </span>
+            </div>
+
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              {loading ? (
+                <span className="badge badge-warning">Memuat…</span>
+              ) : (
+                <span className="badge badge-success">{items.length} item</span>
+              )}
+            </div>
+          </div>
+
+          {/* Grid */}
+          {loading && items.length === 0 ? (
+            <div className="pg-grid" aria-busy="true" aria-label="Memuat katalog">
+              {Array.from({ length: Math.min(12, perPage) }).map((_, i) => (
+                <ProductCardSkeleton key={`sk-${i}`} keyId={`sk-${i}`} />
+              ))}
+            </div>
+          ) : !loading && items.length === 0 ? (
+            <div className="pg-empty">Belum ada produk aktif.</div>
+          ) : (
+            <div className="pg-grid">
+              {items.map((p) => {
+                const fallbackPath =
+                  p.media?.find((m) => m.is_primary)?.path || p.media?.[0]?.path || null;
+                const img = ensureImageUrl(p.image_url ?? null, fallbackPath);
+
+                const minPrice = getMinVariantPrice(p);
+                const hasVariants = Array.isArray(p.variants) && p.variants.length > 0;
+
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => onPick?.(p)}
+                    className="pg-card"
+                    type="button"
+                    aria-label={`Tambah ${p.nama} ke keranjang`}
+                  >
+                    <div className="pg-thumb">
+                      {img ? (
+                        <img
+                          src={img}
+                          alt={p.nama}
+                          loading="lazy"
+                          decoding="async"
+                          onError={(e) => {
+                            e.currentTarget.src = "/no-image.svg";
+                          }}
+                        />
+                      ) : (
+                        <div className="pg-noimg">No Image</div>
+                      )}
+                    </div>
+
+                    <div className="pg-body">
+                      <div className="pg-name">{p.nama}</div>
+
+                      <div className="pg-row">
+                        <div className="pg-price">
+                          Rp{formatIDR(minPrice ?? 0)}
+                        </div>
+                        <div className="pg-variant">
+                          {hasVariants ? `${p.variants!.length} varian` : "—"}
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Pagination */}
+          {!showBlockingError && (
+            <div className="pg-footer">
+              <div className="pg-note">
+                Klik kartu produk untuk tambah cepat ke keranjang.
+              </div>
+
+              <div className="pg-pager">
+                <button
+                  className="button button-outline"
+                  onClick={() => setPage((curr) => Math.max(1, curr - 1))}
+                  disabled={page <= 1}
+                  type="button"
+                >
+                  ← Sebelumnya
+                </button>
+                <button
+                  className="button button-outline"
+                  onClick={() => setPage((curr) => Math.min(lastPage, curr + 1))}
+                  disabled={page >= lastPage}
+                  type="button"
+                >
+                  Selanjutnya →
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Non-blocking warning (masih tampil data terakhir) */}
+          {error && items.length > 0 && (
+            <div className="alert alert-warning" style={{ marginTop: 10, fontSize: 12 }}>
+              Terjadi kendala sementara: {error}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -9753,35 +11862,51 @@ export default function ProductSearch({ warehouseId }: Props) {
 
 ### src/components/pos/ReceiptPreview.tsx
 
-- SHA: `27738d426179`  
-- Ukuran: 2 KB
+- SHA: `82a4e630e12c`  
+- Ukuran: 4 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
 // src/components/pos/ReceiptPreview.tsx
-import React, { useEffect, useState } from 'react';
-import { getReceiptHtml } from '../../api/pos';
+import React, { useEffect, useMemo, useState } from "react";
+import { getReceiptHtml } from "../../api/pos";
 
 type Props = { orderId: number; phone?: string | null };
 
 export default function ReceiptPreview({ orderId, phone }: Props): React.ReactElement {
-  const [html, setHtml] = useState<string>('');
+  const [html, setHtml] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    let alive = true;
     (async () => {
       try {
+        setLoading(true);
+        setError(null);
+        setHtml("");
+
         // HTML thermal 58/80mm
-        setHtml(await getReceiptHtml(orderId));
+        const res = await getReceiptHtml(orderId);
+        if (!alive) return;
+        setHtml(res);
       } catch (e) {
+        if (!alive) return;
         setError((e as Error).message);
+      } finally {
+        if (!alive) return;
+        setLoading(false);
       }
     })();
+
+    return () => {
+      alive = false;
+    };
   }, [orderId]);
 
-  function doPrint() {
+  function doPrint(): void {
     if (!html) return;
-    const win = window.open('', '_blank', 'width=400,height=600');
+    const win = window.open("", "_blank", "width=420,height=640");
     if (!win) return;
     win.document.open();
     win.document.write(html);
@@ -9790,44 +11915,100 @@ export default function ReceiptPreview({ orderId, phone }: Props): React.ReactEl
     win.print();
   }
 
-  function waLink(): string | null {
+  const waHref = useMemo<string | null>(() => {
     if (!phone) return null;
     const text = `Order #${orderId}\nTerima kasih. Struk pembelian terlampir.`;
-    return `https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`;
-  }
+    return `https://wa.me/${phone.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`;
+  }, [phone, orderId]);
+
+  const canPrint = Boolean(html) && !loading && !error;
 
   return (
     <div className="card">
-      <div className="modal-header">
-        <h3 className="modal-title">Struk</h3>
-        <div className="btn-group">
-          <button className="button button-outline" onClick={doPrint} disabled={!html}>
+      {/* Header card (lebih konsisten daripada modal-header) */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          gap: 12,
+          flexWrap: "wrap",
+        }}
+      >
+        <div style={{ minWidth: 220 }}>
+          <div style={{ fontWeight: 800, fontSize: 16, lineHeight: 1.2 }}>Struk</div>
+          <div style={{ marginTop: 4, fontSize: 12, opacity: 0.75 }}>
+            Order #{orderId} • Preview thermal (58/80mm)
+          </div>
+        </div>
+
+        <div className="btn-group" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button
+            className="button button-outline"
+            onClick={doPrint}
+            disabled={!canPrint}
+            aria-disabled={!canPrint}
+            title={!canPrint ? "Struk belum siap untuk dicetak" : "Cetak struk"}
+          >
             Print
           </button>
-          {waLink() && (
-            <a
-              className="button"
-              href={waLink()!}
-              target="_blank"
-              rel="noreferrer"
-            >
+
+          {waHref && (
+            <a className="button button-primary" href={waHref} target="_blank" rel="noreferrer">
               Kirim WA
             </a>
           )}
         </div>
       </div>
 
+      {/* Spacing divider halus */}
+      <div style={{ height: 1, background: "rgba(0,0,0,.06)", margin: "12px 0" }} />
+
       {error && <div className="alert alert-danger">{error}</div>}
 
       {!error && (
-        <div className="card soft">
-          {/* gunakan container card untuk border & shadow;
-              iframe dibiarkan clean agar fokus ke konten struk */}
-          <iframe
-            title="Receipt"
-            srcDoc={html}
-            style={{ width: '100%', height: '24rem', border: 'none' }}
-          />
+        <div className="card soft" style={{ padding: 12 }}>
+          {/* Loading state */}
+          {loading && (
+            <div style={{ padding: 12 }}>
+              <div className="text-sm opacity-70">Memuat struk…</div>
+              <div style={{ height: 10 }} />
+              <div
+                style={{
+                  height: 320,
+                  borderRadius: 12,
+                  background: "rgba(0,0,0,.05)",
+                }}
+              />
+            </div>
+          )}
+
+          {!loading && html && (
+            <div
+              style={{
+                borderRadius: 14,
+                overflow: "hidden",
+                border: "1px solid rgba(0,0,0,.06)",
+                background: "#fff",
+              }}
+            >
+              {/* iframe clean agar fokus ke konten struk */}
+              <iframe
+                title="Receipt"
+                srcDoc={html}
+                style={{
+                  width: "100%",
+                  height: "26rem",
+                  border: "none",
+                  display: "block",
+                }}
+              />
+            </div>
+          )}
+
+          {!loading && !html && (
+            <div className="empty-state">Struk belum tersedia.</div>
+          )}
         </div>
       )}
     </div>
@@ -9839,8 +12020,8 @@ export default function ReceiptPreview({ orderId, phone }: Props): React.ReactEl
 
 ### src/components/products/ImageDropzone.tsx
 
-- SHA: `43087d25c00b`  
-- Ukuran: 8 KB
+- SHA: `06f9b302fec6`  
+- Ukuran: 12 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -9854,21 +12035,27 @@ type Props = { productId: number };
 /* =========================
    Helpers ENV & URL (tanpa `as any`)
    ========================= */
-function getEnvStr(v: unknown): string { return typeof v === "string" ? v : ""; }
-/** Hilangkan trailing slash */
-function rtrimSlash(s: string): string { return s.replace(/\/+$/, ""); }
-/** Ambil origin backend dari VITE_API_URL / VITE_API_BASE_URL, buang /api(/vX)? */
+function getEnvStr(v: unknown): string {
+  return typeof v === "string" ? v : "";
+}
+function rtrimSlash(s: string): string {
+  return s.replace(/\/+$/, "");
+}
 function getApiOrigin(): string {
   const ENV = import.meta.env;
   const rawBase = getEnvStr(ENV.VITE_API_URL) || getEnvStr(ENV.VITE_API_BASE_URL) || "";
   const trimmed = rtrimSlash(rawBase);
   const noApi = trimmed.replace(/\/api(\/v\d+)?$/i, "");
-  try { if (noApi) return new URL(noApi).origin; } catch { /* noop */ }
+  try {
+    if (noApi) return new URL(noApi).origin;
+  } catch {
+    /* noop */
+  }
   if (typeof window !== "undefined") return window.location.origin;
   return "";
 }
 const API_ORIGIN = getApiOrigin();
-/** Bangun URL absolut untuk media product */
+
 function resolveMediaUrl(m: ProductMedia): string {
   const direct = m.thumb_url || m.url;
   if (direct) {
@@ -9880,13 +12067,11 @@ function resolveMediaUrl(m: ProductMedia): string {
   return `${API_ORIGIN}${path}`;
 }
 
-/* =========================
-   Komponen
-   ========================= */
-export default function ImageDropzone({ productId }: Props) {
+export default function ImageDropzone({ productId }: Props): React.ReactElement {
   const [rows, setRows] = useState<ProductMedia[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const ref = useRef<HTMLInputElement | null>(null);
 
@@ -9895,7 +12080,7 @@ export default function ImageDropzone({ productId }: Props) {
     setError(null);
     try {
       await listMedia(productId)
-        .then((rows) => setRows(rows))
+        .then((r) => setRows(r))
         .catch((e) => setError(e?.message || "Gagal memuat media."))
         .finally(() => setLoading(false));
     } catch (e) {
@@ -9906,7 +12091,9 @@ export default function ImageDropzone({ productId }: Props) {
     }
   }, [productId]);
 
-  useEffect(() => { void refresh(); }, [refresh]);
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
 
   type ApiErr = { message?: string; errors?: Record<string, string[]> };
   const renderErrors = useCallback((e: ApiErr | null): string | null => {
@@ -9921,15 +12108,14 @@ export default function ImageDropzone({ productId }: Props) {
   const onFiles = useCallback(
     async (files: File[]) => {
       if (!files.length) return;
-      if (import.meta.env.DEV) {
-        console.log("[ImageDropzone] files:", files.map(f => ({ name: f.name, type: f.type, size: f.size })));
-      }
+
       const MAX_MB = 5;
       const bad = files.find((f) => !f.type.startsWith("image/") || f.size > MAX_MB * 1024 * 1024);
       if (bad) {
         setError(!bad.type.startsWith("image/") ? "File harus berupa gambar." : `Ukuran gambar maksimal ${MAX_MB}MB per file.`);
         return;
       }
+
       setBusy(true);
       setError(null);
       try {
@@ -9945,14 +12131,21 @@ export default function ImageDropzone({ productId }: Props) {
     [productId, refresh, renderErrors]
   );
 
-  function handleBrowse() { ref.current?.click(); }
+  function handleBrowse(): void {
+    ref.current?.click();
+  }
 
   const makePrimary = useCallback(
     async (m: ProductMedia) => {
       setBusy(true);
-      try { await setPrimaryMedia(productId, m.id); await refresh(); }
-      catch (e) { setError((e as { message?: string })?.message ?? "Gagal set primary."); }
-      finally { setBusy(false); }
+      try {
+        await setPrimaryMedia(productId, m.id);
+        await refresh();
+      } catch (e) {
+        setError((e as { message?: string })?.message ?? "Gagal set primary.");
+      } finally {
+        setBusy(false);
+      }
     },
     [productId, refresh]
   );
@@ -9961,34 +12154,89 @@ export default function ImageDropzone({ productId }: Props) {
     async (m: ProductMedia) => {
       if (!confirm("Hapus gambar ini?")) return;
       setBusy(true);
-      try { await deleteMedia(productId, m.id); await refresh(); }
-      catch (e) { setError((e as { message?: string })?.message ?? "Gagal menghapus media."); }
-      finally { setBusy(false); }
+      try {
+        await deleteMedia(productId, m.id);
+        await refresh();
+      } catch (e) {
+        setError((e as { message?: string })?.message ?? "Gagal menghapus media.");
+      } finally {
+        setBusy(false);
+      }
     },
     [productId, refresh]
   );
 
   return (
     <div className="section">
+      {/* Header area */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          gap: "var(--space-4)",
+          flexWrap: "wrap",
+          marginBottom: "var(--space-3)",
+        }}
+      >
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontWeight: 800, letterSpacing: "-0.01em" }}>Media Produk</div>
+          <div className="text-dim" style={{ fontSize: ".9rem", marginTop: 4 }}>
+            Upload beberapa gambar. Tandai salah satu sebagai <b>Primary</b> untuk tampil utama.
+          </div>
+        </div>
+
+        <button
+          type="button"
+          className="button button-outline"
+          disabled={busy}
+          onClick={handleBrowse}
+          style={{ whiteSpace: "nowrap" }}
+        >
+          Pilih Gambar
+        </button>
+      </div>
+
       {/* Dropzone */}
       <div
         className={`card ${busy ? "opacity-50" : ""}`}
-        onDragOver={(e) => { e.preventDefault(); }}
+        role="button"
+        tabIndex={0}
+        aria-disabled={busy ? "true" : "false"}
+        onClick={handleBrowse}
+        onKeyDown={(e) => {
+          if (busy) return;
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handleBrowse();
+          }
+        }}
+        onDragEnter={(e) => {
+          e.preventDefault();
+          setDragOver(true);
+        }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragOver(true);
+        }}
+        onDragLeave={(e) => {
+          e.preventDefault();
+          setDragOver(false);
+        }}
         onDrop={(e) => {
           e.preventDefault();
+          setDragOver(false);
           const files = Array.from(e.dataTransfer.files || []).filter((f) => f.type.startsWith("image/"));
           void onFiles(files);
         }}
-        onClick={handleBrowse}
-        role="button"
-        tabIndex={0}
-        // styling minimal agar sesuai UI-UX (tanpa menambah index.css)
         style={{
-          border: "2px dashed rgba(0,0,0,.15)",
-          textAlign: "center",
-          cursor: "pointer",
           padding: "var(--space-5)",
-          background: "var(--color-surface)"
+          cursor: busy ? "not-allowed" : "pointer",
+          border: dragOver ? "2px dashed var(--color-primary)" : "2px dashed var(--color-border)",
+          background: dragOver ? "rgba(192,70,87,0.06)" : "var(--color-surface)",
+          transition: "border-color .15s ease, background .15s ease, transform .06s ease",
+          transform: dragOver ? "scale(0.995)" : "scale(1)",
+          textAlign: "center",
         }}
       >
         <input
@@ -10003,65 +12251,133 @@ export default function ImageDropzone({ productId }: Props) {
           }}
           style={{ display: "none" }}
         />
-        <div className="mb-1" style={{ fontWeight: 600 }}>Tarik & letakkan gambar di sini</div>
-        <div className="text-dim" style={{ fontSize: ".9rem" }}>atau klik untuk memilih file</div>
+
+        <div
+          style={{
+            width: 52,
+            height: 52,
+            margin: "0 auto",
+            borderRadius: "999px",
+            border: "1px solid var(--color-border)",
+            display: "grid",
+            placeItems: "center",
+            boxShadow: "var(--shadow-xs)",
+            background: "#fff",
+          }}
+          aria-hidden="true"
+        >
+          <span style={{ fontSize: 22, lineHeight: 1 }}>⬆️</span>
+        </div>
+
+        <div style={{ marginTop: "var(--space-3)", fontWeight: 800 }}>
+          {dragOver ? "Lepaskan untuk upload" : "Tarik & letakkan gambar di sini"}
+        </div>
+        <div className="text-dim" style={{ fontSize: ".9rem", marginTop: 6 }}>
+          atau klik untuk memilih file (maks. 5MB per gambar)
+        </div>
       </div>
 
-      {/* List */}
-      {loading ? (
-        <div className="card">Memuat…</div>
-      ) : (rows?.length ?? 0) === 0 ? (
-        <div className="card text-dim" style={{ fontSize: ".9rem" }}>Belum ada media.</div>
-      ) : (
-        <div className="form-row form-row--3">
-          {(rows ?? []).map((m) => (
-            <div key={m.id} className="card">
-              <img
-                src={resolveMediaUrl(m)}
-                alt=""
-                loading="lazy"
-                onError={(e) => {
-                  const el = e.currentTarget as HTMLImageElement;
-                  if (!el.dataset.fallback && m.path) {
-                    el.dataset.fallback = "1";
-                    el.src = `/storage/${m.path}`;
-                  }
-                }}
-                style={{
-                  width: "100%",
-                  aspectRatio: "1 / 1",
-                  objectFit: "cover",
-                  borderRadius: "calc(var(--radius-lg) - 2px)"
-                }}
-              />
-              {/* info + actions */}
-              <div className="mt-2">
-                {m.is_primary && <span className="badge badge-success">Primary</span>}
-              </div>
-              <div className="mt-2">
-                <button
-                  className="button"
-                  disabled={busy || m.is_primary}
-                  onClick={() => void makePrimary(m)}
-                >
-                  Jadikan utama
-                </button>
-                <button
-                  className="button button-outline mt-2"
-                  disabled={busy}
-                  onClick={() => void removeItem(m)}
-                >
-                  Hapus
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Gallery */}
+      <div style={{ marginTop: "var(--space-4)" }}>
+        {loading ? (
+          <div className="card">Memuat…</div>
+        ) : (rows?.length ?? 0) === 0 ? (
+          <div className="card text-dim" style={{ fontSize: ".9rem" }}>
+            Belum ada media.
+          </div>
+        ) : (
+          <div className="form-row form-row--3">
+            {(rows ?? []).map((m) => {
+              const url = resolveMediaUrl(m);
 
+              return (
+                <div key={m.id} className="card" style={{ padding: "var(--space-4)" }}>
+                  <div style={{ position: "relative" }}>
+                    <div
+                      style={{
+                        width: "100%",
+                        aspectRatio: "1 / 1",
+                        borderRadius: "calc(var(--radius-lg) - 2px)",
+                        overflow: "hidden",
+                        border: "1px solid var(--color-border)",
+                        background: "#fafafa",
+                      }}
+                    >
+                      <img
+                        src={url}
+                        alt=""
+                        loading="lazy"
+                        onError={(e) => {
+                          const el = e.currentTarget as HTMLImageElement;
+                          if (!el.dataset.fallback && m.path) {
+                            el.dataset.fallback = "1";
+                            el.src = `/storage/${m.path}`;
+                          }
+                        }}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          display: "block",
+                        }}
+                      />
+                    </div>
+
+                    {m.is_primary && (
+                      <div style={{ position: "absolute", left: 10, top: 10 }}>
+                        <span className="badge badge-success">Primary</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div style={{ marginTop: "var(--space-3)" }}>
+                    <div style={{ display: "flex", gap: "var(--space-2)", flexWrap: "wrap" }}>
+                      <button
+                        type="button"
+                        className={`button ${m.is_primary ? "" : "button-primary"}`}
+                        disabled={busy || m.is_primary}
+                        onClick={() => void makePrimary(m)}
+                        style={{
+                          flex: 1,
+                          minWidth: 140,
+                          opacity: m.is_primary ? 0.7 : 1,
+                        }}
+                        title={m.is_primary ? "Sudah Primary" : "Jadikan sebagai Primary"}
+                      >
+                        {m.is_primary ? "Primary" : "Jadikan Utama"}
+                      </button>
+
+                      <button
+                        type="button"
+                        className="button button-outline"
+                        disabled={busy}
+                        onClick={() => void removeItem(m)}
+                        style={{ flex: 1, minWidth: 120 }}
+                      >
+                        Hapus
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Error */}
       {error && (
-        <div className="card" style={{ borderColor: "rgba(192,70,87,.35)" }}>
-          <pre className="text-dim" style={{ whiteSpace: "pre-wrap" }}>{error}</pre>
+        <div className="card" style={{ borderColor: "rgba(192,70,87,.35)", marginTop: "var(--space-4)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <span className="badge badge-danger">Error</span>
+            <span className="text-dim" style={{ fontSize: ".92rem" }}>
+              Terjadi kesalahan.
+            </span>
+          </div>
+          <pre className="text-dim" style={{ whiteSpace: "pre-wrap", marginTop: 10, marginBottom: 0 }}>
+            {error}
+          </pre>
         </div>
       )}
     </div>
@@ -10073,8 +12389,8 @@ export default function ImageDropzone({ productId }: Props) {
 
 ### src/components/products/PriceInput.tsx
 
-- SHA: `bcf244ac0844`  
-- Ukuran: 1 KB
+- SHA: `255ac5fab254`  
+- Ukuran: 3 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -10087,15 +12403,23 @@ type Props = {
   min?: number;
   disabled?: boolean;
   className?: string;
-  /** Tampilkan placeholder mis. "0" */
   placeholder?: string;
+  /** Default: "Rp" */
+  prefix?: string;
+  /** Lebar input (default 10rem). Jika mau full, kirim "100%" */
+  width?: string;
 };
 
 function clamp(n: number, min = 0): number {
   return Number.isFinite(n) ? Math.max(min, n) : min;
 }
 
-/** Input harga yang menjaga value sebagai number murni */
+/**
+ * PriceInput (UI rapi & konsisten)
+ * - Value tetap number murni (tidak memformat ribuan di dalam input)
+ * - UI: prefix "Rp" + input align-right
+ * - Spinner number diminimalkan (tanpa wajib ubah CSS global)
+ */
 export default function PriceInput({
   value,
   onChange,
@@ -10103,32 +12427,73 @@ export default function PriceInput({
   disabled,
   className,
   placeholder = "0",
+  prefix = "Rp",
+  width = "10rem",
 }: Props): React.ReactElement {
   const display = useMemo(() => String(Number.isFinite(value) ? value : 0), [value]);
 
-  // Jika className tidak disuplai, gunakan style minimal untuk align-right dan lebar kecil
-  const fallbackStyle: React.CSSProperties | undefined =
-    className ? undefined : { textAlign: "right", width: "8rem" };
+  const wrapperStyle: React.CSSProperties = {
+    display: "flex",
+    alignItems: "stretch",
+    width,
+    opacity: disabled ? 0.8 : 1,
+  };
+
+  const prefixStyle: React.CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    padding: "0 0.75rem",
+    border: "1px solid var(--color-border)",
+    borderRight: "none",
+    borderTopLeftRadius: "var(--radius-lg)",
+    borderBottomLeftRadius: "var(--radius-lg)",
+    background: "rgba(15,23,42,0.03)",
+    fontWeight: 700,
+    fontSize: ".9rem",
+    color: "var(--color-text)",
+    userSelect: "none",
+    whiteSpace: "nowrap",
+  };
+
+  const inputStyle: React.CSSProperties = {
+    textAlign: "right",
+    borderTopLeftRadius: 0,
+    borderBottomLeftRadius: 0,
+    width: "100%",
+    // Hilangkan spinner di Firefox (Chrome/Safari via CSS pseudo-element tidak bisa inline,
+    // tapi ini sudah mengurangi perbedaan tampilan antar browser)
+    MozAppearance: "textfield",
+  };
 
   return (
-    <input
-      type="number"
-      inputMode="decimal"
-      min={min}
-      step="1"
-      placeholder={placeholder}
-      className={className ?? "input"}
-      style={fallbackStyle}
-      value={display}
-      disabled={disabled}
-      onChange={(e) => {
-        const n = Number(e.target.value);
-        onChange(clamp(n, min));
-      }}
-      onBlur={(e) => {
-        if (e.currentTarget.value === "") onChange(min);
-      }}
-    />
+    <div style={wrapperStyle} aria-disabled={disabled ? "true" : "false"}>
+      <span style={prefixStyle}>{prefix}</span>
+
+      <input
+        type="number"
+        inputMode="decimal"
+        min={min}
+        step="1"
+        placeholder={placeholder}
+        className={className ?? "input"}
+        value={display}
+        disabled={disabled}
+        style={inputStyle}
+        onChange={(e) => {
+          const raw = e.target.value;
+
+          // Kalau user kosongkan input saat mengetik, jangan langsung dipaksa min.
+          // Ini menjaga UX, tapi tetap tidak mengubah logika: onBlur akan mengembalikan min.
+          if (raw === "") return;
+
+          const n = Number(raw);
+          onChange(clamp(n, min));
+        }}
+        onBlur={(e) => {
+          if (e.currentTarget.value === "") onChange(min);
+        }}
+      />
+    </div>
   );
 }
 
@@ -10137,8 +12502,8 @@ export default function PriceInput({
 
 ### src/components/products/ProductFilters.tsx
 
-- SHA: `254df371b03f`  
-- Ukuran: 3 KB
+- SHA: `9fe8d2b9c5f0`  
+- Ukuran: 6 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -10154,59 +12519,155 @@ type Props = {
 const SORTS: Array<{ v: ProductQuery["sort"]; label: string }> = [
   { v: "-created_at", label: "Terbaru" },
   { v: "created_at", label: "Terlama" },
-  { v: "nama", label: "Nama (A-Z)" },
-  { v: "-nama", label: "Nama (Z-A)" },
+  { v: "nama", label: "Nama (A–Z)" },
+  { v: "-nama", label: "Nama (Z–A)" },
 ];
 
 const PER_PAGES = [10, 25, 50, 100];
 
-export default function ProductFilters({ value, categories, onChange }: Props) {
+function isDefault(value: ProductQuery): boolean {
+  const searchEmpty = (value.search ?? "").trim() === "";
+  const catEmpty = !value.category_id;
+  const sortDefault = (value.sort ?? "-created_at") === "-created_at";
+  const perDefault = (value.per_page ?? 10) === 10;
+  const activeOff = !value.is_active;
+  return searchEmpty && catEmpty && sortDefault && perDefault && activeOff;
+}
+
+export default function ProductFilters({ value, categories, onChange }: Props): React.ReactElement {
+  const canReset = !isDefault(value);
+
+  function reset(): void {
+    // hanya reset filter UI; tidak mengubah struktur query lain yang mungkin Anda pakai
+    onChange({
+      ...value,
+      page: 1,
+      search: "",
+      category_id: undefined,
+      sort: "-created_at",
+      per_page: 10,
+      is_active: false,
+    });
+  }
+
   return (
-    <div>
-      {/* Baris utama: Search, Kategori, Sort */}
-      <div className="form-row form-row--3">
-        <input
-          className="input"
-          placeholder="Cari nama produk…"
-          value={value.search ?? ""}
-          onChange={(e) => onChange({ ...value, page: 1, search: e.target.value })}
-        />
+    <div className="card" style={{ padding: "var(--space-5)" }}>
+      {/* Header */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          gap: "var(--space-3)",
+          flexWrap: "wrap",
+          marginBottom: "var(--space-4)",
+        }}
+      >
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontWeight: 800, letterSpacing: "-0.01em" }}>Filter Produk</div>
+          <div className="text-dim" style={{ fontSize: ".9rem", marginTop: 4 }}>
+            Cari, pilih kategori, dan atur urutan tampilan.
+          </div>
+        </div>
 
-        <select
-          className="select"
-          value={value.category_id ?? ""}
-          onChange={(e) =>
-            onChange({
-              ...value,
-              page: 1,
-              category_id: e.target.value ? Number(e.target.value) : undefined,
-            })
-          }
+        <button
+          type="button"
+          className="button button-outline"
+          onClick={reset}
+          disabled={!canReset}
+          style={{ whiteSpace: "nowrap" }}
+          title={!canReset ? "Filter sudah default" : "Reset semua filter"}
         >
-          <option value="">Semua Kategori</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.nama}
-            </option>
-          ))}
-        </select>
-
-        <select
-          className="select"
-          value={value.sort ?? "-created_at"}
-          onChange={(e) => onChange({ ...value, page: 1, sort: e.target.value as ProductQuery["sort"] })}
-        >
-          {SORTS.map((s) => (
-            <option key={s.v} value={s.v ?? ""}>
-              {s.label}
-            </option>
-          ))}
-        </select>
+          Reset
+        </button>
       </div>
 
-      {/* Baris sekunder: checkbox aktif (kiri) & per_page (kanan) */}
-      <div className="row row--between" style={{ marginTop: "0.75rem" }}>
-        <label htmlFor="only-active" className="row row--center" style={{ gap: "0.5rem" }}>
+      {/* Baris utama: Search, Kategori, Sort */}
+      <div className="form-row form-row--3">
+        <div style={{ display: "grid", gap: 6 }}>
+          <label className="text-dim" style={{ fontSize: ".85rem" }}>
+            Pencarian
+          </label>
+          <input
+            className="input"
+            placeholder="Cari nama produk…"
+            value={value.search ?? ""}
+            onChange={(e) => onChange({ ...value, page: 1, search: e.target.value })}
+          />
+        </div>
+
+        <div style={{ display: "grid", gap: 6 }}>
+          <label className="text-dim" style={{ fontSize: ".85rem" }}>
+            Kategori
+          </label>
+          <select
+            className="select"
+            value={value.category_id ?? ""}
+            onChange={(e) =>
+              onChange({
+                ...value,
+                page: 1,
+                category_id: e.target.value ? Number(e.target.value) : undefined,
+              })
+            }
+          >
+            <option value="">Semua Kategori</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nama}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div style={{ display: "grid", gap: 6 }}>
+          <label className="text-dim" style={{ fontSize: ".85rem" }}>
+            Urutkan
+          </label>
+          <select
+            className="select"
+            value={value.sort ?? "-created_at"}
+            onChange={(e) =>
+              onChange({
+                ...value,
+                page: 1,
+                sort: e.target.value as ProductQuery["sort"],
+              })
+            }
+          >
+            {SORTS.map((s) => (
+              <option key={s.v} value={s.v ?? ""}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Baris sekunder: chips + per_page */}
+      <div
+        className="row row--between"
+        style={{
+          marginTop: "var(--space-4)",
+          paddingTop: "var(--space-4)",
+          borderTop: "1px solid var(--color-border)",
+          gap: "var(--space-3)",
+          flexWrap: "wrap",
+        }}
+      >
+        {/* Left: toggle aktif */}
+        <label
+          htmlFor="only-active"
+          className="row row--center"
+          style={{
+            gap: "0.6rem",
+            userSelect: "none",
+            padding: "0.45rem 0.65rem",
+            borderRadius: "999px",
+            border: "1px solid var(--color-border)",
+            background: "var(--color-surface)",
+          }}
+        >
           <input
             id="only-active"
             type="checkbox"
@@ -10214,15 +12675,21 @@ export default function ProductFilters({ value, categories, onChange }: Props) {
             checked={!!value.is_active}
             onChange={(e) => onChange({ ...value, page: 1, is_active: e.target.checked })}
           />
-          <span className="text-muted">Hanya aktif</span>
+          <span className="text-dim" style={{ fontSize: ".9rem" }}>
+            Hanya aktif
+          </span>
         </label>
 
-        <div className="row row--center" style={{ gap: "0.5rem" }}>
-          <span className="text-muted">Per halaman</span>
+        {/* Right: per page */}
+        <div className="row row--center" style={{ gap: "0.6rem" }}>
+          <span className="text-dim" style={{ fontSize: ".9rem" }}>
+            Per halaman
+          </span>
           <select
             className="select select--sm"
             value={value.per_page ?? 10}
             onChange={(e) => onChange({ ...value, page: 1, per_page: Number(e.target.value) })}
+            style={{ minWidth: 92 }}
           >
             {PER_PAGES.map((n) => (
               <option key={n} value={n}>
@@ -10230,6 +12697,16 @@ export default function ProductFilters({ value, categories, onChange }: Props) {
               </option>
             ))}
           </select>
+        </div>
+      </div>
+
+      {/* Optional: status ringkas (biar tidak terasa "kosong") */}
+      <div style={{ marginTop: "var(--space-3)" }}>
+        <div className="text-dim" style={{ fontSize: ".85rem" }}>
+          Status:{" "}
+          <b style={{ color: "var(--color-text)" }}>
+            {canReset ? "Filter diterapkan" : "Default"}
+          </b>
         </div>
       </div>
     </div>
@@ -10241,21 +12718,27 @@ export default function ProductFilters({ value, categories, onChange }: Props) {
 
 ### src/components/products/ProductFormDialog.tsx
 
-- SHA: `0857976dec32`  
-- Ukuran: 6 KB
+- SHA: `7015a2f03914`  
+- Ukuran: 11 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
 // src/components/products/ProductFormDialog.tsx
 import React, { useEffect, useMemo, useState } from "react";
-import type { Product, ProductCreatePayload, ProductUpdatePayload } from "../../types/product";
+import type {
+  Product,
+  ProductCreatePayload,
+  ProductUpdatePayload,
+} from "../../types/product";
 
 type Props = {
   open: boolean;
   initial?: Product | null;
   categories: Array<{ id: number; nama: string }>;
   onClose: () => void;
-  onSubmit: (payload: ProductCreatePayload | ProductUpdatePayload) => Promise<boolean>;
+  onSubmit: (
+    payload: ProductCreatePayload | ProductUpdatePayload
+  ) => Promise<boolean>;
 };
 
 function slugify(s: string) {
@@ -10267,8 +12750,15 @@ function slugify(s: string) {
     .replace(/(^-|-$)+/g, "");
 }
 
-export default function ProductFormDialog({ open, initial, categories, onClose, onSubmit }: Props) {
+export default function ProductFormDialog({
+  open,
+  initial,
+  categories,
+  onClose,
+  onSubmit,
+}: Props): React.ReactElement | null {
   const isEdit = !!initial?.id;
+
   const [form, setForm] = useState<ProductCreatePayload>({
     category_id: initial?.category_id ?? (categories[0]?.id ?? 0),
     nama: initial?.nama ?? "",
@@ -10276,6 +12766,7 @@ export default function ProductFormDialog({ open, initial, categories, onClose, 
     deskripsi: initial?.deskripsi ?? "",
     is_active: initial?.is_active ?? true,
   });
+
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -10292,12 +12783,34 @@ export default function ProductFormDialog({ open, initial, categories, onClose, 
     }
   }, [open, initial, categories]);
 
-  const autoSlug = useMemo(() => (form.nama ? slugify(form.nama) : ""), [form.nama]);
+  const autoSlug = useMemo(
+    () => (form.nama ? slugify(form.nama) : ""),
+    [form.nama]
+  );
+
+  // Lock scroll + ESC close (UI-only improvement)
+  useEffect(() => {
+    if (!open) return;
+
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open, onClose]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
     setErr(null);
+
     const payload: ProductCreatePayload | ProductUpdatePayload = {
       category_id: form.category_id,
       nama: form.nama.trim(),
@@ -10305,130 +12818,267 @@ export default function ProductFormDialog({ open, initial, categories, onClose, 
       deskripsi: form.deskripsi || null,
       is_active: form.is_active,
     };
+
     const ok = await onSubmit(payload).catch((e) => {
       setErr(e?.message || "Gagal menyimpan.");
       return false;
     });
+
     setSaving(false);
     if (ok) onClose();
   }
 
   if (!open) return null;
 
+  const titleText = isEdit ? "Edit Produk" : "Tambah Produk";
+
   return (
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby="product-form-title"
-      // overlay tanpa tambah kelas baru (supaya patuh aturanmu)
       style={{
         position: "fixed",
         inset: 0,
         zIndex: 1000,
-        background: "rgba(0,0,0,.35)",
+        background:
+          "radial-gradient(900px 500px at 20% 10%, rgba(192,70,87,0.18), transparent 55%), rgba(0,0,0,0.42)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: "12px",
+        padding: "clamp(10px, 2vw, 16px)",
       }}
-      onClick={onClose}
+      onMouseDown={(e) => {
+        // click on overlay closes; click inside should not
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <form
         onSubmit={handleSubmit}
         className="card"
+        onMouseDown={(e) => e.stopPropagation()}
         style={{
           width: "100%",
-          maxWidth: 720,
-          padding: 16,
-          cursor: "auto",
+          maxWidth: 760,
+          padding: 0,
+          overflow: "hidden",
+          borderRadius: "var(--radius-xl)",
+          boxShadow: "0 30px 80px rgba(0,0,0,0.35)",
         }}
-        onClick={(e) => e.stopPropagation()}
       >
-        <div className="row row--between" style={{ marginBottom: 8 }}>
-          <div id="product-form-title" className="title-sm">
-            {isEdit ? "Edit Produk" : "Tambah Produk"}
+        {/* Header */}
+        <div
+          style={{
+            padding: "var(--space-4) var(--space-5)",
+            borderBottom: "1px solid var(--color-border)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "var(--space-3)",
+          }}
+        >
+          <div style={{ minWidth: 0 }}>
+            <div
+              id="product-form-title"
+              style={{
+                fontWeight: 900,
+                letterSpacing: "-0.01em",
+                fontSize: "1.05rem",
+                lineHeight: 1.2,
+              }}
+            >
+              {titleText}
+            </div>
+            <div className="text-dim" style={{ fontSize: ".9rem", marginTop: 4 }}>
+              Isi detail produk dengan rapi. Slug dapat dibuat otomatis.
+            </div>
           </div>
-          <button type="button" className="button" onClick={onClose}>
-            Tutup
+
+          <button
+            type="button"
+            className="button button-ghost"
+            onClick={onClose}
+            aria-label="Tutup dialog"
+            style={{
+              borderRadius: "999px",
+              padding: "0.5rem 0.75rem",
+              whiteSpace: "nowrap",
+            }}
+          >
+            ✕
           </button>
         </div>
 
-        {/* Form grid sederhana pakai utilitas index.css */}
-        <div className="form-row form-row--2" style={{ marginTop: 8 }}>
-          <label className="form-field">
-            <span className="label">Kategori</span>
-            <select
-              className="select"
-              value={form.category_id}
-              onChange={(e) => setForm((f) => ({ ...f, category_id: Number(e.target.value) }))}
-              required
-            >
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.nama}
-                </option>
-              ))}
-            </select>
-          </label>
+        {/* Body */}
+        <div style={{ padding: "var(--space-5)" }}>
+          <div className="form-row form-row--2">
+            <label className="form-field">
+              <span className="label">Kategori</span>
+              <select
+                className="select"
+                value={form.category_id}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, category_id: Number(e.target.value) }))
+                }
+                required
+              >
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nama}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-          <label className="form-field">
-            <span className="label">Nama</span>
-            <input
-              className="input"
-              value={form.nama}
-              onChange={(e) => setForm((f) => ({ ...f, nama: e.target.value }))}
-              required
-            />
-          </label>
-        </div>
-
-        <div className="form-row">
-          <label className="form-field" style={{ width: "100%" }}>
-            <span className="label">Slug</span>
-            <input
-              className="input"
-              placeholder={autoSlug}
-              value={form.slug ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
-            />
-            <span className="help-text">Kosongkan untuk otomatis: {autoSlug || "-"}</span>
-          </label>
-        </div>
-
-        <div className="form-row">
-          <label className="form-field" style={{ width: "100%" }}>
-            <span className="label">Deskripsi</span>
-            <textarea
-              className="textarea"
-              rows={3}
-              value={form.deskripsi ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, deskripsi: e.target.value }))}
-            />
-          </label>
-        </div>
-
-        <div className="form-row" style={{ alignItems: "center" }}>
-          <label className="form-field" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-            <input
-              type="checkbox"
-              checked={!!form.is_active}
-              onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))}
-            />
-            <span>Aktif</span>
-          </label>
-        </div>
-
-        {err && (
-          <div className="badge badge-danger" style={{ marginTop: 8 }}>
-            {err}
+            <label className="form-field">
+              <span className="label">Nama</span>
+              <input
+                className="input"
+                value={form.nama}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, nama: e.target.value }))
+                }
+                required
+                placeholder="Contoh: Kopi Susu 250ml"
+              />
+            </label>
           </div>
-        )}
 
-        <div className="row row--end" style={{ gap: 8, marginTop: 12 }}>
-          <button type="button" onClick={onClose} className="button">
+          <div className="form-row" style={{ marginTop: "var(--space-3)" }}>
+            <label className="form-field" style={{ width: "100%" }}>
+              <span className="label">Slug</span>
+
+              <div style={{ display: "flex", gap: "var(--space-2)", flexWrap: "wrap" }}>
+                <input
+                  className="input"
+                  placeholder={autoSlug}
+                  value={form.slug ?? ""}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, slug: e.target.value }))
+                  }
+                  style={{ flex: 1, minWidth: 240 }}
+                />
+
+                <button
+                  type="button"
+                  className="button button-outline"
+                  disabled={!autoSlug || saving}
+                  onClick={() =>
+                    setForm((f) => ({ ...f, slug: autoSlug }))
+                  }
+                  style={{ whiteSpace: "nowrap" }}
+                  title="Gunakan slug otomatis"
+                >
+                  Pakai Otomatis
+                </button>
+              </div>
+
+              <span className="help-text">
+                Kosongkan untuk otomatis: <b>{autoSlug || "-"}</b>
+              </span>
+            </label>
+          </div>
+
+          <div className="form-row" style={{ marginTop: "var(--space-3)" }}>
+            <label className="form-field" style={{ width: "100%" }}>
+              <span className="label">Deskripsi</span>
+              <textarea
+                className="textarea"
+                rows={4}
+                value={form.deskripsi ?? ""}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, deskripsi: e.target.value }))
+                }
+                placeholder="Opsional. Tambahkan informasi singkat tentang produk."
+              />
+            </label>
+          </div>
+
+          <div
+            style={{
+              marginTop: "var(--space-3)",
+              padding: "var(--space-3)",
+              border: "1px solid var(--color-border)",
+              borderRadius: "var(--radius-lg)",
+              background: "rgba(15,23,42,0.015)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "var(--space-3)",
+              flexWrap: "wrap",
+            }}
+          >
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontWeight: 800 }}>Status Produk</div>
+              <div className="text-dim" style={{ fontSize: ".9rem", marginTop: 2 }}>
+                Nonaktifkan jika produk tidak ingin ditampilkan/dijual.
+              </div>
+            </div>
+
+            <label
+              className="form-field"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 10,
+                margin: 0,
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={!!form.is_active}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, is_active: e.target.checked }))
+                }
+              />
+              <span style={{ fontWeight: 700 }}>
+                {form.is_active ? "Aktif" : "Nonaktif"}
+              </span>
+            </label>
+          </div>
+
+          {err && (
+            <div
+              className="card"
+              style={{
+                marginTop: "var(--space-4)",
+                borderColor: "rgba(192,70,87,.35)",
+                background: "rgba(192,70,87,0.06)",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span className="badge badge-danger">Error</span>
+                <span className="text-dim" style={{ fontSize: ".92rem" }}>
+                  Periksa input atau koneksi Anda.
+                </span>
+              </div>
+              <div style={{ marginTop: 8, fontWeight: 700 }}>{err}</div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div
+          style={{
+            padding: "var(--space-4) var(--space-5)",
+            borderTop: "1px solid var(--color-border)",
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "var(--space-2)",
+            flexWrap: "wrap",
+            background: "rgba(255,255,255,0.65)",
+          }}
+        >
+          <button type="button" onClick={onClose} className="button" disabled={saving}>
             Batal
           </button>
-          <button disabled={saving} className="button button-primary" aria-busy={saving}>
+
+          <button
+            disabled={saving}
+            className="button button-primary"
+            aria-busy={saving}
+            style={{ minWidth: 140 }}
+          >
             {saving ? "Menyimpan…" : "Simpan"}
           </button>
         </div>
@@ -10442,8 +13092,8 @@ export default function ProductFormDialog({ open, initial, categories, onClose, 
 
 ### src/components/products/ProductTable.tsx
 
-- SHA: `1e8d24dd7355`  
-- Ukuran: 6 KB
+- SHA: `ad7876ddb274`  
+- Ukuran: 9 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -10524,6 +13174,10 @@ function resolveMediaCount(r: Product): number {
   return 0;
 }
 
+function clamp(n: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, n));
+}
+
 export default function ProductTable({
   rows,
   loading,
@@ -10535,110 +13189,194 @@ export default function ProductTable({
   onVariants,
   onMedia,
   onDelete,
-}: Props) {
+}: Props): React.ReactElement {
   const lastPage = Math.max(1, Math.ceil(total / perPage));
+  const safePage = clamp(page, 1, lastPage);
 
   return (
-    <div className="card">
-      <table className="table">
-        <thead>
-          <tr>
-            <th>Nama</th>
-            <th>Kategori</th>
-            <th>Status</th>
-            <th style={{ textAlign: "right" }}>Varian</th>
-            <th style={{ textAlign: "right" }}>Media</th>
-            <th style={{ textAlign: "right" }}>Aksi</th>
-          </tr>
-        </thead>
-        <tbody>
-          {loading ? (
-            <tr>
-              <td colSpan={6} className="muted" style={{ textAlign: "center" }}>
-                Memuat…
-              </td>
-            </tr>
-          ) : rows.length === 0 ? (
-            <tr>
-              <td colSpan={6} className="muted" style={{ textAlign: "center" }}>
-                Tidak ada data.
-              </td>
-            </tr>
-          ) : (
-            rows.map((r) => {
-              const categoryLabel = resolveCategoryName(r);
-              const variantsCount = resolveVariantsCount(r);
-              const mediaCount = resolveMediaCount(r);
-
-              return (
-                <tr key={r.id}>
-                  <td>
-                    <div className="text-strong">
-                      <Link to={`/catalog/products/${r.id}`} className="link">
-                        {r.nama}
-                      </Link>
-                    </div>
-                    <div className="muted text-xs">{r.slug}</div>
-                  </td>
-
-                  <td>{categoryLabel}</td>
-
-                  <td>
-                    <span
-                      className={
-                        r.is_active ? "badge badge-success" : "badge"
-                      }
-                    >
-                      {r.is_active ? "Aktif" : "Nonaktif"}
-                    </span>
-                  </td>
-
-                  <td style={{ textAlign: "right" }}>{variantsCount}</td>
-                  <td style={{ textAlign: "right" }}>{mediaCount}</td>
-
-                  <td style={{ textAlign: "right" }}>
-                    <div className="row row--end row--gap-sm">
-                      <button className="button" onClick={() => onVariants(r)}>
-                        Varian
-                      </button>
-                      <button className="button" onClick={() => onMedia(r)}>
-                        Media
-                      </button>
-                      <button className="button" onClick={() => onEdit(r)}>
-                        Edit
-                      </button>
-                      <button
-                        className="button button-outline"
-                        onClick={() => onDelete(r)}
-                      >
-                        Hapus
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })
-          )}
-        </tbody>
-      </table>
-
-      {/* pagination */}
-      <div className="row row--between" style={{ padding: "0.75rem 1rem" }}>
-        <div className="muted text-sm">
-          Halaman {page} dari {lastPage} • Total {total}
+    <div className="card" style={{ overflow: "hidden" }}>
+      {/* Header / Toolbar */}
+      <div
+        style={{
+          padding: "var(--space-4) var(--space-4)",
+          borderBottom: "1px solid var(--color-border)",
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          gap: "var(--space-4)",
+          flexWrap: "wrap",
+        }}
+      >
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontWeight: 900, letterSpacing: "-0.01em" }}>Daftar Produk</div>
+          <div className="text-dim" style={{ fontSize: ".9rem", marginTop: 4 }}>
+            Total {total} produk • Halaman {safePage} dari {lastPage}
+          </div>
         </div>
-        <div className="row row--gap-sm">
+      </div>
+
+      {/* Table */}
+      <div style={{ width: "100%", overflowX: "auto" }}>
+        <table className="table" style={{ minWidth: 760 }}>
+          <thead>
+            <tr>
+              <th>Produk</th>
+              <th>Kategori</th>
+              <th>Status</th>
+              <th style={{ textAlign: "right" }}>Varian</th>
+              <th style={{ textAlign: "right" }}>Media</th>
+              <th style={{ textAlign: "right", width: 360 }}>Aksi</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan={6} className="muted" style={{ textAlign: "center", padding: "1.25rem" }}>
+                  Memuat…
+                </td>
+              </tr>
+            ) : rows.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="muted" style={{ textAlign: "center", padding: "1.25rem" }}>
+                  Tidak ada data.
+                </td>
+              </tr>
+            ) : (
+              rows.map((r) => {
+                const categoryLabel = resolveCategoryName(r);
+                const variantsCount = resolveVariantsCount(r);
+                const mediaCount = resolveMediaCount(r);
+
+                return (
+                  <tr key={r.id}>
+                    {/* Produk */}
+                    <td>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                        <div className="text-strong" style={{ lineHeight: 1.2 }}>
+                          <Link to={`/catalog/products/${r.id}`} className="link">
+                            {r.nama}
+                          </Link>
+                        </div>
+                        <div className="muted text-xs" style={{ wordBreak: "break-word" }}>
+                          {r.slug}
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Kategori */}
+                    <td>
+                      <span className="muted" style={{ fontSize: ".95rem" }}>
+                        {categoryLabel}
+                      </span>
+                    </td>
+
+                    {/* Status */}
+                    <td>
+                      <span className={r.is_active ? "badge badge-success" : "badge"}>
+                        {r.is_active ? "Aktif" : "Nonaktif"}
+                      </span>
+                    </td>
+
+                    {/* Varian */}
+                    <td style={{ textAlign: "right" }}>
+                      <span className="badge" title="Jumlah varian">
+                        {variantsCount}
+                      </span>
+                    </td>
+
+                    {/* Media */}
+                    <td style={{ textAlign: "right" }}>
+                      <span className="badge" title="Jumlah media">
+                        {mediaCount}
+                      </span>
+                    </td>
+
+                    {/* Aksi */}
+                    <td style={{ textAlign: "right" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          gap: "var(--space-2)",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <button
+                          type="button"
+                          className="button"
+                          onClick={() => onVariants(r)}
+                          style={{ padding: "0.45rem 0.7rem" }}
+                        >
+                          Varian
+                        </button>
+
+                        <button
+                          type="button"
+                          className="button"
+                          onClick={() => onMedia(r)}
+                          style={{ padding: "0.45rem 0.7rem" }}
+                        >
+                          Media
+                        </button>
+
+                        <button
+                          type="button"
+                          className="button button-primary"
+                          onClick={() => onEdit(r)}
+                          style={{ padding: "0.45rem 0.85rem", fontWeight: 800 }}
+                        >
+                          Edit
+                        </button>
+
+                        <button
+                          type="button"
+                          className="button button-outline"
+                          onClick={() => onDelete(r)}
+                          style={{ padding: "0.45rem 0.85rem" }}
+                        >
+                          Hapus
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Footer / Pagination */}
+      <div
+        style={{
+          padding: "var(--space-3) var(--space-4)",
+          borderTop: "1px solid var(--color-border)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "var(--space-3)",
+          flexWrap: "wrap",
+        }}
+      >
+        <div className="muted text-sm">
+          Menampilkan halaman <b>{safePage}</b> dari <b>{lastPage}</b> • Total <b>{total}</b>
+        </div>
+
+        <div style={{ display: "flex", gap: "var(--space-2)" }}>
           <button
+            type="button"
             className="button"
-            disabled={page <= 1}
-            onClick={() => onPageChange(page - 1)}
+            disabled={safePage <= 1}
+            onClick={() => onPageChange(safePage - 1)}
           >
             Prev
           </button>
           <button
+            type="button"
             className="button"
-            disabled={page >= lastPage}
-            onClick={() => onPageChange(page + 1)}
+            disabled={safePage >= lastPage}
+            onClick={() => onPageChange(safePage + 1)}
           >
             Next
           </button>
@@ -10653,13 +13391,13 @@ export default function ProductTable({
 
 ### src/components/products/VariantManager.tsx
 
-- SHA: `5c3334ddf03d`  
-- Ukuran: 9 KB
+- SHA: `ccebf686964a`  
+- Ukuran: 15 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
 // src/components/products/VariantManager.tsx
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type {
   ProductVariant,
   VariantCreatePayload,
@@ -10675,7 +13413,7 @@ import PriceInput from "./PriceInput";
 
 type Props = { productId: number };
 
-export default function VariantManager({ productId }: Props) {
+export default function VariantManager({ productId }: Props): React.ReactElement {
   const [rows, setRows] = useState<ProductVariant[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<number | "new" | null>(null);
@@ -10689,6 +13427,8 @@ export default function VariantManager({ productId }: Props) {
     harga: 0,
     is_active: true,
   });
+
+  const isBusy = savingId !== null;
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -10704,12 +13444,13 @@ export default function VariantManager({ productId }: Props) {
   }, [productId]);
 
   useEffect(() => {
-    refresh();
+    void refresh();
   }, [refresh]);
 
-  async function saveNew() {
+  async function saveNew(): Promise<void> {
     setSavingId("new");
     setError(null);
+
     const payload: VariantCreatePayload = {
       ...draftNew,
       size: draftNew.size || null,
@@ -10719,6 +13460,7 @@ export default function VariantManager({ productId }: Props) {
       harga: Number(draftNew.harga || 0),
       is_active: draftNew.is_active ?? true,
     };
+
     try {
       await createVariant(productId, payload);
       setDraftNew({
@@ -10737,9 +13479,10 @@ export default function VariantManager({ productId }: Props) {
     }
   }
 
-  async function saveEdit(row: ProductVariant) {
+  async function saveEdit(row: ProductVariant): Promise<void> {
     setSavingId(row.id);
     setError(null);
+
     const payload: VariantUpdatePayload = {
       size: row.size || null,
       type: row.type || null,
@@ -10748,6 +13491,7 @@ export default function VariantManager({ productId }: Props) {
       harga: Number(row.harga || 0),
       is_active: !!row.is_active,
     };
+
     try {
       await updateVariant(productId, row.id, payload);
       await refresh();
@@ -10758,10 +13502,12 @@ export default function VariantManager({ productId }: Props) {
     }
   }
 
-  async function remove(row: ProductVariant) {
+  async function remove(row: ProductVariant): Promise<void> {
     if (!confirm(`Hapus varian ${row.sku}?`)) return;
+
     setSavingId(row.id);
     setError(null);
+
     try {
       await deleteVariant(productId, row.id);
       await refresh();
@@ -10772,202 +13518,362 @@ export default function VariantManager({ productId }: Props) {
     }
   }
 
+  const canAdd = useMemo(() => {
+    // UI-only: minimal gate agar tidak “nambah kosong”
+    const skuOk = String(draftNew.sku || "").trim().length > 0;
+    return skuOk && !isBusy;
+  }, [draftNew.sku, isBusy]);
+
   if (loading) return <div className="card">Memuat varian…</div>;
 
   return (
-    <div>
-      <div className="card">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>SKU</th>
-              <th>Size</th>
-              <th>Type</th>
-              <th>Tester</th>
-              <th className="text-right">Harga</th>
-              <th>Aktif</th>
-              <th className="text-right">Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(rows ?? []).map((r) => (
-              <tr key={r.id}>
-                <td>
-                  <input
-                    className="input"
-                    value={r.sku}
-                    onChange={(e) =>
-                      setRows((prev) =>
-                        prev.map((x) =>
-                          x.id === r.id ? { ...x, sku: e.target.value } : x
-                        )
-                      )
-                    }
-                  />
-                </td>
-                <td>
-                  <input
-                    className="input"
-                    value={r.size ?? ""}
-                    onChange={(e) =>
-                      setRows((prev) =>
-                        prev.map((x) =>
-                          x.id === r.id ? { ...x, size: e.target.value } : x
-                        )
-                      )
-                    }
-                  />
-                </td>
-                <td>
-                  <input
-                    className="input"
-                    value={r.type ?? ""}
-                    onChange={(e) =>
-                      setRows((prev) =>
-                        prev.map((x) =>
-                          x.id === r.id ? { ...x, type: e.target.value } : x
-                        )
-                      )
-                    }
-                  />
-                </td>
-                <td>
-                  <input
-                    className="input"
-                    value={r.tester ?? ""}
-                    onChange={(e) =>
-                      setRows((prev) =>
-                        prev.map((x) =>
-                          x.id === r.id ? { ...x, tester: e.target.value } : x
-                        )
-                      )
-                    }
-                  />
-                </td>
-                <td className="text-right">
-                  <PriceInput
-                    value={r.harga}
-                    onChange={(next) =>
-                      setRows((prev) =>
-                        prev.map((x) =>
-                          x.id === r.id ? { ...x, harga: next } : x
-                        )
-                      )
-                    }
-                  />
-                </td>
-                <td style={{ textAlign: "center" }}>
-                  <input
-                    type="checkbox"
-                    checked={!!r.is_active}
-                    onChange={(e) =>
-                      setRows((prev) =>
-                        prev.map((x) =>
-                          x.id === r.id
-                            ? { ...x, is_active: e.target.checked }
-                            : x
-                        )
-                      )
-                    }
-                  />
-                </td>
-                <td className="text-right">
-                  <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-                    <button
-                      className="button"
-                      disabled={savingId === r.id}
-                      onClick={() => saveEdit(r)}
-                    >
-                      {savingId === r.id ? "Menyimpan…" : "Simpan"}
-                    </button>
-                    <button
-                      className="button"
-                      disabled={savingId === r.id}
-                      onClick={() => remove(r)}
-                    >
-                      Hapus
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+    <div className="section">
+      {/* Header */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          gap: "var(--space-4)",
+          flexWrap: "wrap",
+          marginBottom: "var(--space-3)",
+        }}
+      >
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontWeight: 800, letterSpacing: "-0.01em" }}>Varian Produk</div>
+          <div className="text-dim" style={{ fontSize: ".9rem", marginTop: 4 }}>
+            Kelola SKU/atribut/aktivasi serta harga per varian.
+          </div>
+        </div>
 
-            {/* Row tambah baru */}
-            <tr>
-              <td>
-                <input
-                  className="input"
-                  placeholder="SKU"
-                  value={draftNew.sku}
-                  onChange={(e) => setDraftNew((d) => ({ ...d, sku: e.target.value }))}
-                />
-              </td>
-              <td>
-                <input
-                  className="input"
-                  placeholder="Size"
-                  value={draftNew.size ?? ""}
-                  onChange={(e) => setDraftNew((d) => ({ ...d, size: e.target.value }))}
-                />
-              </td>
-              <td>
-                <input
-                  className="input"
-                  placeholder="Type"
-                  value={draftNew.type ?? ""}
-                  onChange={(e) => setDraftNew((d) => ({ ...d, type: e.target.value }))}
-                />
-              </td>
-              <td>
-                <input
-                  className="input"
-                  placeholder="Tester"
-                  value={draftNew.tester ?? ""}
-                  onChange={(e) =>
-                    setDraftNew((d) => ({ ...d, tester: e.target.value }))
-                  }
-                />
-              </td>
-              <td className="text-right">
-                <input
-                  type="number"
-                  className="input"
-                  placeholder="0"
-                  value={draftNew.harga}
-                  onChange={(e) =>
-                    setDraftNew((d) => ({
-                      ...d,
-                      harga: Number(e.target.value || 0),
-                    }))
-                  }
-                />
-              </td>
-              <td style={{ textAlign: "center" }}>
-                <input
-                  type="checkbox"
-                  checked={!!draftNew.is_active}
-                  onChange={(e) =>
-                    setDraftNew((d) => ({ ...d, is_active: e.target.checked }))
-                  }
-                />
-              </td>
-              <td className="text-right">
-                <button
-                  className="button"
-                  disabled={savingId === "new"}
-                  onClick={saveNew}
-                >
-                  {savingId === "new" ? "Menambah…" : "Tambah"}
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <button
+          type="button"
+          className="button button-outline"
+          disabled={isBusy}
+          onClick={() => void refresh()}
+          style={{ whiteSpace: "nowrap" }}
+          title="Refresh data varian"
+        >
+          Refresh
+        </button>
       </div>
 
+      {/* Add New Variant */}
+      <div className="card" style={{ marginBottom: "var(--space-4)" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "var(--space-3)",
+            flexWrap: "wrap",
+            marginBottom: "var(--space-3)",
+          }}
+        >
+          <div style={{ fontWeight: 800 }}>Tambah Varian</div>
+          <span className="text-dim" style={{ fontSize: ".85rem" }}>
+            SKU wajib diisi
+          </span>
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1.2fr 1fr 1fr 1fr 1fr 0.8fr",
+            gap: "var(--space-3)",
+          }}
+        >
+          <div>
+            <label className="text-dim" style={{ display: "block", fontSize: ".85rem", marginBottom: 6 }}>
+              SKU
+            </label>
+            <input
+              className="input"
+              placeholder="SKU"
+              value={draftNew.sku}
+              onChange={(e) => setDraftNew((d) => ({ ...d, sku: e.target.value }))}
+              disabled={isBusy}
+            />
+          </div>
+
+          <div>
+            <label className="text-dim" style={{ display: "block", fontSize: ".85rem", marginBottom: 6 }}>
+              Size
+            </label>
+            <input
+              className="input"
+              placeholder="Size"
+              value={draftNew.size ?? ""}
+              onChange={(e) => setDraftNew((d) => ({ ...d, size: e.target.value }))}
+              disabled={isBusy}
+            />
+          </div>
+
+          <div>
+            <label className="text-dim" style={{ display: "block", fontSize: ".85rem", marginBottom: 6 }}>
+              Type
+            </label>
+            <input
+              className="input"
+              placeholder="Type"
+              value={draftNew.type ?? ""}
+              onChange={(e) => setDraftNew((d) => ({ ...d, type: e.target.value }))}
+              disabled={isBusy}
+            />
+          </div>
+
+          <div>
+            <label className="text-dim" style={{ display: "block", fontSize: ".85rem", marginBottom: 6 }}>
+              Tester
+            </label>
+            <input
+              className="input"
+              placeholder="Tester"
+              value={draftNew.tester ?? ""}
+              onChange={(e) => setDraftNew((d) => ({ ...d, tester: e.target.value }))}
+              disabled={isBusy}
+            />
+          </div>
+
+          <div>
+            <label className="text-dim" style={{ display: "block", fontSize: ".85rem", marginBottom: 6 }}>
+              Harga
+            </label>
+            <input
+              type="number"
+              className="input"
+              placeholder="0"
+              value={draftNew.harga}
+              onChange={(e) =>
+                setDraftNew((d) => ({ ...d, harga: Number(e.target.value || 0) }))
+              }
+              disabled={isBusy}
+            />
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "flex-end",
+              gap: "var(--space-2)",
+              flexWrap: "wrap",
+            }}
+          >
+            <label
+              className="text-dim"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                userSelect: "none",
+                marginBottom: 2,
+                fontSize: ".9rem",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={!!draftNew.is_active}
+                onChange={(e) => setDraftNew((d) => ({ ...d, is_active: e.target.checked }))}
+                disabled={isBusy}
+              />
+              Aktif
+            </label>
+
+            <button
+              type="button"
+              className="button button-primary"
+              disabled={!canAdd || savingId === "new"}
+              onClick={() => void saveNew()}
+              style={{ width: "100%" }}
+              title={!String(draftNew.sku || "").trim() ? "SKU wajib diisi" : "Tambah varian"}
+            >
+              {savingId === "new" ? "Menambah…" : "Tambah"}
+            </button>
+          </div>
+        </div>
+
+        {/* Responsive fallback */}
+        <style>
+          {`
+            @media (max-width: 1000px) {
+              .card > div[style*="grid-template-columns: 1.2fr 1fr 1fr 1fr 1fr 0.8fr"] {
+                grid-template-columns: 1fr 1fr !important;
+              }
+            }
+            @media (max-width: 560px) {
+              .card > div[style*="grid-template-columns: 1fr 1fr"] {
+                grid-template-columns: 1fr !important;
+              }
+            }
+          `}
+        </style>
+      </div>
+
+      {/* Table */}
+      <div className="card">
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "var(--space-3)",
+            flexWrap: "wrap",
+            marginBottom: "var(--space-3)",
+          }}
+        >
+          <div style={{ fontWeight: 800 }}>Daftar Varian</div>
+          <span className="text-dim" style={{ fontSize: ".85rem" }}>
+            Total: {(rows ?? []).length}
+          </span>
+        </div>
+
+        <div style={{ overflowX: "auto" }}>
+          <table className="table" style={{ minWidth: 860 }}>
+            <thead>
+              <tr>
+                <th style={{ width: 190 }}>SKU</th>
+                <th style={{ width: 140 }}>Size</th>
+                <th style={{ width: 140 }}>Type</th>
+                <th style={{ width: 140 }}>Tester</th>
+                <th className="text-right" style={{ width: 160 }}>
+                  Harga
+                </th>
+                <th style={{ width: 90, textAlign: "center" }}>Aktif</th>
+                <th className="text-right" style={{ width: 220 }}>
+                  Aksi
+                </th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {(rows ?? []).map((r) => (
+                <tr key={r.id} style={{ opacity: savingId === r.id ? 0.7 : 1 }}>
+                  <td>
+                    <input
+                      className="input"
+                      value={r.sku}
+                      onChange={(e) =>
+                        setRows((prev) =>
+                          prev.map((x) => (x.id === r.id ? { ...x, sku: e.target.value } : x))
+                        )
+                      }
+                      disabled={savingId === r.id}
+                    />
+                  </td>
+
+                  <td>
+                    <input
+                      className="input"
+                      value={r.size ?? ""}
+                      onChange={(e) =>
+                        setRows((prev) =>
+                          prev.map((x) => (x.id === r.id ? { ...x, size: e.target.value } : x))
+                        )
+                      }
+                      disabled={savingId === r.id}
+                    />
+                  </td>
+
+                  <td>
+                    <input
+                      className="input"
+                      value={r.type ?? ""}
+                      onChange={(e) =>
+                        setRows((prev) =>
+                          prev.map((x) => (x.id === r.id ? { ...x, type: e.target.value } : x))
+                        )
+                      }
+                      disabled={savingId === r.id}
+                    />
+                  </td>
+
+                  <td>
+                    <input
+                      className="input"
+                      value={r.tester ?? ""}
+                      onChange={(e) =>
+                        setRows((prev) =>
+                          prev.map((x) => (x.id === r.id ? { ...x, tester: e.target.value } : x))
+                        )
+                      }
+                      disabled={savingId === r.id}
+                    />
+                  </td>
+
+                  <td className="text-right">
+                    <PriceInput
+                      value={r.harga}
+                      onChange={(next) =>
+                        setRows((prev) =>
+                          prev.map((x) => (x.id === r.id ? { ...x, harga: next } : x))
+                        )
+                      }
+                    />
+                  </td>
+
+                  <td style={{ textAlign: "center" }}>
+                    <input
+                      type="checkbox"
+                      checked={!!r.is_active}
+                      onChange={(e) =>
+                        setRows((prev) =>
+                          prev.map((x) =>
+                            x.id === r.id ? { ...x, is_active: e.target.checked } : x
+                          )
+                        )
+                      }
+                      disabled={savingId === r.id}
+                    />
+                  </td>
+
+                  <td className="text-right">
+                    <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", flexWrap: "wrap" }}>
+                      <button
+                        type="button"
+                        className="button button-primary"
+                        disabled={savingId === r.id}
+                        onClick={() => void saveEdit(r)}
+                        style={{ minWidth: 110 }}
+                      >
+                        {savingId === r.id ? "Menyimpan…" : "Simpan"}
+                      </button>
+                      <button
+                        type="button"
+                        className="button button-outline"
+                        disabled={savingId === r.id}
+                        onClick={() => void remove(r)}
+                        style={{ minWidth: 90 }}
+                      >
+                        Hapus
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+
+              {(rows ?? []).length === 0 && (
+                <tr>
+                  <td colSpan={7}>
+                    <div className="text-dim" style={{ padding: "var(--space-4)", textAlign: "center" }}>
+                      Belum ada varian.
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Error */}
       {error && (
-        <div style={{ marginTop: 8 }}>
-          <span className="badge badge-danger">{error}</span>
+        <div className="card" style={{ marginTop: "var(--space-4)", borderColor: "rgba(192,70,87,.35)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <span className="badge badge-danger">Error</span>
+            <span className="text-dim" style={{ fontSize: ".92rem" }}>
+              {error}
+            </span>
+          </div>
         </div>
       )}
     </div>
@@ -11452,8 +14358,8 @@ export default function SettingsForm({
 
 ### src/components/stock/CabangSelect.tsx
 
-- SHA: `0dfccfffe254`  
-- Ukuran: 4 KB
+- SHA: `f1c365e9a40f`  
+- Ukuran: 6 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -11470,11 +14376,25 @@ type Props = {
   allowAll?: boolean; // show “Semua Cabang” option when not locked
 };
 
-export default function CabangSelect({ value, onChange, disabled, allowAll }: Props) {
+function getErrMsg(e: unknown, fallback = "Gagal memuat cabang."): string {
+  if (typeof e === "string") return e;
+  if (e && typeof e === "object" && "message" in e) {
+    const m = (e as { message?: unknown }).message;
+    if (typeof m === "string") return m;
+  }
+  return fallback;
+}
+
+export default function CabangSelect({
+  value,
+  onChange,
+  disabled,
+  allowAll,
+}: Props): React.ReactElement {
   const { user } = useAuth();
   const [rows, setRows] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError]   = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Determine if user is locked to a cabang (admin_cabang / gudang)
   const lockedCabangId = useMemo<number | undefined>(() => {
@@ -11493,6 +14413,7 @@ export default function CabangSelect({ value, onChange, disabled, allowAll }: Pr
     setError(null);
 
     const q: BranchQuery = { is_active: true, per_page: 100 };
+
     listBranches(q)
       .then((res) => {
         if (!alive) return;
@@ -11500,18 +14421,16 @@ export default function CabangSelect({ value, onChange, disabled, allowAll }: Pr
       })
       .catch((e: unknown) => {
         if (!alive) return;
-        const msg =
-          typeof e === "object" && e !== null && "message" in e && typeof (e as { message?: unknown }).message === "string"
-            ? String((e as { message?: unknown }).message)
-            : "Gagal memuat cabang.";
-        setError(msg);
+        setError(getErrMsg(e));
       })
       .finally(() => {
         if (!alive) return;
         setLoading(false);
       });
 
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, []);
 
   // If locked, ensure parent value matches lock, but emit only when it actually differs (once)
@@ -11533,61 +14452,125 @@ export default function CabangSelect({ value, onChange, disabled, allowAll }: Pr
   }, [rows]);
 
   // Compute the current value for the <select>
-  const selectedValue: number | "" = lockedCabangId != null ? lockedCabangId : (value ?? "");
+  const selectedValue: number | "" =
+    lockedCabangId != null ? lockedCabangId : value ?? "";
 
   // Disable when locked or loading or externally disabled
   const isDisabled = Boolean(disabled || loading || lockedCabangId != null);
 
+  // Label kecil untuk status (locked / loading)
+  const statusHint = useMemo(() => {
+    if (loading) return "Memuat daftar cabang…";
+    if (lockedCabangId != null) return "Cabang dikunci sesuai akun Anda.";
+    return null;
+  }, [loading, lockedCabangId]);
+
   return (
-    <>
-      <select
-        className="select"
-        value={selectedValue}
-        disabled={isDisabled}
-        aria-label="Pilih Cabang"
-        aria-busy={loading}
-        onChange={(e) => {
-          const v = e.target.value;
-          const next = v === "" ? undefined : Number(v);
-          if (next === value) return;
-          onChange(next);
-        }}
-      >
-        {/* “Semua Cabang” only when not locked */}
-        {allowAll && lockedCabangId == null && (
-          <option value="">Semua Cabang</option>
-        )}
+    <div style={{ display: "grid", gap: 8 }}>
+      <div style={{ position: "relative" }}>
+        <select
+          className="select"
+          value={selectedValue}
+          disabled={isDisabled}
+          aria-label="Pilih Cabang"
+          aria-busy={loading}
+          onChange={(e) => {
+            const v = e.target.value;
+            const next = v === "" ? undefined : Number(v);
+            if (next === value) return;
+            onChange(next);
+          }}
+          style={{
+            width: "100%",
+            paddingRight: "2.5rem", // ruang untuk ikon di kanan
+            opacity: isDisabled ? 0.9 : 1,
+          }}
+        >
+          {/* Placeholder saat belum ada pilihan (dan tidak lock) */}
+          {lockedCabangId == null && !allowAll && (
+            <option value="" disabled>
+              Pilih cabang…
+            </option>
+          )}
 
-        {/* Loading placeholder */}
-        {loading && (
-          <option value="" disabled>
-            Memuat cabang…
-          </option>
-        )}
+          {/* “Semua Cabang” only when not locked */}
+          {allowAll && lockedCabangId == null && <option value="">Semua Cabang</option>}
 
-        {/* If locked, show only the locked cabang */}
-        {lockedCabangId != null
-          ? options
-              .filter((r) => r.id === lockedCabangId)
-              .map((r) => (
+          {/* Loading placeholder (tetap tampil, tapi tidak ganggu opsi) */}
+          {loading && (
+            <option value="" disabled>
+              Memuat cabang…
+            </option>
+          )}
+
+          {/* If locked, show only the locked cabang */}
+          {lockedCabangId != null
+            ? options
+                .filter((r) => r.id === lockedCabangId)
+                .map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.nama}
+                    {r.kota ? ` · ${r.kota}` : ""}
+                  </option>
+                ))
+            : options.map((r) => (
                 <option key={r.id} value={r.id}>
-                  {r.nama}{r.kota ? ` · ${r.kota}` : ""}
+                  {r.nama}
+                  {r.kota ? ` · ${r.kota}` : ""}
                 </option>
-              ))
-          : options.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.nama}{r.kota ? ` · ${r.kota}` : ""}
-              </option>
-            ))}
-      </select>
+              ))}
+        </select>
 
-      {error && (
-        <div className="mt-2">
-          <span className="badge badge-danger">Error</span>
-          <span style={{ marginLeft: 8 }}>{error}</span>
+        {/* ikon status di kanan (tanpa library icon) */}
+        <span
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            right: 10,
+            top: "50%",
+            transform: "translateY(-50%)",
+            width: 18,
+            height: 18,
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: 999,
+            border: "1px solid rgba(0,0,0,0.10)",
+            background: "rgba(0,0,0,0.03)",
+            fontSize: 11,
+            opacity: 0.8,
+          }}
+          title={lockedCabangId != null ? "Locked" : loading ? "Loading" : "Select"}
+        >
+          {lockedCabangId != null ? "🔒" : loading ? "…" : "⌄"}
+        </span>
+      </div>
+
+      {/* Hint halus */}
+      {statusHint && (
+        <div className="text-dim" style={{ fontSize: ".85rem" }}>
+          {statusHint}
         </div>
       )}
-    </>
+
+      {/* Error */}
+      {error && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: 10,
+            padding: "10px 12px",
+            borderRadius: 12,
+            border: "1px solid rgba(239,68,68,0.25)",
+            background: "rgba(239,68,68,0.06)",
+          }}
+        >
+          <span className="badge badge-danger">Error</span>
+          <div style={{ lineHeight: 1.35 }}>{error}</div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -11596,8 +14579,8 @@ export default function CabangSelect({ value, onChange, disabled, allowAll }: Pr
 
 ### src/components/stock/GudangSelect.tsx
 
-- SHA: `a8078b381cbc`  
-- Ukuran: 3 KB
+- SHA: `0fa9aa0cdc69`  
+- Ukuran: 4 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -11622,7 +14605,7 @@ export default React.memo(function GudangSelect({
   value,
   onChange,
   disabled,
-  allowAll,
+  allowAll = false,
   autoSelectFirst = true,
 }: Props) {
   const [rows, setRows] = useState<Warehouse[]>([]);
@@ -11644,20 +14627,22 @@ export default React.memo(function GudangSelect({
     setLoading(true);
 
     listWarehouses({ cabang_id: cabangId, is_active: true, per_page: 100 })
-      .then(res => {
+      .then((res) => {
         if (!alive) return;
         const data = (res?.data ?? []) as Warehouse[];
         rowsForCabangRef.current = cabangId;
         setRows(data);
       })
       .catch(() => {
-        // abaikan error di dropdown
+        // dropdown: fail-soft (tidak menampilkan error di sini)
       })
       .finally(() => {
         if (alive) setLoading(false);
       });
 
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, [cabangId]);
 
   // auto-select default/first (opsional)
@@ -11670,7 +14655,7 @@ export default React.memo(function GudangSelect({
     if (rowsForCabangRef.current !== cabangId) return;
     if (lastAutoSelectedCabangRef.current === cabangId) return;
 
-    const def = rows.find(r => !!r.is_default) ?? rows[0];
+    const def = rows.find((r) => !!r.is_default) ?? rows[0];
     if (!def?.id) return;
     if (def.id === value) return;
 
@@ -11680,11 +14665,23 @@ export default React.memo(function GudangSelect({
   }, [rows, cabangId, value, allowAll, autoSelectFirst]);
 
   const opts = useMemo(() => {
+    // sort konsisten (id locale)
     return [...rows].sort((a, b) => a.nama.localeCompare(b.nama, "id"));
   }, [rows]);
 
   const selected = typeof value === "number" && value > 0 ? String(value) : "";
-  const isDisabled = Boolean(disabled || !cabangId || cabangId <= 0 || loading);
+
+  const cabangReady = Boolean(cabangId && cabangId > 0);
+  const isDisabled = Boolean(disabled || !cabangReady || loading);
+
+  // placeholder label yang lebih jelas
+  const placeholder = !cabangReady
+    ? "Pilih cabang dulu"
+    : loading
+      ? "Memuat gudang…"
+      : allowAll
+        ? "Semua Gudang"
+        : "Pilih gudang";
 
   return (
     <select
@@ -11698,18 +14695,24 @@ export default React.memo(function GudangSelect({
       }}
       aria-label="Pilih Gudang"
     >
-      {allowAll && (
-        <option value="">
-          {cabangId ? (loading ? "Memuat..." : "Semua Gudang") : "Pilih cabang dulu"}
-        </option>
-      )}
-      {!allowAll && (!cabangId || cabangId <= 0) && <option value="">Pilih cabang dulu</option>}
+      {/* Placeholder: selalu tampil sebagai opsi kosong untuk UX yang konsisten */}
+      <option value="">{placeholder}</option>
 
-      {opts.map(g => (
-        <option key={g.id} value={String(g.id)}>
-          {g.nama}{g.is_default ? " · default" : ""}
-        </option>
-      ))}
+      {/* Jika allowAll=true, placeholder di atas sudah mewakili "Semua Gudang" */}
+      {/* Jika allowAll=false, placeholder di atas mewakili "Pilih gudang" */}
+
+      {opts.map((g) => {
+        const label = `${g.nama}${g.is_default ? " (default)" : ""}`;
+        return (
+          <option
+            key={g.id}
+            value={String(g.id)}
+            title={g.is_default ? "Gudang default" : undefined}
+          >
+            {label}
+          </option>
+        );
+      })}
     </select>
   );
 });
@@ -11719,36 +14722,73 @@ export default React.memo(function GudangSelect({
 
 ### src/components/stock/LowStockIndicator.tsx
 
-- SHA: `68e65345c366`  
-- Ukuran: 403 B
+- SHA: `867ba6442453`  
+- Ukuran: 1 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
 // src/components/stock/LowStockIndicator.tsx
+import React from "react";
+
 export default function LowStockIndicator({
   low,
   isLow,
-}: { low?: boolean; isLow?: boolean }) {
+}: {
+  low?: boolean;
+  isLow?: boolean;
+}): React.ReactElement | null {
   const flag = (typeof low === "boolean" ? low : isLow) ?? false;
   if (!flag) return null;
+
+  // Gunakan style konsisten dengan "badge" project.
+  // Tidak mengubah logika, hanya tampilan.
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-amber-100 text-amber-700">
-      ● Low stock
+    <span
+      className="badge"
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 8,
+        padding: "0.28rem 0.6rem",
+        borderRadius: 999,
+        fontSize: "0.78rem",
+        lineHeight: 1,
+        background: "rgba(245, 158, 11, 0.14)", // amber halus
+        border: "1px solid rgba(245, 158, 11, 0.28)",
+        color: "rgba(146, 64, 14, 0.95)", // amber gelap, tetap terbaca
+        fontWeight: 700,
+        whiteSpace: "nowrap",
+      }}
+      title="Stok berada di bawah Min Stok"
+      aria-label="Low stock"
+    >
+      <span
+        aria-hidden="true"
+        style={{
+          width: 8,
+          height: 8,
+          borderRadius: 999,
+          background: "rgba(245, 158, 11, 0.95)",
+          boxShadow: "0 0 0 4px rgba(245, 158, 11, 0.18)",
+        }}
+      />
+      Low stock
     </span>
   );
 }
+
 ```
 </details>
 
 ### src/components/stock/SetInitialStockDialog.tsx
 
-- SHA: `5c7a4ec46474`  
-- Ukuran: 7 KB
+- SHA: `14a6afc22769`  
+- Ukuran: 12 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
 // src/components/stock/SetInitialStockDialog.tsx
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import CabangSelect from "./CabangSelect";
 import GudangSelect from "./GudangSelect";
 import VariantPicker from "./VariantPicker";
@@ -11817,6 +14857,8 @@ export default function SetInitialStockDialog({ open, onClose, onSuccess }: Prop
   const [minStok, setMinStok] = useState<number | undefined>(10);
   const [saving, setSaving] = useState(false);
 
+  const panelRef = useRef<HTMLFormElement | null>(null);
+
   useEffect(() => {
     if (!open) return;
     setGudangId(undefined);
@@ -11828,6 +14870,18 @@ export default function SetInitialStockDialog({ open, onClose, onSuccess }: Prop
   useEffect(() => {
     setGudangId(undefined);
   }, [cabangId]);
+
+  // ESC to close (UI improvement; does not change business logic)
+  useEffect(() => {
+    if (!open) return;
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, onClose]);
 
   const onCabangChange = (raw: unknown) => setCabangId(parseId(raw));
   const onGudangChange = (raw: unknown) => setGudangId(parseId(raw));
@@ -11854,9 +14908,9 @@ export default function SetInitialStockDialog({ open, onClose, onSuccess }: Prop
 
   const disabledReason = useMemo(() => {
     const reasons: string[] = [];
-    if (!(Number.isFinite(gudangId) && Number(gudangId) > 0)) reasons.push("Gudang belum dipilih (ID > 0).");
-    if (!(Number.isFinite(variantId) && Number(variantId) > 0)) reasons.push("Varian belum dipilih (ID > 0).");
-    if (!(Number.isFinite(qty) && qty >= 0)) reasons.push("Qty tidak valid (>= 0).");
+    if (!(Number.isFinite(gudangId) && Number(gudangId) > 0)) reasons.push("Pilih gudang.");
+    if (!(Number.isFinite(variantId) && Number(variantId) > 0)) reasons.push("Pilih varian.");
+    if (!(Number.isFinite(qty) && qty >= 0)) reasons.push("Qty harus ≥ 0.");
     return reasons.join(" ");
   }, [gudangId, variantId, qty]);
 
@@ -11893,99 +14947,222 @@ export default function SetInitialStockDialog({ open, onClose, onSuccess }: Prop
   if (!open) return null;
 
   return (
-    // Backdrop (inline style agar tidak menambah kelas di index.css)
     <div
       role="dialog"
       aria-modal="true"
+      aria-label="Set stok awal"
       style={{
         position: "fixed",
         inset: 0,
-        background: "rgba(0,0,0,0.4)",
+        zIndex: 1000,
+        padding: 16,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: 16,
-        zIndex: 1000,
+        background: "rgba(2,6,23,0.55)",
+        backdropFilter: "blur(4px)",
+      }}
+      onMouseDown={(e) => {
+        // click backdrop to close, but ignore clicks inside panel
+        if (!panelRef.current) return;
+        if (e.target === e.currentTarget) onClose();
       }}
     >
       <form
+        ref={panelRef}
         className="card"
-        style={{ width: "100%", maxWidth: 560 }}
+        style={{
+          width: "100%",
+          maxWidth: 720,
+          borderRadius: 22,
+          overflow: "hidden",
+          boxShadow: "0 30px 90px rgba(0,0,0,0.35)",
+        }}
         onSubmit={(e) => {
           e.preventDefault();
           void handleSubmit();
         }}
         data-testid="set-initial-stock-form"
       >
-        <h3 style={{ marginBottom: 12 }}>Set Stok Awal</h3>
+        {/* Header */}
+        <div
+          style={{
+            padding: "18px 18px 14px",
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            gap: 12,
+          }}
+        >
+          <div>
+            <h3 style={{ margin: 0, marginBottom: 6, fontWeight: 800 }}>
+              Set Stok Awal
+            </h3>
+            <div className="text-dim" style={{ fontSize: ".92rem", lineHeight: 1.5 }}>
+              Tentukan gudang, varian, qty awal, dan min stok untuk kebutuhan peringatan low stock.
+            </div>
+          </div>
 
-        {/* Baris 1: Cabang, Gudang */}
-        <div className="form-row form-row--2" style={{ marginBottom: 12 }}>
-          <label>
-            <div className="label">Cabang</div>
-            <CabangSelect value={cabangId} onChange={onCabangChange} />
-          </label>
-
-          <label>
-            <div className="label">Gudang</div>
-            <GudangSelect cabangId={cabangId} value={gudangId} onChange={onGudangChange} />
-          </label>
-        </div>
-
-        {/* Baris 2: Varian (full width) */}
-        <div style={{ marginBottom: 12 }}>
-          <label>
-            <div className="label">Varian Produk</div>
-            <VariantPicker value={variantId} onChange={onVariantChange} />
-          </label>
-        </div>
-
-        {/* Baris 3: Qty & Min Stok */}
-        <div className="form-row form-row--2" style={{ marginBottom: 16 }}>
-          <label>
-            <div className="label">Qty</div>
-            <input
-              type="number"
-              min={0}
-              className="input"
-              value={Number.isFinite(qty) ? qty : 0}
-              onChange={onQtyChange}
-              required
-            />
-          </label>
-
-          <label>
-            <div className="label">Min. Stok</div>
-            <input
-              type="number"
-              min={0}
-              className="input"
-              value={minStok ?? 0}
-              onChange={onMinChange}
-            />
-          </label>
-        </div>
-
-        {/* Actions */}
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
           <button
             type="button"
-            className="button"
+            className="button button-ghost"
             onClick={onClose}
             disabled={saving}
+            aria-label="Tutup dialog"
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: 999,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 18,
+              lineHeight: 1,
+            }}
+            title="Tutup"
           >
-            Batal
-          </button>
-          <button
-            type="submit"
-            className="button button-primary"
-            disabled={!valid || saving}
-            title={!valid ? (disabledReason || "Lengkapi Cabang, Gudang, Varian, dan Qty ≥ 0") : ""}
-          >
-            {saving ? "Menyimpan…" : "Simpan"}
+            ×
           </button>
         </div>
+
+        {/* Divider */}
+        <div style={{ height: 1, background: "rgba(0,0,0,0.06)" }} />
+
+        {/* Body */}
+        <div style={{ padding: 18 }}>
+          {/* Cabang + Gudang */}
+          <div className="form-row form-row--2" style={{ marginBottom: 14 }}>
+            <div>
+              <label style={{ display: "block", fontWeight: 700, marginBottom: 8 }}>
+                Cabang
+              </label>
+              <CabangSelect value={cabangId} onChange={onCabangChange} />
+              <div className="text-dim" style={{ fontSize: ".85rem", marginTop: 6 }}>
+                Pilih cabang untuk memfilter daftar gudang.
+              </div>
+            </div>
+
+            <div>
+              <label style={{ display: "block", fontWeight: 700, marginBottom: 8 }}>
+                Gudang
+              </label>
+              <GudangSelect cabangId={cabangId} value={gudangId} onChange={onGudangChange} />
+              <div className="text-dim" style={{ fontSize: ".85rem", marginTop: 6 }}>
+                Gudang wajib dipilih agar stok tercatat pada lokasi yang benar.
+              </div>
+            </div>
+          </div>
+
+          {/* Varian full */}
+          <div style={{ marginBottom: 14 }}>
+            <label style={{ display: "block", fontWeight: 700, marginBottom: 8 }}>
+              Varian Produk
+            </label>
+            <VariantPicker value={variantId} onChange={onVariantChange} />
+            <div className="text-dim" style={{ fontSize: ".85rem", marginTop: 6 }}>
+              Pilih SKU/varian yang akan diisi stok awalnya.
+            </div>
+          </div>
+
+          {/* Qty + Min */}
+          <div className="form-row form-row--2" style={{ marginBottom: 10 }}>
+            <div>
+              <label style={{ display: "block", fontWeight: 700, marginBottom: 8 }}>
+                Qty Awal
+              </label>
+              <input
+                type="number"
+                min={0}
+                className="input"
+                value={Number.isFinite(qty) ? qty : 0}
+                onChange={onQtyChange}
+                required
+                placeholder="0"
+              />
+              <div className="text-dim" style={{ fontSize: ".85rem", marginTop: 6 }}>
+                Nilai awal boleh 0 jika memang belum ada stok.
+              </div>
+            </div>
+
+            <div>
+              <label style={{ display: "block", fontWeight: 700, marginBottom: 8 }}>
+                Min. Stok
+              </label>
+              <input
+                type="number"
+                min={0}
+                className="input"
+                value={minStok ?? 0}
+                onChange={onMinChange}
+                placeholder="10"
+              />
+              <div className="text-dim" style={{ fontSize: ".85rem", marginTop: 6 }}>
+                Digunakan untuk penanda low stock (peringatan).
+              </div>
+            </div>
+          </div>
+
+          {/* Hint invalid */}
+          {!valid && (
+            <div
+              style={{
+                marginTop: 12,
+                padding: "10px 12px",
+                borderRadius: 12,
+                border: "1px solid rgba(245,158,11,0.25)",
+                background: "rgba(245,158,11,0.10)",
+                fontSize: ".9rem",
+              }}
+            >
+              <strong style={{ fontWeight: 800 }}>Belum bisa simpan.</strong>{" "}
+              <span>{disabledReason || "Lengkapi data yang diperlukan."}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Footer actions */}
+        <div style={{ height: 1, background: "rgba(0,0,0,0.06)" }} />
+        <div
+          style={{
+            padding: 14,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 10,
+            flexWrap: "wrap",
+          }}
+        >
+          <div className="text-dim" style={{ fontSize: ".85rem" }}>
+            Tip: tekan <strong>ESC</strong> untuk menutup dialog.
+          </div>
+
+          <div style={{ display: "flex", gap: 8 }}>
+            <button type="button" className="button" onClick={onClose} disabled={saving}>
+              Batal
+            </button>
+            <button
+              type="submit"
+              className="button button-primary"
+              disabled={!valid || saving}
+              style={{ minWidth: 120 }}
+              title={!valid ? disabledReason : ""}
+            >
+              {saving ? "Menyimpan…" : "Simpan"}
+            </button>
+          </div>
+        </div>
       </form>
+
+      {/* Responsif: agar tetap rapi di mobile */}
+      <style>
+        {`
+          @media (max-width: 640px) {
+            form.card[style*="max-width: 720px"] {
+              border-radius: 16px !important;
+            }
+          }
+        `}
+      </style>
     </div>
   );
 }
@@ -11995,8 +15172,8 @@ export default function SetInitialStockDialog({ open, onClose, onSuccess }: Prop
 
 ### src/components/stock/StockTable.tsx
 
-- SHA: `6f29b5f24b9e`  
-- Ukuran: 3 KB
+- SHA: `d3ca66500775`  
+- Ukuran: 7 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -12015,93 +15192,199 @@ type Props = {
 };
 
 export default function StockTable({ rows, loading, onEditMin }: Props) {
+  // Loading state yang lebih rapi (tanpa ubah logic)
   if (loading) {
-    return <div>Memuat stok...</div>;
+    return (
+      <div
+        style={{
+          padding: "14px 12px",
+          borderRadius: 14,
+          border: "1px solid rgba(0,0,0,0.08)",
+          background: "rgba(0,0,0,0.02)",
+        }}
+      >
+        <div style={{ fontWeight: 800, marginBottom: 6 }}>Memuat stok…</div>
+        <div className="text-dim" style={{ fontSize: ".9rem" }}>
+          Mohon tunggu sebentar.
+        </div>
+      </div>
+    );
   }
 
+  // Empty state yang lebih rapi
   if (!rows?.length) {
-    return <div>Belum ada data stok.</div>;
+    return (
+      <div
+        style={{
+          padding: "14px 12px",
+          borderRadius: 14,
+          border: "1px dashed rgba(0,0,0,0.18)",
+          background: "rgba(0,0,0,0.01)",
+        }}
+      >
+        <div style={{ fontWeight: 800, marginBottom: 6 }}>Belum ada data stok</div>
+        <div className="text-dim" style={{ fontSize: ".9rem" }}>
+          Coba ubah filter cabang/gudang/varian atau cek kembali data stok.
+        </div>
+      </div>
+    );
   }
 
   return (
     <div>
-      <table className="table">
-        <thead>
-          <tr>
-            <th>Variant</th>
-            <th className="text-right">Qty</th>
-            <th className="text-right">Min</th>
-            <th>Status</th>
-            <th className="text-right">Aksi</th>
-          </tr>
-        </thead>
+      {/* Wrapper agar tabel aman di mobile (scroll horizontal, tidak merusak layout) */}
+      <div style={{ overflowX: "auto" }}>
+        <table className="table" style={{ minWidth: 860 }}>
+          <thead>
+            <tr>
+              <th style={{ width: "52%" }}>Variant</th>
+              <th className="text-right" style={{ width: "12%" }}>
+                Qty
+              </th>
+              <th className="text-right" style={{ width: "12%" }}>
+                Min
+              </th>
+              <th style={{ width: "12%" }}>Status</th>
+              <th className="text-right" style={{ width: "12%" }}>
+                Aksi
+              </th>
+            </tr>
+          </thead>
 
-        <tbody>
-          {rows.map((r) => {
-            const isLow =
-              !!r.is_low_stock ||
-              (typeof r.qty === "number" &&
-                typeof r.min_stok === "number" &&
-                r.qty < r.min_stok);
+          <tbody>
+            {rows.map((r) => {
+              const isLow =
+                !!r.is_low_stock ||
+                (typeof r.qty === "number" &&
+                  typeof r.min_stok === "number" &&
+                  r.qty < r.min_stok);
 
-            return (
-              <tr key={r.id}>
-                {/* VARIANT + LOKASI */}
-                <td>
-                  <div className="font-medium">
-                    {r.variant?.nama_produk ?? `Variant #${r.product_variant_id}`}
-                  </div>
+              const nama = r.variant?.nama_produk ?? `Variant #${r.product_variant_id}`;
+              const sku = r.variant?.sku ?? "-";
+              const cabang = r.cabang?.nama ?? `#${r.cabang_id}`;
+              const gudang = r.gudang?.nama ?? `#${r.gudang_id}`;
 
-                  <div className="mt-2">
-                    <span>SKU: {r.variant?.sku ?? "-"}</span>
+              return (
+                <tr key={r.id}>
+                  {/* VARIANT + META */}
+                  <td style={{ verticalAlign: "top" }}>
+                    <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                      {/* Accent dot untuk visual (tidak mengubah logic) */}
+                      <span
+                        aria-hidden="true"
+                        style={{
+                          marginTop: 6,
+                          width: 10,
+                          height: 10,
+                          borderRadius: 999,
+                          background: isLow ? "rgba(239,68,68,0.9)" : "rgba(16,185,129,0.9)",
+                          boxShadow: isLow
+                            ? "0 0 0 4px rgba(239,68,68,0.15)"
+                            : "0 0 0 4px rgba(16,185,129,0.15)",
+                          flex: "0 0 auto",
+                        }}
+                      />
 
-                    {/* Cabang & Gudang tampil sebagai badge kecil agar informatif */}
-                    <span className="badge" style={{ marginLeft: 8 }}>
-                      Cabang: {r.cabang?.nama ?? `#${r.cabang_id}`}
-                    </span>
-                    <span className="badge" style={{ marginLeft: 6 }}>
-                      Gudang: {r.gudang?.nama ?? `#${r.gudang_id}`}
-                    </span>
-                  </div>
-                </td>
+                      <div style={{ minWidth: 0 }}>
+                        <div
+                          className="font-medium"
+                          style={{
+                            fontWeight: 800,
+                            lineHeight: 1.25,
+                            wordBreak: "break-word",
+                          }}
+                        >
+                          {nama}
+                        </div>
 
-                {/* QTY */}
-                <td className="text-right">
-                  <span title={isLow ? "Qty di bawah Min Stok" : "Qty"}>
-                    {fmt(r.qty)}
-                  </span>
-                </td>
+                        <div
+                          style={{
+                            marginTop: 8,
+                            display: "flex",
+                            flexWrap: "wrap",
+                            gap: 8,
+                            alignItems: "center",
+                          }}
+                        >
+                          <span className="badge" title="SKU">
+                            SKU: {sku}
+                          </span>
 
-                {/* MIN STOK */}
-                <td className="text-right">
-                  <span>{fmt(r.min_stok)}</span>
-                </td>
+                          <span className="badge" title="Cabang">
+                            Cabang: {cabang}
+                          </span>
 
-                {/* STATUS */}
-                <td>
-                  <LowStockIndicator low={isLow} />
-                </td>
+                          <span className="badge" title="Gudang">
+                            Gudang: {gudang}
+                          </span>
+                        </div>
 
-                {/* AKSI */}
-                <td className="text-right">
-                  <div>
-                    {onEditMin && (
+                        {isLow && (
+                          <div className="text-dim" style={{ marginTop: 8, fontSize: ".88rem" }}>
+                            Qty di bawah Min Stok. Pertimbangkan restok.
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+
+                  {/* QTY */}
+                  <td className="text-right" style={{ verticalAlign: "top" }}>
+                    <div style={{ fontWeight: 800 }}>{fmt(r.qty)}</div>
+                    <div className="text-dim" style={{ fontSize: ".85rem", marginTop: 4 }}>
+                      Unit
+                    </div>
+                  </td>
+
+                  {/* MIN */}
+                  <td className="text-right" style={{ verticalAlign: "top" }}>
+                    <div style={{ fontWeight: 800 }}>{fmt(r.min_stok)}</div>
+                    <div className="text-dim" style={{ fontSize: ".85rem", marginTop: 4 }}>
+                      Batas
+                    </div>
+                  </td>
+
+                  {/* STATUS */}
+                  <td style={{ verticalAlign: "top" }}>
+                    <LowStockIndicator low={isLow} />
+                  </td>
+
+                  {/* AKSI */}
+                  <td className="text-right" style={{ verticalAlign: "top" }}>
+                    {onEditMin ? (
                       <button
                         className="button button-outline"
                         onClick={() => onEditMin(r)}
                         title="Ubah Min Stok"
-                        aria-label={`Ubah Min Stok untuk ${r.variant?.sku ?? `Variant ${r.product_variant_id}`}`}
+                        aria-label={`Ubah Min Stok untuk ${
+                          r.variant?.sku ?? `Variant ${r.product_variant_id}`
+                        }`}
+                        style={{
+                          whiteSpace: "nowrap",
+                          borderRadius: 999,
+                          padding: "0.5rem 0.75rem",
+                          fontWeight: 700,
+                        }}
                       >
                         Ubah Min
                       </button>
+                    ) : (
+                      <span className="text-dim" style={{ fontSize: ".9rem" }}>
+                        -
+                      </span>
                     )}
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Hint untuk mobile */}
+      <div className="text-dim" style={{ fontSize: ".85rem", marginTop: 10 }}>
+        Jika di layar kecil, geser tabel ke kanan/kiri untuk melihat kolom lain.
+      </div>
     </div>
   );
 }
@@ -12111,8 +15394,8 @@ export default function StockTable({ rows, loading, onEditMin }: Props) {
 
 ### src/components/stock/VariantPicker.tsx
 
-- SHA: `46edec1a1c65`  
-- Ukuran: 6 KB
+- SHA: `bcee2e7dfb78`  
+- Ukuran: 10 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -12132,9 +15415,9 @@ function useDebounced<T>(value: T, ms: number): T {
 }
 
 type Props = {
-  value?: number;                               // product_variant_id (controlled by parent)
+  value?: number; // product_variant_id (controlled by parent)
   onChange: (variantId: number | undefined) => void;
-  autoSelectFirst?: boolean;                    // default: false
+  autoSelectFirst?: boolean; // default: false
 };
 
 function VariantPicker({ value, onChange, autoSelectFirst = false }: Props) {
@@ -12153,7 +15436,8 @@ function VariantPicker({ value, onChange, autoSelectFirst = false }: Props) {
   // ── Fetch products (debounced, abortable)
   useEffect(() => {
     const ctrl = new AbortController();
-    setLoadingP(true); setErrP(null);
+    setLoadingP(true);
+    setErrP(null);
 
     listProducts({ search: debSearch, per_page: 10 }, { signal: ctrl.signal })
       .then((res) => setProducts(res.data ?? []))
@@ -12162,19 +15446,24 @@ function VariantPicker({ value, onChange, autoSelectFirst = false }: Props) {
           setErrP((e as Error)?.message ?? "Gagal memuat produk.");
         }
       })
-      .finally(() => { if (!ctrl.signal.aborted) setLoadingP(false); });
+      .finally(() => {
+        if (!ctrl.signal.aborted) setLoadingP(false);
+      });
 
     return () => ctrl.abort();
   }, [debSearch]);
 
   // Reset variants immediately when product changes
-  useEffect(() => { setVariants([]); }, [productId]);
+  useEffect(() => {
+    setVariants([]);
+  }, [productId]);
 
   // ── Fetch variants for selected product (abortable)
   useEffect(() => {
     if (!productId) return;
     const ctrl = new AbortController();
-    setLoadingV(true); setErrV(null);
+    setLoadingV(true);
+    setErrV(null);
 
     listVariants(productId, { signal: ctrl.signal })
       .then((rows) => setVariants(rows ?? []))
@@ -12183,7 +15472,9 @@ function VariantPicker({ value, onChange, autoSelectFirst = false }: Props) {
           setErrV((e as Error)?.message ?? "Gagal memuat varian.");
         }
       })
-      .finally(() => { if (!ctrl.signal.aborted) setLoadingV(false); });
+      .finally(() => {
+        if (!ctrl.signal.aborted) setLoadingV(false);
+      });
 
     return () => ctrl.abort();
   }, [productId]);
@@ -12194,7 +15485,7 @@ function VariantPicker({ value, onChange, autoSelectFirst = false }: Props) {
     if (!variants.length) return;
     if (value == null) return;
 
-    const stillExists = variants.some(v => v.id === value);
+    const stillExists = variants.some((v) => v.id === value);
     if (stillExists) {
       clearedRef.current = false;
       return;
@@ -12228,24 +15519,149 @@ function VariantPicker({ value, onChange, autoSelectFirst = false }: Props) {
     [products]
   );
 
+  const variantOptions = useMemo(() => {
+    // Tidak mengubah data, hanya membangun label yang rapi.
+    return variants.map((v) => {
+      const parts: string[] = [];
+      parts.push(v.sku);
+      if (v.size) parts.push(v.size);
+      if (v.type) parts.push(v.type);
+      if (v.tester) parts.push(String(v.tester));
+      return { id: v.id, label: parts.join(" · ") };
+    });
+  }, [variants]);
+
+  const canReset = Boolean(search || productId || value);
+
   return (
     <div>
-      {/* Baris pencarian produk */}
-      <div className="form-row">
+      {/* Inline style kecil agar layout selalu rapi tanpa mengandalkan CSS eksternal */}
+      <style>
+        {`
+          .vp-grid{
+            display:grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 12px;
+          }
+          .vp-grid2{
+            display:grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+          }
+          .vp-rowhead{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:10px;
+            flex-wrap:wrap;
+            margin-bottom:10px;
+          }
+          .vp-help{
+            font-size:.85rem;
+            opacity:.75;
+            margin-top:6px;
+          }
+          .vp-meta{
+            display:flex;
+            gap:8px;
+            align-items:center;
+            flex-wrap:wrap;
+          }
+          @media (max-width: 760px){
+            .vp-grid{ grid-template-columns: 1fr; }
+          }
+        `}
+      </style>
+
+      {/* Header kecil: status + reset */}
+      <div className="vp-rowhead">
+        <div className="vp-meta">
+          <span className="badge" title="Status">
+            {loadingP || loadingV ? "Memuat…" : "Siap"}
+          </span>
+          {productId ? (
+            <span className="badge" title="Produk terpilih">
+              Produk: {productId}
+            </span>
+          ) : (
+            <span className="badge" title="Produk terpilih">
+              Produk: —
+            </span>
+          )}
+          <span className="badge" title="Jumlah varian">
+            Varian: {variants.length}
+          </span>
+        </div>
+
+        <button
+          type="button"
+          className="button button-ghost"
+          disabled={!canReset}
+          onClick={() => {
+            // UI-only reset; tidak mengubah logic fetch di luar yang sudah ada
+            setSearch("");
+            setProductId(undefined);
+            setVariants([]);
+            if (value !== undefined) onChange(undefined);
+            setErrP(null);
+            setErrV(null);
+          }}
+          style={{ whiteSpace: "nowrap" }}
+        >
+          Reset
+        </button>
+      </div>
+
+      {/* Row 1: Search + Product */}
+      <div className="vp-grid">
         <div>
-          <label htmlFor="vp-search" className="mb-2">Cari Produk</label>
-          <input
-            id="vp-search"
-            className="input"
-            placeholder="Ketik nama/SKU produk…"
-            value={search}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
-          />
+          <label htmlFor="vp-search" className="mb-2" style={{ display: "block", fontWeight: 700 }}>
+            Cari Produk
+          </label>
+
+          <div style={{ position: "relative" }}>
+            <input
+              id="vp-search"
+              className="input"
+              placeholder="Ketik nama/SKU produk…"
+              value={search}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+              aria-label="Cari produk"
+              style={{ paddingRight: search ? "3.25rem" : undefined }}
+            />
+
+            {search ? (
+              <button
+                type="button"
+                className="button button-ghost"
+                aria-label="Hapus pencarian"
+                onClick={() => setSearch("")}
+                style={{
+                  position: "absolute",
+                  right: 6,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  padding: "0.25rem 0.5rem",
+                  borderRadius: 999,
+                  fontSize: ".8rem",
+                }}
+              >
+                Clear
+              </button>
+            ) : null}
+          </div>
+
+          <div className="vp-help">
+            {loadingP ? "Mencari produk…" : "Tips: cari dengan nama atau SKU."}
+          </div>
+
           {errP && <div className="help help--error">{errP}</div>}
         </div>
 
         <div>
-          <label htmlFor="vp-product" className="mb-2">Produk</label>
+          <label htmlFor="vp-product" className="mb-2" style={{ display: "block", fontWeight: 700 }}>
+            Produk
+          </label>
           <select
             id="vp-product"
             className="select"
@@ -12259,18 +15675,28 @@ function VariantPicker({ value, onChange, autoSelectFirst = false }: Props) {
             disabled={loadingP}
             aria-label="Pilih Produk"
           >
-            <option value="">Pilih produk…</option>
+            <option value="">{loadingP ? "Memuat produk…" : "Pilih produk…"}</option>
             {productOptions.map((p) => (
-              <option key={p.id} value={p.id}>{p.nama}</option>
+              <option key={p.id} value={p.id}>
+                {p.nama}
+              </option>
             ))}
           </select>
+          <div className="vp-help">
+            {productId ? "Produk terpilih, lanjut pilih varian." : "Pilih produk untuk memuat varian."}
+          </div>
         </div>
       </div>
 
-      {/* Baris varian */}
-      <div className="form-row">
+      {/* Divider halus */}
+      <div style={{ height: 1, background: "rgba(0,0,0,0.06)", margin: "14px 0" }} />
+
+      {/* Row 2: Variant */}
+      <div className="vp-grid2">
         <div>
-          <label htmlFor="vp-variant" className="mb-2">Varian</label>
+          <label htmlFor="vp-variant" className="mb-2" style={{ display: "block", fontWeight: 700 }}>
+            Varian
+          </label>
           <select
             id="vp-variant"
             className="select"
@@ -12283,13 +15709,26 @@ function VariantPicker({ value, onChange, autoSelectFirst = false }: Props) {
             disabled={!productId || loadingV}
             aria-label="Pilih Varian"
           >
-            <option value="">{productId ? "Pilih varian…" : "Pilih produk dulu"}</option>
-            {variants.map((v) => (
+            <option value="">
+              {!productId ? "Pilih produk dulu" : loadingV ? "Memuat varian…" : "Pilih varian…"}
+            </option>
+            {variantOptions.map((v) => (
               <option key={v.id} value={v.id}>
-                {v.sku} · {v.size ?? "—"} {v.type ? `· ${v.type}` : ""} {v.tester ? `· ${v.tester}` : ""}
+                {v.label}
               </option>
             ))}
           </select>
+
+          <div className="vp-help">
+            {!productId
+              ? "Varian akan muncul setelah produk dipilih."
+              : loadingV
+              ? "Sedang memuat varian…"
+              : variants.length
+              ? "Pilih varian untuk menerapkan filter."
+              : "Tidak ada varian untuk produk ini."}
+          </div>
+
           {errV && <div className="help help--error">{errV}</div>}
         </div>
       </div>
@@ -12785,13 +16224,13 @@ export default function UserTable(props: Props): React.ReactElement {
 
 ### src/components/warehouses/WarehouseFilters.tsx
 
-- SHA: `ce1cc4ed77b2`  
-- Ukuran: 3 KB
+- SHA: `cd47cfecba39`  
+- Ukuran: 5 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
 // src/components/warehouses/WarehouseFilters.tsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import type { WarehouseQuery } from "../../types/warehouse";
 import { listBranches } from "../../api/branches";
 import { useAuth } from "../../store/auth";
@@ -12802,77 +16241,195 @@ type Props = {
   onSearch: () => void;
 };
 
-export default function WarehouseFilters({ value, onChange, onSearch }: Props): React.ReactElement {
+export default function WarehouseFilters({
+  value,
+  onChange,
+  onSearch,
+}: Props): React.ReactElement {
   const { user } = useAuth();
+
   const [cabs, setCabs] = useState<{ id: number; nama: string }[]>([]);
+  const [loadingCabang, setLoadingCabang] = useState(false);
 
   useEffect(() => {
+    let mounted = true;
+
     void (async () => {
-      const res = await listBranches({ is_active: true, per_page: 100 });
-      setCabs(res.data.map(b => ({ id: b.id, nama: b.nama })));
+      setLoadingCabang(true);
+      try {
+        const res = await listBranches({ is_active: true, per_page: 100 });
+        if (!mounted) return;
+        setCabs(res.data.map((b) => ({ id: b.id, nama: b.nama })));
+      } finally {
+        if (mounted) setLoadingCabang(false);
+      }
     })();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const lockCabang = user?.role === "admin_cabang" && user.cabang_id;
+  const cabangValue = useMemo(() => {
+    if (lockCabang) return String(lockCabang);
+    return String(value.cabang_id ?? "");
+  }, [lockCabang, value.cabang_id]);
 
   return (
-    <div className="form-row form-row--3">
-      {/* Cari */}
-      <div className="form-field">
-        <label className="form-label" htmlFor="wh-q">Cari</label>
-        <input
-          id="wh-q"
-          className="input"
-          value={value.q ?? ""}
-          onChange={(e) => onChange({ ...value, q: e.target.value, page: 1 })}
-          placeholder="nama gudang"
-        />
-      </div>
-
-      {/* Cabang */}
-      <div className="form-field">
-        <label className="form-label" htmlFor="wh-cabang">Cabang</label>
-        <select
-          id="wh-cabang"
-          className="select"
-          value={lockCabang ? String(lockCabang) : String(value.cabang_id ?? "")}
-          onChange={(e) =>
-            onChange({
-              ...value,
-              cabang_id: e.target.value ? Number(e.target.value) : undefined,
-              page: 1,
-            })
-          }
-          disabled={Boolean(lockCabang)}
-        >
-          {!lockCabang && <option value="">Semua Cabang</option>}
-          {cabs.map(c => (
-            <option key={c.id} value={c.id}>{c.nama}</option>
-          ))}
-        </select>
-      </div>
-
-      {/* Hanya aktif + tombol */}
-      <div className="form-field" style={{ display: "flex", alignItems: "flex-end", gap: 12 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+    <div>
+      {/* Grid utama filter */}
+      <div
+        className="form-row form-row--3"
+        style={{
+          alignItems: "end",
+          gap: 12,
+        }}
+      >
+        {/* Cari */}
+        <div className="form-field" style={{ minWidth: 220 }}>
+          <label className="form-label" htmlFor="wh-q">
+            Cari
+          </label>
           <input
-            id="wh-active"
-            type="checkbox"
-            checked={Boolean(value.is_active)}
+            id="wh-q"
+            className="input"
+            value={value.q ?? ""}
             onChange={(e) =>
               onChange({
                 ...value,
-                is_active: e.target.checked ? true : undefined,
+                q: e.target.value,
                 page: 1,
               })
             }
+            placeholder="Cari nama gudang…"
+            autoComplete="off"
           />
-          <label htmlFor="wh-active" className="muted">Hanya aktif</label>
         </div>
-        <button className="button button-primary" onClick={onSearch}>
-          Terapkan
-        </button>
+
+        {/* Cabang */}
+        <div className="form-field" style={{ minWidth: 220 }}>
+          <label className="form-label" htmlFor="wh-cabang">
+            Cabang
+          </label>
+
+          <select
+            id="wh-cabang"
+            className="select"
+            value={cabangValue}
+            onChange={(e) =>
+              onChange({
+                ...value,
+                cabang_id: e.target.value ? Number(e.target.value) : undefined,
+                page: 1,
+              })
+            }
+            disabled={Boolean(lockCabang) || loadingCabang}
+            aria-busy={loadingCabang ? "true" : "false"}
+          >
+            {!lockCabang && (
+              <option value="">
+                {loadingCabang ? "Memuat cabang…" : "Semua Cabang"}
+              </option>
+            )}
+
+            {cabs.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nama}
+              </option>
+            ))}
+          </select>
+
+          {lockCabang && (
+            <div className="muted" style={{ marginTop: 6, fontSize: ".85rem" }}>
+              Cabang dikunci sesuai akun admin cabang.
+            </div>
+          )}
+        </div>
+
+        {/* Aksi */}
+        <div
+          className="form-field"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+            flexWrap: "wrap",
+          }}
+        >
+          {/* Toggle aktif */}
+          <label
+            htmlFor="wh-active"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              cursor: "pointer",
+              userSelect: "none",
+            }}
+          >
+            <input
+              id="wh-active"
+              type="checkbox"
+              checked={Boolean(value.is_active)}
+              onChange={(e) =>
+                onChange({
+                  ...value,
+                  is_active: e.target.checked ? true : undefined,
+                  page: 1,
+                })
+              }
+            />
+            <span className="muted">Hanya aktif</span>
+          </label>
+
+          {/* Tombol aksi: Terapkan + Reset */}
+          <div style={{ display: "flex", gap: 8, marginLeft: "auto" }}>
+            <button
+              type="button"
+              className="button button-outline"
+              onClick={() =>
+                onChange({
+                  ...value,
+                  q: "",
+                  cabang_id: lockCabang ? Number(lockCabang) : undefined,
+                  is_active: undefined,
+                  page: 1,
+                })
+              }
+              title="Reset filter"
+            >
+              Reset
+            </button>
+
+            <button
+              type="button"
+              className="button button-primary"
+              onClick={onSearch}
+              title="Terapkan filter"
+            >
+              Terapkan
+            </button>
+          </div>
+        </div>
       </div>
+
+      {/* Catatan kecil (optional, tapi bikin tampilan lebih “premium”) */}
+      <div className="muted" style={{ marginTop: 10, fontSize: ".85rem" }}>
+        Tips: ketik kata kunci lalu klik <b>Terapkan</b>.
+      </div>
+
+      {/* Responsif: rapikan agar tidak "maksa 3 kolom" di layar kecil */}
+      <style>
+        {`
+          @media (max-width: 900px) {
+            .form-row.form-row--3 {
+              grid-template-columns: 1fr !important;
+            }
+          }
+        `}
+      </style>
     </div>
   );
 }
@@ -12882,13 +16439,13 @@ export default function WarehouseFilters({ value, onChange, onSearch }: Props): 
 
 ### src/components/warehouses/WarehouseFormDialog.tsx
 
-- SHA: `20339c760e9a`  
-- Ukuran: 5 KB
+- SHA: `d058ab4f052c`  
+- Ukuran: 10 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
 // src/components/warehouses/WarehouseFormDialog.tsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import type { Warehouse, WarehouseCreatePayload } from "../../types/warehouse";
 import { useAuth } from "../../store/auth";
 import { listBranches } from "../../api/branches";
@@ -12908,20 +16465,23 @@ export default function WarehouseFormDialog({
   onClose,
   onSubmit,
 }: Props): React.ReactElement | null {
+  const { user } = useAuth();
+  const lockCabang = user?.role === "admin_cabang" && user.cabang_id;
+
   const [form, setForm] = useState<WarehouseCreatePayload>({
     cabang_id: defaultCabangId ?? 0,
     nama: "",
     is_default: false,
     is_active: true,
   });
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const { user } = useAuth();
-  const lockCabang = user?.role === "admin_cabang" && user.cabang_id;
 
   const [cabangs, setCabangs] = useState<{ id: number; nama: string }[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // load cabang saat dialog dibuka
+  const title = useMemo(() => (initial ? "Edit Gudang" : "Tambah Gudang"), [initial]);
+
+  // Load cabang saat dialog dibuka
   useEffect(() => {
     if (!open) return;
     void (async () => {
@@ -12930,14 +16490,14 @@ export default function WarehouseFormDialog({
     })();
   }, [open]);
 
-  // set preferensi cabang saat tambah (bukan edit)
+  // Set preferensi cabang saat tambah (bukan edit)
   useEffect(() => {
     if (!open || initial) return;
     const prefer = (lockCabang as number) ?? (defaultCabangId ?? 0);
     setForm((s) => ({ ...s, cabang_id: prefer }));
   }, [open, initial, lockCabang, defaultCabangId]);
 
-  // isi form saat edit
+  // Isi form saat edit
   useEffect(() => {
     if (!open || !initial) return;
     setForm({
@@ -12948,18 +16508,48 @@ export default function WarehouseFormDialog({
     });
   }, [open, initial]);
 
+  // UX modal: lock scroll + ESC close
+  useEffect(() => {
+    if (!open) return;
+
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open, onClose]);
+
   if (!open) return null;
 
   const submit = async () => {
     setSaving(true);
     setError(null);
+
     if (!form.cabang_id) {
       setError("Cabang harus diisi.");
       setSaving(false);
       return;
     }
-    const ok = await onSubmit(form);
+    if (!form.nama?.trim()) {
+      setError("Nama gudang harus diisi.");
+      setSaving(false);
+      return;
+    }
+
+    const ok = await onSubmit({
+      ...form,
+      nama: form.nama.trim(),
+    });
+
     setSaving(false);
+
     if (ok) onClose();
     else setError("Gagal menyimpan. Cek input.");
   };
@@ -12969,11 +16559,14 @@ export default function WarehouseFormDialog({
       role="dialog"
       aria-modal="true"
       aria-labelledby="warehouse-dialog-title"
-      // backdrop & center tanpa menambah kelas baru (hanya inline style)
+      onMouseDown={(e) => {
+        // klik backdrop untuk tutup (tanpa ganggu klik di dalam card)
+        if (e.target === e.currentTarget) onClose();
+      }}
       style={{
         position: "fixed",
         inset: 0,
-        background: "rgba(0,0,0,.4)",
+        background: "rgba(0,0,0,.45)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -12981,78 +16574,207 @@ export default function WarehouseFormDialog({
         zIndex: 50,
       }}
     >
-      <div className="card" style={{ width: "100%", maxWidth: 640 }}>
-        <h3 id="warehouse-dialog-title" className="card-title" style={{ marginBottom: 8 }}>
-          {initial ? "Edit Gudang" : "Tambah Gudang"}
-        </h3>
-
-        {/* form grid bawaan index.css */}
-        <div className="form-row form-row--2" style={{ marginTop: 12 }}>
-          <div>
-            <label className="label">Cabang</label>
-            <select
-              className="select"
-              value={form.cabang_id || ""}
-              onChange={(e) => setForm({ ...form, cabang_id: Number(e.target.value) })}
-              disabled={Boolean(lockCabang)}
+      <div
+        className="card"
+        style={{
+          width: "100%",
+          maxWidth: 720,
+          borderRadius: 18,
+          overflow: "hidden",
+        }}
+        onMouseDown={(e) => {
+          // cegah backdrop handler ikut kepanggil ketika klik di dalam
+          e.stopPropagation();
+        }}
+      >
+        {/* Header */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            gap: 12,
+            padding: "16px 18px",
+            borderBottom: "1px solid rgba(0,0,0,.06)",
+          }}
+        >
+          <div style={{ minWidth: 0 }}>
+            <h3
+              id="warehouse-dialog-title"
+              className="card-title"
+              style={{ margin: 0, lineHeight: 1.2 }}
             >
-              <option value="" disabled>
-                Pilih Cabang
-              </option>
-              {cabangs.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.nama}
-                </option>
-              ))}
-            </select>
+              {title}
+            </h3>
+            <div className="muted" style={{ marginTop: 6, fontSize: ".9rem" }}>
+              Isi data gudang dengan benar. Cabang dapat terkunci sesuai role.
+            </div>
           </div>
 
-          <div>
-            <label className="label">Nama Gudang</label>
-            <input
-              className="input"
-              placeholder="Nama Gudang"
-              value={form.nama}
-              onChange={(e) => setForm({ ...form, nama: e.target.value })}
-            />
-          </div>
-
-          <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <input
-              type="checkbox"
-              checked={Boolean(form.is_default)}
-              onChange={(e) => setForm({ ...form, is_default: e.target.checked })}
-            />
-            Default
-          </label>
-
-          <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <input
-              type="checkbox"
-              checked={Boolean(form.is_active)}
-              onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
-            />
-            Aktif
-          </label>
+          <button
+            type="button"
+            className="button button-ghost"
+            onClick={onClose}
+            disabled={saving}
+            aria-label="Tutup"
+            title="Tutup"
+            style={{
+              padding: "0.35rem 0.6rem",
+              borderRadius: 12,
+              lineHeight: 1,
+            }}
+          >
+            ✕
+          </button>
         </div>
 
-        {error && (
-          <div className="muted" style={{ marginTop: 8 }}>
-            <span className="badge badge-danger" style={{ marginRight: 8 }}>
-              Error
-            </span>
-            {error}
-          </div>
-        )}
+        {/* Body */}
+        <div style={{ padding: "16px 18px" }}>
+          <div className="form-row form-row--2" style={{ gap: 14 }}>
+            <div>
+              <label className="label">Cabang</label>
+              <select
+                className="select"
+                value={form.cabang_id || ""}
+                onChange={(e) =>
+                  setForm({ ...form, cabang_id: Number(e.target.value) })
+                }
+                disabled={Boolean(lockCabang)}
+                aria-disabled={Boolean(lockCabang)}
+              >
+                <option value="" disabled>
+                  Pilih Cabang
+                </option>
+                {cabangs.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nama}
+                  </option>
+                ))}
+              </select>
+              {Boolean(lockCabang) && (
+                <div className="muted" style={{ marginTop: 6, fontSize: ".85rem" }}>
+                  Cabang dikunci oleh role Anda.
+                </div>
+              )}
+            </div>
 
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 16 }}>
-          <button className="button" onClick={onClose} disabled={saving}>
+            <div>
+              <label className="label">Nama Gudang</label>
+              <input
+                className="input"
+                placeholder="Contoh: Gudang Utama"
+                value={form.nama}
+                onChange={(e) => setForm({ ...form, nama: e.target.value })}
+              />
+            </div>
+
+            {/* Switch-style rows */}
+            <div
+              style={{
+                gridColumn: "1 / -1",
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 12,
+              }}
+            >
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 10,
+                  padding: "10px 12px",
+                  border: "1px solid rgba(0,0,0,.08)",
+                  borderRadius: 14,
+                  background: "rgba(0,0,0,.02)",
+                }}
+              >
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, lineHeight: 1.2 }}>Default</div>
+                  <div className="muted" style={{ fontSize: ".85rem", marginTop: 4 }}>
+                    Jadikan gudang default untuk cabang terpilih.
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={Boolean(form.is_default)}
+                  onChange={(e) => setForm({ ...form, is_default: e.target.checked })}
+                />
+              </label>
+
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 10,
+                  padding: "10px 12px",
+                  border: "1px solid rgba(0,0,0,.08)",
+                  borderRadius: 14,
+                  background: "rgba(0,0,0,.02)",
+                }}
+              >
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, lineHeight: 1.2 }}>Aktif</div>
+                  <div className="muted" style={{ fontSize: ".85rem", marginTop: 4 }}>
+                    Nonaktifkan jika gudang tidak digunakan.
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={Boolean(form.is_active)}
+                  onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
+                />
+              </label>
+            </div>
+          </div>
+
+          {/* Error */}
+          {error && (
+            <div
+              style={{
+                marginTop: 12,
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 8,
+              }}
+              role="alert"
+            >
+              <span className="badge badge-danger">Error</span>
+              <div style={{ lineHeight: 1.4 }}>{error}</div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer actions */}
+        <div
+          style={{
+            padding: "14px 18px",
+            borderTop: "1px solid rgba(0,0,0,.06)",
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: 8,
+            flexWrap: "wrap",
+          }}
+        >
+          <button className="button button-outline" onClick={onClose} disabled={saving}>
             Batal
           </button>
           <button className="button button-primary" onClick={submit} disabled={saving}>
             {saving ? "Menyimpan..." : "Simpan"}
           </button>
         </div>
+
+        {/* Responsif: pada layar kecil, kartu checkbox jadi 1 kolom */}
+        <style>
+          {`
+            @media (max-width: 640px) {
+              [role="dialog"] .card div[style*="grid-template-columns: 1fr 1fr"] {
+                grid-template-columns: 1fr !important;
+              }
+            }
+          `}
+        </style>
       </div>
     </div>
   );
@@ -13063,8 +16785,8 @@ export default function WarehouseFormDialog({
 
 ### src/components/warehouses/WarehouseTable.tsx
 
-- SHA: `39acbbcb3a80`  
-- Ukuran: 2 KB
+- SHA: `2a5bc7d66697`  
+- Ukuran: 4 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -13078,54 +16800,104 @@ type Props = {
   onDelete: (row: Warehouse) => void;
 };
 
-export default function WarehouseTable({ items, onEdit, onDelete }: Props): React.ReactElement {
+export default function WarehouseTable({
+  items,
+  onEdit,
+  onDelete,
+}: Props): React.ReactElement {
   return (
     <div style={{ overflowX: "auto" }}>
-      <table className="table" style={{ minWidth: 800 }}>
+      <table className="table" style={{ minWidth: 860 }}>
         <thead>
           <tr>
             <th style={{ width: 80 }}>ID</th>
-            <th>Cabang</th>
-            <th>Nama</th>
-            <th style={{ width: 110 }}>Default</th>
-            <th style={{ width: 110 }}>Aktif</th>
-            <th style={{ width: 180 }}>Aksi</th>
+            <th style={{ width: 220 }}>Cabang</th>
+            <th>Gudang</th>
+            <th style={{ width: 120, textAlign: "center" }}>Default</th>
+            <th style={{ width: 120, textAlign: "center" }}>Status</th>
+            <th style={{ width: 190 }}>Aksi</th>
           </tr>
         </thead>
+
         <tbody>
-          {items.map((r) => (
-            <tr key={r.id}>
-              <td>{r.id}</td>
-              <td>{r.cabang?.nama ?? r.cabang_id}</td>
-              <td>{r.nama}</td>
-              <td>
-                {r.is_default ? (
-                  <span className="badge badge-success">Default</span>
-                ) : (
-                  <span className="badge">-</span>
-                )}
-              </td>
-              <td>
-                {r.is_active ? (
-                  <span className="badge badge-success">Aktif</span>
-                ) : (
-                  <span className="badge badge-danger">Nonaktif</span>
-                )}
-              </td>
-              <td>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button className="button" onClick={() => onEdit(r)}>Edit</button>
-                  <button className="button button-outline" onClick={() => onDelete(r)}>
-                    Hapus
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
+          {items.map((r) => {
+            const cabangLabel = r.cabang?.nama ?? `Cabang #${r.cabang_id}`;
+            return (
+              <tr key={r.id}>
+                <td style={{ whiteSpace: "nowrap" }}>{r.id}</td>
+
+                <td style={{ minWidth: 200 }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    <span style={{ fontWeight: 600 }}>{cabangLabel}</span>
+                    <span className="muted" style={{ fontSize: ".85rem" }}>
+                      ID Cabang: {r.cabang_id}
+                    </span>
+                  </div>
+                </td>
+
+                <td>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    <span style={{ fontWeight: 700 }}>{r.nama}</span>
+                    <span className="muted" style={{ fontSize: ".85rem" }}>
+                      Gudang penyimpanan stok
+                    </span>
+                  </div>
+                </td>
+
+                <td style={{ textAlign: "center" }}>
+                  {r.is_default ? (
+                    <span className="badge badge-success">Default</span>
+                  ) : (
+                    <span className="badge">—</span>
+                  )}
+                </td>
+
+                <td style={{ textAlign: "center" }}>
+                  {r.is_active ? (
+                    <span className="badge badge-success">Aktif</span>
+                  ) : (
+                    <span className="badge badge-danger">Nonaktif</span>
+                  )}
+                </td>
+
+                <td>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <button
+                      className="button button-outline"
+                      type="button"
+                      onClick={() => onEdit(r)}
+                      style={{ padding: ".45rem .7rem" }}
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      className="button button-outline"
+                      type="button"
+                      onClick={() => onDelete(r)}
+                      style={{
+                        padding: ".45rem .7rem",
+                        borderColor: "rgba(239,68,68,.45)",
+                        color: "rgb(239,68,68)",
+                      }}
+                    >
+                      Hapus
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
+
           {items.length === 0 && (
             <tr>
-              <td colSpan={6} style={{ textAlign: "center" }}>
-                <span className="muted">Belum ada data.</span>
+              <td colSpan={6} style={{ textAlign: "center", padding: "1.25rem" }}>
+                <div style={{ display: "grid", gap: 6 }}>
+                  <span style={{ fontWeight: 700 }}>Belum ada data gudang</span>
+                  <span className="muted" style={{ fontSize: ".9rem" }}>
+                    Silakan klik tombol <b>Tambah</b> untuk membuat gudang baru.
+                  </span>
+                </div>
               </td>
             </tr>
           )}
@@ -13903,8 +17675,8 @@ export default function AccountingReports() {
 
 ### src/pages/auth/Login.tsx
 
-- SHA: `14b4a0700272`  
-- Ukuran: 1 KB
+- SHA: `a6f924170fd1`  
+- Ukuran: 10 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -13924,39 +17696,289 @@ export default function LoginPage(): React.ReactElement {
     }
   }, [isAuthenticated, navigate]);
 
-  const wrapperStyle: React.CSSProperties = {
+  // Layout: split card (visual kiri + form kanan)
+  const pageStyle: React.CSSProperties = {
     minHeight: "100dvh",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     padding: "1.5rem",
+    // background halus, tetap netral agar cocok dengan tema project Anda
+    background:
+      "radial-gradient(1200px 600px at 10% 10%, rgba(99,102,241,0.18), transparent 55%), radial-gradient(900px 500px at 90% 20%, rgba(16,185,129,0.12), transparent 50%), linear-gradient(180deg, rgba(15,23,42,0.04), rgba(15,23,42,0.02))",
   };
 
-  const cardStyle: React.CSSProperties = {
+  const shellStyle: React.CSSProperties = {
     width: "100%",
-    maxWidth: "28rem", // ≈ 448px, cukup proporsional di desktop maupun mobile
+    maxWidth: "980px",
+  };
+
+  // kartu besar dengan radius besar
+  const splitCardStyle: React.CSSProperties = {
+    borderRadius: "28px",
+    overflow: "hidden",
+    display: "grid",
+    gridTemplateColumns: "1.1fr 0.9fr",
+    minHeight: "560px",
+  };
+
+  // Responsif via inline: pakai media query tidak bisa di inline,
+  // jadi kita buat dua layout: desktop grid, mobile stack menggunakan CSS sederhana lewat style + className.
+  // Solusi: gunakan wrapper dengan className untuk kontrol responsif di CSS global jika Anda mau.
+  // Tapi agar langsung jalan tanpa ubah CSS global, kita set fallback: bila layar kecil, grid akan wrap dengan auto rows.
+  // (Sebagian browser tetap oke; jika Anda ingin 100% presisi, nanti kita pindah ke CSS index.css.)
+
+  const leftPanelStyle: React.CSSProperties = {
+    position: "relative",
+    padding: "1.25rem",
+    // gunakan image/gradient. Anda bisa ganti url(...) ke aset project Anda.
+    backgroundImage:
+      "linear-gradient(135deg, rgba(2,6,23,0.72), rgba(2,6,23,0.35)), radial-gradient(900px 400px at 20% 20%, rgba(99,102,241,0.55), transparent 55%), radial-gradient(700px 420px at 80% 30%, rgba(16,185,129,0.35), transparent 52%), radial-gradient(600px 420px at 30% 85%, rgba(244,63,94,0.25), transparent 55%)",
+    color: "rgba(255,255,255,0.92)",
+  };
+
+  const mockFrameStyle: React.CSSProperties = {
+    position: "absolute",
+    inset: "18px",
+    borderRadius: "22px",
+    border: "1px solid rgba(255,255,255,0.20)",
+    background:
+      "linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03))",
+    boxShadow: "0 22px 60px rgba(0,0,0,0.35)",
+    overflow: "hidden",
+  };
+
+  const leftContentStyle: React.CSSProperties = {
+    position: "relative",
+    height: "100%",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
+    padding: "1.25rem",
+  };
+
+  const topNavStyle: React.CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "1rem",
+  };
+
+  const badgeStyle: React.CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "0.5rem",
+    padding: "0.35rem 0.6rem",
+    borderRadius: "999px",
+    border: "1px solid rgba(255,255,255,0.18)",
+    background: "rgba(255,255,255,0.10)",
+    fontSize: "0.78rem",
+  };
+
+  const leftFooterStyle: React.CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "1rem",
+  };
+
+  const profileStyle: React.CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    gap: "0.75rem",
+    minWidth: 0,
+  };
+
+  const avatarStyle: React.CSSProperties = {
+    width: "40px",
+    height: "40px",
+    borderRadius: "999px",
+    background:
+      "linear-gradient(135deg, rgba(255,255,255,0.35), rgba(255,255,255,0.12))",
+    border: "1px solid rgba(255,255,255,0.22)",
+    display: "grid",
+    placeItems: "center",
+    fontWeight: 700,
+  };
+
+  const formPanelStyle: React.CSSProperties = {
+    padding: "2.25rem 2rem",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    background: "rgba(255,255,255,0.92)",
+    backdropFilter: "blur(8px)",
+  };
+
+  const titleStyle: React.CSSProperties = {
+    fontSize: "2.0rem",
+    fontWeight: 800,
+    letterSpacing: "-0.02em",
+    margin: 0,
+  };
+
+  const subtitleStyle: React.CSSProperties = {
+    marginTop: "0.5rem",
+    marginBottom: "1.5rem",
+    opacity: 0.75,
+    fontSize: "0.95rem",
   };
 
   // skeleton ringan saat cek sesi
   if (status === "idle" || status === "loading") {
     return (
-      <div style={wrapperStyle}>
-        <div className="card" style={cardStyle}>
-          <p className="text-sm opacity-70">Memeriksa sesi…</p>
+      <div style={pageStyle}>
+        <div style={shellStyle}>
+          <div className="card" style={{ borderRadius: "28px", padding: "1.5rem" }}>
+            <p className="text-sm opacity-70">Memeriksa sesi…</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={wrapperStyle}>
-      {/* gunakan komponen Card dari index.css */}
-      <div className="card" style={cardStyle}>
-        <h1 className="mb-2 text-xl font-semibold" style={{ textAlign: "center" }}>POS Prime</h1>
-        <p className="mb-6 text-sm opacity-70" style={{ textAlign: "center" }}>
-          Silakan masuk untuk melanjutkan.
-        </p>
-        <LoginForm />
+    <div style={pageStyle}>
+      <div style={shellStyle}>
+        {/* gunakan style card Anda, tapi kita buat split layout di dalamnya */}
+        <div className="card" style={splitCardStyle}>
+          {/* LEFT: Visual */}
+          <section style={leftPanelStyle}>
+            <div style={mockFrameStyle} />
+
+            <div style={leftContentStyle}>
+              <div style={topNavStyle}>
+                <div style={badgeStyle}>
+                  <span
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: 999,
+                      background: "rgba(16,185,129,0.9)",
+                      boxShadow: "0 0 0 4px rgba(16,185,129,0.18)",
+                    }}
+                  />
+                  <span>POS Prime • Multi Cabang</span>
+                </div>
+              </div>
+
+              <div style={{ marginTop: "2.5rem" }}>
+                <h2
+                  style={{
+                    margin: 0,
+                    fontSize: "2.2rem",
+                    fontWeight: 800,
+                    letterSpacing: "-0.02em",
+                    lineHeight: 1.1,
+                    color: "#ffffff"
+                  }}
+                >
+                  Kelola Penjualan,
+                  <br />
+                  Stok, dan Kas
+                  <br />
+                  Lebih Mudah
+                </h2>
+                <p
+                  style={{
+                    marginTop: "0.9rem",
+                    maxWidth: "28rem",
+                    opacity: 0.82,
+                    lineHeight: 1.6,
+                    color: "#ffffff"
+                  }}
+                >
+                  Masuk untuk mengakses 
+                  POS Prime dan optimalkan 
+                  operasional toko Anda dengan
+                  sistem point-of-sale terbaik.
+                </p>
+              </div>
+
+              <div style={leftFooterStyle}>
+                <div style={profileStyle}>
+                  <div style={avatarStyle}>P</div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, lineHeight: 1.2 }}>
+                      POS Prime
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </section>
+
+          {/* RIGHT: Form */}
+          <section style={formPanelStyle}>
+            <div style={{ maxWidth: "420px", width: "100%", margin: "0 auto" }}>
+              <div style={{ marginBottom: "1rem" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "1rem",
+                  }}
+                >
+                  <div style={{ fontWeight: 800, letterSpacing: "-0.02em" }}>
+                    POS Prime
+                  </div>
+                  <div
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                      padding: "0.35rem 0.6rem",
+                      borderRadius: "999px",
+                      border: "1px solid rgba(2,6,23,0.08)",
+                      background: "rgba(2,6,23,0.02)",
+                      fontSize: "0.78rem",
+                      opacity: 0.85,
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: 18,
+                        height: 18,
+                        borderRadius: 999,
+                        border: "1px solid rgba(2,6,23,0.10)",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "0.7rem",
+                      }}
+                    >
+                      ID
+                    </span>
+                    <span>Indonesia</span>
+                  </div>
+                </div>
+              </div>
+
+              <h1 style={titleStyle}>Hallo, Selamat Datang</h1>
+              <p style={subtitleStyle}>Silakan masuk untuk melanjutkan.</p>
+
+              <LoginForm />
+
+              <div style={{ marginTop: "1.25rem", fontSize: "0.85rem", opacity: 0.75 }}>
+                Dengan masuk, Anda menyetujui kebijakan operasional aplikasi.
+              </div>
+            </div>
+          </section>
+        </div>
+
+        {/* Responsif: fallback sederhana untuk layar kecil */}
+        <style>
+          {`
+            @media (max-width: 900px) {
+              .card[style*="grid-template-columns"] {
+                grid-template-columns: 1fr !important;
+                min-height: unset !important;
+              }
+            }
+          `}
+        </style>
       </div>
     </div>
   );
@@ -14283,8 +18305,8 @@ export default function CashIndex(): React.ReactElement {
 
 ### src/pages/categories/CategoryIndex.tsx
 
-- SHA: `c250d0d1e7b6`  
-- Ukuran: 7 KB
+- SHA: `23c55fc4bea7`  
+- Ukuran: 11 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -14387,6 +18409,7 @@ export default function CategoryIndex(): React.ReactElement {
     setEditItem(null);
     setOpenForm(true);
   };
+
   const openEdit = (row: Category) => {
     setEditItem(row);
     setOpenForm(true);
@@ -14423,123 +18446,209 @@ export default function CategoryIndex(): React.ReactElement {
     }
   };
 
+  const softText: React.CSSProperties = { color: "var(--color-text-soft)" };
+  const divider: React.CSSProperties = { borderTop: "1px solid var(--color-border)" };
+
   return (
-    <div className="page">
-      {/* Header */}
-      <div className="card" style={{ padding: 16 }}>
-        <div
-          className="header-bar"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 12,
-            flexWrap: "wrap",
-          }}
-        >
-          <div>
-            <h1 className="h1" style={{ margin: 0 }}>Kategori</h1>
-            <div className="muted">Kelola kategori produk (multi-cabang & siap POS).</div>
-          </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <select
-              className="select"
-              value={query.per_page ?? 10}
-              onChange={(e) =>
-                setQuery({
-                  ...query,
-                  per_page: Number(e.target.value),
-                  page: 1,
-                })
-              }
-            >
-              {[10, 20, 50].map((n) => (
-                <option key={n} value={n}>
-                  {n} / halaman
-                </option>
-              ))}
-            </select>
-            <button className="button button-primary" onClick={openCreate}>
-              + Tambah
-            </button>
-          </div>
-        </div>
-      </div>
+    <div className="container">
+      {/* HEADER */}
+      <div className="section">
+        <div className="card" style={{ padding: "1rem" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              justifyContent: "space-between",
+              gap: "1rem",
+              flexWrap: "wrap",
+            }}
+          >
+            <div style={{ minWidth: 220 }}>
+              <h1 style={{ margin: 0, lineHeight: 1.15 }}>Kategori</h1>
+              <div style={{ ...softText, marginTop: ".35rem" }}>
+                Kelola kategori produk.
+              </div>
 
-      {/* Filters + Table */}
-      <div className="card" style={{ padding: 16 }}>
-        <div style={{ marginBottom: 12 }}>
-          <CategoryFilters value={query} onChange={setQuery} />
-        </div>
-
-        <div>
-          {loading ? (
-            <div className="empty" style={{ padding: 24, textAlign: "center" }}>
-              Memuat…
-            </div>
-          ) : error ? (
-            <div
-              className="alert alert-danger"
-              style={{ padding: 16, textAlign: "center" }}
-            >
-              {error}
-            </div>
-          ) : rows.length === 0 ? (
-            <div className="empty" style={{ padding: 24, textAlign: "center" }}>
-              Belum ada data kategori.
-            </div>
-          ) : (
-            <CategoryTable rows={rows} onEdit={openEdit} onDelete={handleDelete} />
-          )}
-        </div>
-      </div>
-
-      {/* Pagination */}
-      <div className="card" style={{ padding: 12 }}>
-        <div
-          className="pagination-bar"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 12,
-            flexWrap: "wrap",
-          }}
-        >
-          <div className="muted" style={{ fontSize: 14 }}>
-            Halaman {meta.current_page} dari {meta.last_page} • Total {meta.total} data
-          </div>
-          <div style={{ display: "flex", gap: 6 }}>
-            <button
-              className="button"
-              disabled={current <= 1}
-              onClick={() =>
-                setQuery({ ...query, page: Math.max(1, (query.page ?? 1) - 1) })
-              }
-            >
-              Prev
-            </button>
-            {pageItems.map((p) => (
-              <button
-                key={p}
-                className={`button${p === meta.current_page ? " button-primary" : ""}`}
-                onClick={() => setQuery({ ...query, page: p })}
+              <div
+                style={{
+                  display: "flex",
+                  gap: ".5rem",
+                  flexWrap: "wrap",
+                  marginTop: ".8rem",
+                }}
               >
-                {p}
-              </button>
-            ))}
-            <button
-              className="button"
-              disabled={current >= meta.last_page}
-              onClick={() =>
-                setQuery({
-                  ...query,
-                  page: Math.min(meta.last_page, (query.page ?? 1) + 1),
-                })
-              }
+                <span className="badge" title="Total data">
+                  Total: {meta.total}
+                </span>
+                <span className="badge" title="Per halaman">
+                  Per halaman: {query.per_page ?? 10}
+                </span>
+                <span className="badge" title="Urutan">
+                  Sort: {query.sort ?? "nama"}
+                </span>
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: ".6rem",
+                flexWrap: "wrap",
+                justifyContent: "flex-end",
+              }}
             >
-              Next
-            </button>
+              <select
+                className="select"
+                value={query.per_page ?? 10}
+                onChange={(e) =>
+                  setQuery({
+                    ...query,
+                    per_page: Number(e.target.value),
+                    page: 1,
+                  })
+                }
+                style={{ minWidth: 140 }}
+              >
+                {[10, 20, 50].map((n) => (
+                  <option key={n} value={n}>
+                    {n} / halaman
+                  </option>
+                ))}
+              </select>
+
+              <button className="button button-primary" onClick={openCreate}>
+                + Tambah Kategori
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* CONTENT */}
+      <div className="section">
+        <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+          {/* Toolbar: Filters */}
+          <div
+            style={{
+              padding: "1rem",
+              background: "rgba(0,0,0,0.015)",
+              borderBottom: "1px solid var(--color-border)",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: ".75rem", flexWrap: "wrap" }}>
+              <div style={{ fontWeight: 700 }}>Filter</div>
+              <div style={{ ...softText, fontSize: 14 }}>
+                Gunakan pencarian/sort untuk mempercepat pengelolaan data.
+              </div>
+            </div>
+
+            <div style={{ marginTop: ".8rem" }}>
+              <CategoryFilters value={query} onChange={setQuery} />
+            </div>
+          </div>
+
+          {/* Body: Table / State */}
+          <div style={{ padding: "1rem" }}>
+            {loading ? (
+              <div
+                style={{
+                  padding: "1.25rem",
+                  textAlign: "center",
+                  ...softText,
+                  border: "1px dashed var(--color-border)",
+                  borderRadius: "var(--radius-md)",
+                  background: "var(--color-surface)",
+                }}
+              >
+                Memuat data kategori…
+              </div>
+            ) : error ? (
+              <div
+                style={{
+                  padding: "1rem",
+                  borderRadius: "var(--radius-md)",
+                  border: "1px solid rgba(220,38,38,.25)",
+                  background: "rgba(220,38,38,.06)",
+                  color: "var(--color-danger)",
+                  textAlign: "center",
+                  fontWeight: 700,
+                }}
+              >
+                {error}
+              </div>
+            ) : rows.length === 0 ? (
+              <div
+                style={{
+                  padding: "1.25rem",
+                  textAlign: "center",
+                  border: "1px dashed var(--color-border)",
+                  borderRadius: "var(--radius-md)",
+                  background: "var(--color-surface)",
+                }}
+              >
+                <div style={{ fontWeight: 800 }}>Belum ada kategori</div>
+                <div style={{ ...softText, marginTop: ".35rem" }}>
+                  Klik tombol <b>Tambah Kategori</b> untuk membuat data baru.
+                </div>
+              </div>
+            ) : (
+              <CategoryTable rows={rows} onEdit={openEdit} onDelete={handleDelete} />
+            )}
+          </div>
+
+          {/* Footer: Pagination */}
+          <div style={{ padding: "0.9rem 1rem", ...divider }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: ".75rem",
+                flexWrap: "wrap",
+              }}
+            >
+              <div style={{ ...softText, fontSize: 14 }}>
+                Halaman <b>{meta.current_page}</b> dari <b>{meta.last_page}</b> • Total{" "}
+                <b>{meta.total}</b> data
+              </div>
+
+              <div style={{ display: "flex", gap: ".4rem", flexWrap: "wrap" }}>
+                <button
+                  className="button button-outline"
+                  disabled={current <= 1}
+                  onClick={() =>
+                    setQuery({ ...query, page: Math.max(1, (query.page ?? 1) - 1) })
+                  }
+                >
+                  Prev
+                </button>
+
+                {pageItems.map((p) => (
+                  <button
+                    key={p}
+                    className={p === meta.current_page ? "button button-primary" : "button button-outline"}
+                    onClick={() => setQuery({ ...query, page: p })}
+                    style={{ minWidth: 44, paddingInline: ".85rem" }}
+                  >
+                    {p}
+                  </button>
+                ))}
+
+                <button
+                  className="button button-outline"
+                  disabled={current >= meta.last_page}
+                  onClick={() =>
+                    setQuery({
+                      ...query,
+                      page: Math.min(meta.last_page, (query.page ?? 1) + 1),
+                    })
+                  }
+                >
+                  Next
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -14559,22 +18668,32 @@ export default function CategoryIndex(): React.ReactElement {
 
 ### src/pages/customers/CustomerDetail.tsx
 
-- SHA: `3e6558a729e9`  
-- Ukuran: 6 KB
+- SHA: `e397430ddce6`  
+- Ukuran: 13 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
 // src/pages/customers/CustomerDetail.tsx
-import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { changeCustomerStage, getCustomer, getCustomerHistory } from '../../api/customers';
-import type { CustomerDetail as TDetail, CustomerTimelineEvent, CustomerStage } from '../../types/customers';
-import CustomerStageBadge from '../../components/customers/CustomerStageBadge';
-import CustomerTimeline from '../../components/customers/CustomerTimeline';
-import { useAuth } from '../../store/auth';
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  changeCustomerStage,
+  getCustomer,
+  getCustomerHistory,
+} from "../../api/customers";
+import type {
+  CustomerDetail as TDetail,
+  CustomerTimelineEvent,
+  CustomerStage,
+} from "../../types/customers";
+import CustomerStageBadge from "../../components/customers/CustomerStageBadge";
+import CustomerTimeline from "../../components/customers/CustomerTimeline";
+import { useAuth } from "../../store/auth";
 
-export default function CustomerDetail() {
+export default function CustomerDetail(): React.ReactElement {
   const { id } = useParams();
+  const nav = useNavigate();
+
   const cid = Number(id);
   const [detail, setDetail] = useState<TDetail | null>(null);
   const [timeline, setTimeline] = useState<CustomerTimelineEvent[]>([]);
@@ -14582,12 +18701,13 @@ export default function CustomerDetail() {
   const [tlLoading, setTlLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [tlError, setTlError] = useState<string | null>(null);
+
   const { hasRole } = useAuth();
-  const canChangeStage = hasRole('superadmin') || hasRole('admin_cabang');
+  const canChangeStage = hasRole("superadmin") || hasRole("admin_cabang");
 
   useEffect(() => {
     if (!Number.isFinite(cid)) {
-      setError('Invalid customer id');
+      setError("Invalid customer id");
       setLoading(false);
       return;
     }
@@ -14599,17 +18719,19 @@ export default function CustomerDetail() {
         const d = await getCustomer(cid);
         if (!cancelled) setDetail(d);
       } catch {
-        if (!cancelled) setError('Failed to load customer');
+        if (!cancelled) setError("Failed to load customer");
       } finally {
         if (!cancelled) setLoading(false);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [cid]);
 
   useEffect(() => {
     if (!Number.isFinite(cid)) {
-      setTlError('Invalid customer id');
+      setTlError("Invalid customer id");
       setTlLoading(false);
       return;
     }
@@ -14621,93 +18743,281 @@ export default function CustomerDetail() {
         const h = await getCustomerHistory(cid);
         if (!cancelled) setTimeline(h);
       } catch {
-        if (!cancelled) setTlError('Failed to load timeline');
+        if (!cancelled) setTlError("Failed to load timeline");
       } finally {
         if (!cancelled) setTlLoading(false);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [cid]);
 
-  async function onChangeStage(s: CustomerStage) {
+  async function onChangeStage(s: CustomerStage): Promise<void> {
     if (!detail) return;
     try {
       const updated = await changeCustomerStage(detail.customer.id, s);
-      setDetail(d => (d ? { ...d, customer: updated } : d));
+      setDetail((d) => (d ? { ...d, customer: updated } : d));
     } catch {
       // tempatkan toast global bila ada
     }
   }
 
+  // ====== UI helpers (tanpa ubah data/logika) ======
+  const c = detail?.customer;
+
+  const displayName = useMemo(() => {
+    if (!c) return "—";
+    return (
+      (c as unknown as { nama?: string }).nama ??
+      (c as unknown as { name?: string }).name ??
+      "—"
+    );
+  }, [c]);
+
+  const displayAddress = useMemo(() => {
+    if (!c) return "—";
+    return (
+      (c as unknown as { alamat?: string | null }).alamat ??
+      (c as unknown as { address?: string | null }).address ??
+      "—"
+    );
+  }, [c]);
+
+  const displayPhone = useMemo(() => {
+    if (!c) return "—";
+    return (c as unknown as { phone?: string | null }).phone ?? "—";
+  }, [c]);
+
+  const displayEmail = useMemo(() => {
+    if (!c) return "—";
+    return (c as unknown as { email?: string | null }).email ?? "—";
+  }, [c]);
+
+  // ====== States ======
   if (loading) {
     return (
-      <div className="section p-4">
-        <div className="card p-4">Loading…</div>
-      </div>
-    );
-  }
-  if (error || !detail) {
-    return (
-      <div className="section p-4">
-        <div className="card p-4">
-          <span className="badge badge-danger" style={{ verticalAlign: 'middle' }}>Error</span>
-          <span style={{ marginLeft: 8 }}>{error ?? 'Not found'}</span>
+      <div className="container">
+        <div className="section">
+          <div className="card p-4">Loading…</div>
         </div>
       </div>
     );
   }
 
-  const c = detail.customer;
-
-  // Toleransi nama/alamat beda field tanpa any
-  const displayName =
-    (c as unknown as { nama?: string }).nama ??
-    (c as unknown as { name?: string }).name ??
-    '—';
-
-  const displayAddress =
-    (c as unknown as { alamat?: string | null }).alamat ??
-    (c as unknown as { address?: string | null }).address ??
-    '—';
-
-  return (
-    <div className="section p-4">
-      {/* Header detail */}
-      <div className="card p-4">
-        <div className="form-row form-row--2" style={{ alignItems: 'flex-start' }}>
-          <div>
-            <h1>{displayName}</h1>
-            <div className="muted">
-              {(c as unknown as { phone?: string | null }).phone ?? '—'} • {(c as unknown as { email?: string | null }).email ?? '—'}
-            </div>
-            <div className="muted">{displayAddress}</div>
+  if (error || !detail || !c) {
+    return (
+      <div className="container">
+        <div className="section">
+          <div className="card p-4" style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <span className="badge badge-danger" style={{ verticalAlign: "middle" }}>
+              Error
+            </span>
+            <span>{error ?? "Not found"}</span>
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ marginBottom: 8 }}>
-              <CustomerStageBadge stage={c.stage} />
+        </div>
+      </div>
+    );
+  }
+
+  // ====== Layout ======
+  return (
+    <div className="container">
+      <div className="section">
+        {/* Top bar: back + title */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            gap: "1rem",
+            flexWrap: "wrap",
+            marginBottom: "1rem",
+          }}
+        >
+          <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+            <button
+              type="button"
+              className="button button-outline"
+              onClick={() => nav("/customers")}
+              title="Back to customers"
+              style={{ borderRadius: "999px" }}
+            >
+              ← Back
+            </button>
+
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", flexWrap: "wrap" }}>
+                <h1 style={{ marginBottom: 0 }}>{displayName}</h1>
+                <CustomerStageBadge stage={c.stage} />
+              </div>
+              <div className="muted" style={{ marginTop: 4 }}>
+                {displayPhone} • {displayEmail}
+              </div>
             </div>
+          </div>
+
+          {/* Right actions */}
+          <div style={{ display: "flex", gap: "0.6rem", alignItems: "center", flexWrap: "wrap" }}>
+            <span className="badge" title="Customer ID">
+              ID: {c.id}
+            </span>
+
             {canChangeStage ? (
-              <select
-                className="select"
-                value={c.stage}
-                onChange={(e) => onChangeStage(e.target.value as CustomerStage)}
+              <div
+                className="card"
+                style={{
+                  padding: "0.65rem 0.75rem",
+                  display: "flex",
+                  gap: "0.6rem",
+                  alignItems: "center",
+                }}
+                title="Change stage"
               >
-                <option value="LEAD">LEAD</option>
-                <option value="ACTIVE">ACTIVE</option>
-                <option value="CHURN">CHURN</option>
-              </select>
+                <span className="muted" style={{ fontSize: "0.9rem" }}>
+                  Stage
+                </span>
+                <select
+                  className="select"
+                  value={c.stage}
+                  onChange={(e) => onChangeStage(e.target.value as CustomerStage)}
+                  style={{ minWidth: 140 }}
+                >
+                  <option value="LEAD">LEAD</option>
+                  <option value="ACTIVE">ACTIVE</option>
+                  <option value="CHURN">CHURN</option>
+                </select>
+              </div>
             ) : null}
           </div>
         </div>
-      </div>
 
-      {/* Grid 2 kolom: Orders & Timeline */}
-      <div className="form-row form-row--2" style={{ marginTop: 16 }}>
-        {/* Recent Orders */}
-        <section>
+        {/* Summary cards */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1.6fr 1fr",
+            gap: "1rem",
+            marginBottom: "1rem",
+          }}
+        >
+          {/* Profile card */}
           <div className="card p-4">
-            <h2>Recent Orders</h2>
-            <div style={{ marginTop: 8 }}>
+            <h2 style={{ marginBottom: "0.5rem" }}>Profile</h2>
+
+            <div className="muted" style={{ marginBottom: "0.75rem" }}>
+              Informasi dasar pelanggan.
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "140px 1fr",
+                gap: "0.6rem 1rem",
+                alignItems: "start",
+              }}
+            >
+              <div className="muted">Name</div>
+              <div style={{ fontWeight: 700 }}>{displayName}</div>
+
+              <div className="muted">Phone</div>
+              <div>{displayPhone}</div>
+
+              <div className="muted">Email</div>
+              <div>{displayEmail}</div>
+
+              <div className="muted">Address</div>
+              <div style={{ lineHeight: 1.5 }}>{displayAddress}</div>
+            </div>
+          </div>
+
+          {/* Quick stats */}
+          <div className="card p-4">
+            <h2 style={{ marginBottom: "0.5rem" }}>Summary</h2>
+            <div className="muted" style={{ marginBottom: "0.75rem" }}>
+              Ringkasan singkat.
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr",
+                gap: "0.6rem",
+              }}
+            >
+              <div
+                className="card"
+                style={{
+                  padding: "0.8rem",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <span className="muted">Total Orders</span>
+                <span style={{ fontWeight: 800 }}>{detail.orders.length}</span>
+              </div>
+
+              <div
+                className="card"
+                style={{
+                  padding: "0.8rem",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <span className="muted">Timeline Events</span>
+                <span style={{ fontWeight: 800 }}>{timeline.length}</span>
+              </div>
+
+              <div
+                className="card"
+                style={{
+                  padding: "0.8rem",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <span className="muted">Current Stage</span>
+                <span style={{ fontWeight: 800 }}>{c.stage}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Orders + Timeline */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1.2fr 0.8fr",
+            gap: "1rem",
+          }}
+        >
+          {/* Recent Orders */}
+          <section className="card p-4">
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "1rem",
+                flexWrap: "wrap",
+                marginBottom: "0.75rem",
+              }}
+            >
+              <div>
+                <h2 style={{ marginBottom: "0.25rem" }}>Recent Orders</h2>
+                <div className="muted">Riwayat order terbaru pelanggan.</div>
+              </div>
+
+              <span className="badge" title="Orders">
+                {detail.orders.length} orders
+              </span>
+            </div>
+
+            <div style={{ overflowX: "auto" }}>
               <table className="table">
                 <thead>
                   <tr>
@@ -14720,23 +19030,26 @@ export default function CustomerDetail() {
                 <tbody>
                   {detail.orders.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="muted" style={{ textAlign: 'center' }}>
+                      <td colSpan={4} className="muted" style={{ textAlign: "center" }}>
                         No orders yet.
                       </td>
                     </tr>
                   ) : (
                     detail.orders.map((o) => (
                       <tr key={o.id}>
-                        <td>{(o as unknown as { code?: string }).code ?? '-'}</td>
-                        <td>{(o as unknown as { status?: string }).status ?? '-'}</td>
-                        <td>{(o as unknown as { grand_total?: number | string }).grand_total ?? '-'}</td>
+                        <td>{(o as unknown as { code?: string }).code ?? "-"}</td>
+                        <td>{(o as unknown as { status?: string }).status ?? "-"}</td>
+                        <td>
+                          {(o as unknown as { grand_total?: number | string }).grand_total ??
+                            "-"}
+                        </td>
                         <td>
                           {(() => {
                             const dt =
                               (o as unknown as { ordered_at?: string }).ordered_at ??
                               (o as unknown as { created_at?: string }).created_at ??
                               null;
-                            return dt ? new Date(dt).toLocaleString() : '-';
+                            return dt ? new Date(dt).toLocaleString() : "-";
                           })()}
                         </td>
                       </tr>
@@ -14745,18 +19058,37 @@ export default function CustomerDetail() {
                 </tbody>
               </table>
             </div>
-          </div>
-        </section>
+          </section>
 
-        {/* Timeline */}
-        <section>
-          <div className="card p-4">
-            <h2>Timeline</h2>
-            <div style={{ marginTop: 8 }}>
-              <CustomerTimeline items={timeline} loading={tlLoading} error={tlError} />
+          {/* Timeline */}
+          <section className="card p-4">
+            <div style={{ marginBottom: "0.75rem" }}>
+              <h2 style={{ marginBottom: "0.25rem" }}>Timeline</h2>
+              <div className="muted">Aktivitas terkait customer.</div>
             </div>
-          </div>
-        </section>
+
+            <CustomerTimeline items={timeline} loading={tlLoading} error={tlError} />
+          </section>
+        </div>
+
+        {/* Responsive tweaks */}
+        <style>
+          {`
+            @media (max-width: 1024px) {
+              .container .section > div[style*="grid-template-columns: 1.6fr 1fr"] {
+                grid-template-columns: 1fr !important;
+              }
+              .container .section > div[style*="grid-template-columns: 1.2fr 0.8fr"] {
+                grid-template-columns: 1fr !important;
+              }
+            }
+            @media (max-width: 520px) {
+              .container .section h1 {
+                font-size: 1.4rem !important;
+              }
+            }
+          `}
+        </style>
       </div>
     </div>
   );
@@ -14767,35 +19099,36 @@ export default function CustomerDetail() {
 
 ### src/pages/customers/CustomersIndex.tsx
 
-- SHA: `8f7fe7eee3bb`  
-- Ukuran: 2 KB
+- SHA: `5c3f27ba60fb`  
+- Ukuran: 4 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
 // src/pages/customers/CustomersIndex.tsx
-import { useNavigate } from 'react-router-dom';
-import CustomerTable from '../../components/customers/CustomerTable';
-import { useAuth } from '../../store/auth';
-import { createCustomer } from '../../api/customers';
-import { useState } from 'react';
-import type { Customer } from '../../types/customers';
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useAuth } from "../../store/auth";
+import { createCustomer } from "../../api/customers";
+import CustomerTable from "../../components/customers/CustomerTable";
+import type { Customer } from "../../types/customers";
 
-export default function CustomersIndex() {
+export default function CustomersIndex(): React.ReactElement {
   const nav = useNavigate();
   const { hasRole } = useAuth();
+
   const canCreate =
-    hasRole('superadmin') ||
-    hasRole('admin_cabang') ||
-    hasRole('kasir') ||
-    hasRole('sales');
+    hasRole("superadmin") ||
+    hasRole("admin_cabang") ||
+    hasRole("kasir") ||
+    hasRole("sales");
 
   const [version, setVersion] = useState<number>(0);
 
-  async function handleCreate() {
-    const nameInput = window.prompt('Customer name?')?.trim();
+  async function handleCreate(): Promise<void> {
+    const nameInput = window.prompt("Customer name?")?.trim();
     if (!nameInput) return;
 
-    const phone = window.prompt('Phone (e.g. 08xxxxxxxxxx)?')?.trim();
+    const phone = window.prompt("Phone (e.g. 08xxxxxxxxxx)?")?.trim();
     if (!phone) return;
 
     try {
@@ -14804,8 +19137,8 @@ export default function CustomersIndex() {
       setVersion((v) => v + 1); // refresh table by remount
       nav(`/customers/${c.id}`);
     } catch (err: unknown) {
-      let msg = 'Failed to create customer';
-      if (typeof err === 'object' && err !== null) {
+      let msg = "Failed to create customer";
+      if (typeof err === "object" && err !== null) {
         // @ts-expect-error akses opsional, tetap tanpa any
         msg = err?.response?.data?.message ?? (err as Error).message ?? msg;
       }
@@ -14814,15 +19147,96 @@ export default function CustomersIndex() {
   }
 
   return (
-    <div className="section p-4">
-      <h1>Customers</h1>
-      <div className="mt-4">
-        <CustomerTable
-          key={version}
-          canCreate={canCreate}
-          onCreate={handleCreate}
-          onRowClick={(c: Customer) => nav(`/customers/${c.id}`)}
-        />
+    <div className="container">
+      <div className="section">
+        {/* Header + Toolbar */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            gap: "1rem",
+            flexWrap: "wrap",
+            marginBottom: "1rem",
+          }}
+        >
+          <div style={{ minWidth: 240 }}>
+            <h1 style={{ marginBottom: "0.35rem" }}>Customers</h1>
+            <p style={{ marginBottom: 0 }}>
+              Kelola data pelanggan dan akses detail transaksi per pelanggan.
+            </p>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.6rem",
+              flexWrap: "wrap",
+            }}
+          >
+            <span className="badge" title="Modul">
+              CRM
+            </span>
+
+            {/* Aksi utama */}
+            {canCreate ? (
+              <button
+                type="button"
+                className="button button-primary"
+                onClick={handleCreate}
+              >
+                + New Customer
+              </button>
+            ) : null}
+
+            {/* Aksi sekunder: contoh tombol kecil untuk konsistensi UI */}
+            <button
+              type="button"
+              className="button button-outline"
+              onClick={() => setVersion((v) => v + 1)}
+              title="Refresh list"
+            >
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="card" style={{ padding: "1rem" }}>
+          {/* Area penjelas kecil + hint */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "1rem",
+              flexWrap: "wrap",
+              padding: "0.25rem 0.25rem 0.75rem 0.25rem",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <span className="badge" style={{ height: 26 }}>
+                List
+              </span>
+              <span style={{ fontSize: "0.95rem", opacity: 0.8 }}>
+                Klik baris untuk membuka detail customer.
+              </span>
+            </div>
+
+            {/* Placeholder kanan atas jika suatu saat Anda mau taruh filter global */}
+            <div style={{ opacity: 0.7, fontSize: "0.9rem" }}>
+              {/* biarkan kosong / atau isi info singkat */}
+            </div>
+          </div>
+
+          <CustomerTable
+            key={version}
+            canCreate={canCreate}
+            onCreate={handleCreate}
+            onRowClick={(c: Customer) => nav(`/customers/${c.id}`)}
+          />
+        </div>
       </div>
     </div>
   );
@@ -14833,8 +19247,8 @@ export default function CustomersIndex() {
 
 ### src/pages/DashboardHome.tsx
 
-- SHA: `5383d687c903`  
-- Ukuran: 8 KB
+- SHA: `e6910118017b`  
+- Ukuran: 10 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -14871,14 +19285,6 @@ export default function DashboardHome(): React.ReactElement {
   const [loading, setLoading] = useState<boolean>(true);
   const [err, setErr] = useState<string | null>(null);
 
-  // ====== Layout responsif (tanpa Tailwind) ======
-  const [isWide, setIsWide] = useState<boolean>(() => typeof window !== 'undefined' && window.innerWidth >= 1200);
-  useEffect(() => {
-    const onResize = (): void => setIsWide(window.innerWidth >= 1200);
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
-
   useEffect(() => {
     let cancelled = false;
 
@@ -14910,12 +19316,14 @@ export default function DashboardHome(): React.ReactElement {
             anyErr?.response?.data &&
             typeof anyErr.response.data === 'object' &&
             (anyErr.response.data as Record<string, unknown>)?.message;
+
           const msg =
             anyErr?.response?.status === 403
               ? (typeof serverMsg === 'string'
                 ? `403 Forbidden — ${serverMsg}`
                 : '403 Forbidden — Policy backend menolak akses.')
               : (e instanceof Error ? e.message : 'Failed to load dashboard');
+
           setErr(msg);
         }
       } finally {
@@ -14927,7 +19335,7 @@ export default function DashboardHome(): React.ReactElement {
     return () => { cancelled = true; };
   }, [effectiveCabangId, canView]);
 
-  // ====== Guard ======
+  // ====== Guard (tetap) ======
   if (!canView) {
     return (
       <div className="card" style={{ padding: 16 }}>
@@ -14952,93 +19360,220 @@ export default function DashboardHome(): React.ReactElement {
     );
   }
 
-  // ====== UI ======
+  // ====== UI styles ======
+  const pageStyle: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 18,
+    width: 'min(1280px, 96%)',
+    margin: '0 auto',
+    paddingBottom: 6,
+  };
+
+  const headerWrap: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginTop: 2,
+  };
+
+  const headerMeta: React.CSSProperties = {
+    fontSize: 12,
+    opacity: 0.7,
+    marginBottom: 6,
+    letterSpacing: '.02em',
+    textTransform: 'uppercase',
+  };
+
+  const headerTitle: React.CSSProperties = {
+    margin: 0,
+    fontSize: 20,
+    fontWeight: 800,
+    letterSpacing: '-0.01em',
+    color: 'var(--color-text)',
+    lineHeight: 1.2,
+  };
+
+  const headerDesc: React.CSSProperties = {
+    marginTop: 6,
+    marginBottom: 0,
+    fontSize: 14,
+    color: 'var(--color-text-soft)',
+  };
+
+  const headerRight: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end',
+  };
+
+  const cardHeadRow: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    gap: 10,
+  };
+
+  const cardTitle: React.CSSProperties = {
+    fontWeight: 750,
+    color: 'var(--color-text)',
+    margin: 0,
+    fontSize: 14,
+    letterSpacing: '.01em',
+  };
+
+  const cardHint: React.CSSProperties = {
+    fontSize: 12,
+    color: 'var(--color-text-soft)',
+    margin: 0,
+    opacity: 0.9,
+  };
+
+  const divider: React.CSSProperties = {
+    borderTop: '1px solid rgba(0,0,0,0.06)',
+    marginTop: 10,
+    paddingTop: 12,
+  };
+
+  // Grid 3 kartu di bawah chart
+  const triGrid: React.CSSProperties = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+    gap: 18,
+    alignItems: 'start',
+  };
+
+  const responsiveCss = `
+    @media (max-width: 1100px) {
+      .dash-3 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+    }
+    @media (max-width: 720px) {
+      .dash-3 { grid-template-columns: 1fr !important; }
+    }
+  `;
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 1280, margin: '0 auto' }}>
-      {/* Header halaman */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-        <div>
-          <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4 }}>Dashboard</div>
-          <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700, letterSpacing: '.01em', color: '#1f2937' }}>
-            Ringkasan aktivitas & performa toko
-          </h1>
+    <div style={pageStyle}>
+      {/* Header */}
+      <div style={headerWrap}>
+        <div style={{ minWidth: 0 }}>
+          <div style={headerMeta}>Dashboard</div>
+          <h1 style={headerTitle}>Ringkasan aktivitas & performa toko</h1>
+          <p style={headerDesc}>
+            KPI, tren 7 hari, produk terlaris, indikator reorder (ROP), dan peringatan stok rendah.
+          </p>
         </div>
-        {/* ruang kosong kanan (slot search/role switch jika sudah ada di topbar) */}
-        <div />
+
+        <div style={headerRight}>
+          {err ? (
+            <span className="badge badge-danger" title={err}>Error</span>
+          ) : loading ? (
+            <span className="badge">Loading</span>
+          ) : (
+            <span className="badge badge-success">Up to date</span>
+          )}
+        </div>
       </div>
 
-      {/* KPI baris pertama (komponen sudah menata card di dalam) */}
+      {/* KPI */}
       <KPIStatCards data={kpi} loading={loading} error={err} />
 
-      {/* Grid utama: Kiri (Chart) — Kanan (List) */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: isWide ? '2fr 1fr' : '1fr',
-          gap: 20,
-          alignItems: 'start',
-        }}
-      >
-        {/* Kiri: Chart 7 hari */}
-        <section className="card" style={{ padding: 18, minWidth: 0 }}>
-          <div style={{ fontWeight: 600, marginBottom: 10, color: '#111827' }}>Trend Penjualan Mingguan</div>
-          <div style={{ borderTop: '1px solid rgba(0,0,0,.06)', marginTop: 8, paddingTop: 12 }}>
-            <Sales7DaysChart data={chart} loading={loading} error={err} />
+      {/* Chart: sekarang full width */}
+      <section className="card" style={{ padding: 'var(--space-5)', minWidth: 0 }}>
+        <div style={cardHeadRow}>
+          <h2 style={cardTitle}>Trend Penjualan 7 Hari</h2>
+          <p style={cardHint}>Update otomatis berdasarkan cabang & role</p>
+        </div>
+        <div style={divider}>
+          <Sales7DaysChart data={chart} loading={loading} error={err} />
+        </div>
+      </section>
+
+      {/* 3 kartu: Top Produk, ROP, Stok Rendah (di bawah chart) */}
+      <div className="dash-3" style={triGrid}>
+        <section className="card" style={{ padding: 'var(--space-5)', minWidth: 0 }}>
+          <div style={cardHeadRow}>
+            <h2 style={cardTitle}>Produk Terlaris</h2>
+            <p style={cardHint}>Top 5</p>
+          </div>
+          <div style={divider}>
+            <TopProductsList data={top} loading={loading} error={err} />
           </div>
         </section>
 
-        {/* Kanan: dua kartu vertikal */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20, minWidth: 0 }}>
-          <section className="card" style={{ padding: 18 }}>
-            <div style={{ fontWeight: 600, marginBottom: 10, color: '#111827' }}>Produk Terlaris</div>
-            <div style={{ borderTop: '1px solid rgba(0,0,0,.06)', marginTop: 8, paddingTop: 12 }}>
-              <TopProductsList data={top} loading={loading} error={err} />
-            </div>
-          </section>
+        <section className="card" style={{ padding: 'var(--space-5)', minWidth: 0 }}>
+          <div style={cardHeadRow}>
+            <h2 style={cardTitle}>Perlu Reorder (ROP)</h2>
+            <p style={cardHint}>Prioritas restok</p>
+          </div>
+          <div style={divider}>
+            <ReorderPointList />
+          </div>
+        </section>
 
-          {/* Kartu baru: Perlu Reorder (ROP) */}
-          <section className="card" style={{ padding: 18 }}>
-            <div style={{ fontWeight: 600, marginBottom: 10, color: '#111827' }}>Perlu Reorder (ROP)</div>
-            <div style={{ borderTop: '1px solid rgba(0,0,0,.06)', marginTop: 8, paddingTop: 12 }}>
-              <ReorderPointList />
-            </div>
-          </section>
-
-          <section className="card" style={{ padding: 18 }}>
-            <div style={{ fontWeight: 600, marginBottom: 10, color: '#111827' }}>Stok Rendah</div>
-            <div style={{ borderTop: '1px solid rgba(0,0,0,.06)', marginTop: 8, paddingTop: 12 }}>
-              <LowStockList data={low} loading={loading} error={err} />
-            </div>
-          </section>
-        </div>
+        <section className="card" style={{ padding: 'var(--space-5)', minWidth: 0 }}>
+          <div style={cardHeadRow}>
+            <h2 style={cardTitle}>Stok Rendah</h2>
+            <p style={cardHint}>Butuh tindakan cepat</p>
+          </div>
+          <div style={divider}>
+            <LowStockList data={low} loading={loading} error={err} />
+          </div>
+        </section>
       </div>
 
-      {/* Alert bar tipis (opsional, meniru “Peringatan Stok Rendah” di bagian bawah gambar) */}
+      {/* Alert bar */}
       {Array.isArray(low) && low.length > 0 && (
-        <div className="card" style={{ padding: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span className="badge badge-warning">Peringatan</span>
-          <div style={{ fontSize: 14, color: '#374151' }}>
-            Peringatan stok rendah pada {low.length} item. Periksa kartu <strong>Stok Rendah</strong> di kanan.
+        <div
+          className="card"
+          style={{
+            padding: 14,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 10,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span className="badge badge-warning">Peringatan</span>
+            <div style={{ fontSize: 14, color: 'var(--color-text)' }}>
+              Ada <strong>{low.length}</strong> item stok rendah. Cek kartu <strong>Stok Rendah</strong>.
+            </div>
           </div>
+
+          <button
+            type="button"
+            className="button button-outline"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          >
+            Lihat Ringkasan
+          </button>
         </div>
       )}
 
       {/* Quick actions */}
-      <section className="card" style={{ padding: 18 }}>
-        <div style={{ fontWeight: 600, marginBottom: 10, color: '#111827' }}>Tindakan Cepat</div>
-        <div style={{ borderTop: '1px solid rgba(0,0,0,.06)', marginTop: 8, paddingTop: 12 }}>
+      <section className="card" style={{ padding: 'var(--space-5)' }}>
+        <div style={cardHeadRow}>
+          <h2 style={cardTitle}>Tindakan Cepat</h2>
+          <p style={cardHint}>Shortcut operasional</p>
+        </div>
+        <div style={divider}>
           <QuickActions
             data={acts}
             loading={loading}
             error={err}
             onRun={(a) => {
-              // logic tetap asli; tidak ada dummy data
               if (a.type === 'LOW_STOCK') alert(`Low stock count: ${a.payload?.count ?? 0}`);
               if (a.type === 'PAYMENT_CHECK') alert('Buka daftar pembayaran untuk cek transaksi PENDING/FAILED.');
             }}
           />
         </div>
       </section>
+
+      <style>{responsiveCss}</style>
     </div>
   );
 }
@@ -15048,21 +19583,27 @@ export default function DashboardHome(): React.ReactElement {
 
 ### src/pages/delivery/DeliveryDetail.tsx
 
-- SHA: `cb1038a62916`  
-- Ukuran: 9 KB
+- SHA: `a8bf22b52871`  
+- Ukuran: 16 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
 // src/pages/delivery/DeliveryDetail.tsx
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { damageClaim, getDelivery, updateStatus, assignCourier } from "../../api/deliveries";
+import {
+  damageClaim,
+  getDelivery,
+  updateStatus,
+  assignCourier,
+  getWaybillHtml,
+  sendWaybillWhatsapp,
+} from "../../api/deliveries";
 import type { DeliveryDetail } from "../../types/delivery";
 import DeliveryStatusStepper from "../../components/delivery/DeliveryStatusStepper";
 import AssignCourierSelect from "../../components/delivery/AssignCourierSelect";
 import DamageClaimDialog from "../../components/delivery/DamageClaimDialog";
 import WaybillPreview from "../../components/delivery/WaybillPreview";
-import { getWaybillHtml, sendWaybillWhatsapp } from "../../api/deliveries";
 import { isAxiosError } from "axios";
 import { useAuth } from "../../store/auth";
 
@@ -15078,8 +19619,18 @@ export default function DeliveryDetail(): React.ReactElement {
   const [wbOpen, setWbOpen] = useState(false);
   const [wbHtml, setWbHtml] = useState<string>("");
 
-  const canAssign = hasRole("superadmin") || hasRole("admin_cabang") || hasRole("kasir") || hasRole("gudang");
-  const canProgress = hasRole("superadmin") || hasRole("admin_cabang") || hasRole("kurir") || hasRole("kasir") || hasRole("gudang");
+  const canAssign =
+    hasRole("superadmin") ||
+    hasRole("admin_cabang") ||
+    hasRole("kasir") ||
+    hasRole("gudang");
+
+  const canProgress =
+    hasRole("superadmin") ||
+    hasRole("admin_cabang") ||
+    hasRole("kurir") ||
+    hasRole("kasir") ||
+    hasRole("gudang");
 
   useEffect(() => {
     if (!id) return;
@@ -15097,18 +19648,6 @@ export default function DeliveryDetail(): React.ReactElement {
     };
   }, [id]);
 
-  if (loading) return <div>Memuat…</div>;
-  if (!data)
-    return (
-      <div>
-        Data tidak ditemukan.{" "}
-        <button className="link" onClick={() => nav(-1)}>
-          Kembali
-        </button>
-      </div>
-    );
-
-  // + Handler: buka preview Surat Jalan
   async function onOpenWaybill() {
     try {
       const html = await getWaybillHtml(data!.id);
@@ -15119,7 +19658,6 @@ export default function DeliveryDetail(): React.ReactElement {
     }
   }
 
-  // + Handler: kirim link WA ke kurir
   async function onSendToCourier() {
     try {
       const { wa_url } = await sendWaybillWhatsapp(data!.id);
@@ -15129,158 +19667,430 @@ export default function DeliveryDetail(): React.ReactElement {
     }
   }
 
+  function fmt(ts: string | null | undefined): string {
+    if (!ts) return "-";
+    try {
+      return new Date(ts).toLocaleString();
+    } catch {
+      return ts;
+    }
+  }
+
+  function TypeChip({ type }: { type: string | null | undefined }): React.ReactElement {
+    const t = (type ?? "-").toString();
+    return (
+      <span
+        className="badge"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          padding: "0.25rem 0.55rem",
+          borderRadius: "999px",
+          fontSize: "0.78rem",
+          lineHeight: 1.2,
+          border: "1px solid rgba(0,0,0,0.08)",
+          background: "rgba(0,0,0,0.03)",
+          opacity: 0.9,
+        }}
+      >
+        {t}
+      </span>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="page">
+        <div className="card" style={{ padding: "1.25rem" }}>
+          <div className="text-muted">Memuat…</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="page">
+        <div className="card" style={{ padding: "1.25rem" }}>
+          <div style={{ marginBottom: "0.75rem" }}>Data tidak ditemukan.</div>
+          <button className="button" onClick={() => nav(-1)}>
+            Kembali
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const showAssignBlock = canAssign && ["REQUESTED", "ASSIGNED"].includes(data.status);
+  const showProgressBlock = canProgress && ["ASSIGNED", "PICKED_UP", "ON_ROUTE"].includes(data.status);
+
+  const showWaybillBlock =
+    !!data.assigned_to &&
+    ["ASSIGNED", "PICKED_UP", "ON_ROUTE", "DELIVERED"].includes(data.status);
+
   return (
     <div className="page">
-      <div className="page-header">
-        <h1 className="page-title">Delivery Detail</h1>
-        <Link className="link text-sm" to="/delivery">
-          Kembali ke daftar
-        </Link>
-      </div>
-
-      {/* Header info + status */}
-      <div className="card">
-        <div className="toolbar">
-          <div className="mono">Order: {data.order_code ?? `#${data.order_id}`}</div>
-          <DeliveryStatusStepper status={data.status} />
+      {/* Header lebih rapi */}
+      <div
+        className="page-header"
+        style={{
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          gap: "1rem",
+          flexWrap: "wrap",
+        }}
+      >
+        <div style={{ minWidth: 260 }}>
+          <h1 className="page-title" style={{ marginBottom: "0.25rem" }}>
+            Delivery Detail
+          </h1>
+          <div className="text-muted" style={{ fontSize: "0.95rem" }}>
+            Detail permintaan pickup/delivery, status, kurir, surat jalan, dan timeline.
+          </div>
         </div>
 
-        <div className="details">
-          <div className="details-row">
-            <span className="text-muted">Jenis:</span>
-            <span>{data.type}</span>
-          </div>
-          <div className="details-row">
-            <span className="text-muted">Kurir:</span>
-            <span>{data.courier_name ?? "-"}</span>
-          </div>
-          <div className="details-row">
-            <span className="text-muted">Pickup:</span>
-            <span className="truncate-1">{data.pickup_address ?? "-"}</span>
-          </div>
-          <div className="details-row">
-            <span className="text-muted">Delivery:</span>
-            <span className="truncate-1">{data.delivery_address ?? "-"}</span>
-          </div>
-          <div className="details-row">
-            <span className="text-muted">Requested:</span>
-            <span>{new Date(data.requested_at).toLocaleString()}</span>
-          </div>
-          {data.completed_at && (
-            <div className="details-row">
-              <span className="text-muted">Completed:</span>
-              <span>{new Date(data.completed_at).toLocaleString()}</span>
+        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+          <Link className="button button-outline" to="/delivery">
+            Kembali ke daftar
+          </Link>
+          <button className="button" onClick={() => nav(-1)}>
+            Back
+          </button>
+        </div>
+      </div>
+
+      {/* Ringkasan + status */}
+      <div className="card" style={{ marginBottom: "0.9rem" }}>
+        {/* Top summary bar */}
+        <div
+          className="toolbar"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "1rem",
+            flexWrap: "wrap",
+          }}
+        >
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+            <div className="mono" style={{ fontWeight: 700 }}>
+              Order: {data.order_code ?? `#${data.order_id}`}
             </div>
-          )}
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+              <TypeChip type={data.type} />
+              <span
+                className="badge"
+                style={{ borderRadius: "999px" }}
+              >
+                Status: <b style={{ marginLeft: 6 }}>{data.status}</b>
+              </span>
+            </div>
+          </div>
+
+          <div style={{ minWidth: 240 }}>
+            <DeliveryStatusStepper status={data.status} />
+          </div>
+        </div>
+
+        {/* Info grid */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "0.9rem",
+            paddingTop: "0.25rem",
+          }}
+        >
+          {/* Card sub: Info utama */}
+          <div className="card card--sub" style={{ padding: "1rem" }}>
+            <div className="card-header" style={{ marginBottom: "0.6rem" }}>
+              Informasi Utama
+            </div>
+
+            <div className="details">
+              <div className="details-row">
+                <span className="text-muted">Kurir:</span>
+                <span style={{ fontWeight: 600 }}>{data.courier_name ?? "-"}</span>
+              </div>
+              <div className="details-row">
+                <span className="text-muted">Requested:</span>
+                <span>{fmt(data.requested_at)}</span>
+              </div>
+              <div className="details-row">
+                <span className="text-muted">Completed:</span>
+                <span>{fmt(data.completed_at)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Card sub: Alamat */}
+          <div className="card card--sub" style={{ padding: "1rem" }}>
+            <div className="card-header" style={{ marginBottom: "0.6rem" }}>
+              Alamat
+            </div>
+
+            <div className="details">
+              <div className="details-row">
+                <span className="text-muted">Pickup:</span>
+                <span className="truncate-1" title={data.pickup_address ?? ""}>
+                  {data.pickup_address ?? "-"}
+                </span>
+              </div>
+              <div className="details-row">
+                <span className="text-muted">Delivery:</span>
+                <span className="truncate-1" title={data.delivery_address ?? ""}>
+                  {data.delivery_address ?? "-"}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Assign courier */}
-        {canAssign && ["REQUESTED", "ASSIGNED"].includes(data.status) && (
-          <div className="toolbar">
-            <AssignCourierSelect
-              value={data.assigned_to ?? null}
-              allowAuto
-              onChange={async (val) => {
-                const auto = val === -1;
-                try {
-                  if (auto) {
-                    await assignCourier(data.id, { auto: true });
-                  } else {
-                    const payload = val !== null ? { assigned_to: val } : {};
-                    await assignCourier(data.id, payload);
-                  }
-                  const fresh = await getDelivery(data.id);
-                  setData(fresh);
-                } catch (err: unknown) {
-                  if (isAxiosError(err)) {
-                    if (err.response?.status === 403) {
-                      alert("Anda tidak memiliki izin untuk assign kurir di cabang ini.");
-                    } else {
-                      const serverMsg = (err.response?.data as { message?: string } | undefined)?.message;
-                      alert(serverMsg ?? err.message ?? "Gagal assign kurir.");
-                    }
-                  } else {
-                    alert((err as Error).message);
-                  }
-                }
+        {showAssignBlock && (
+          <div
+            className="card card--sub"
+            style={{
+              marginTop: "0.9rem",
+              padding: "1rem",
+            }}
+          >
+            <div
+              className="toolbar"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "0.9rem",
+                flexWrap: "wrap",
               }}
-            />
-            <span className="text-muted text-sm">Pilih kurir atau Auto-assign.</span>
+            >
+              <div style={{ minWidth: 260 }}>
+                <div style={{ fontWeight: 700, marginBottom: "0.25rem" }}>
+                  Assign Kurir
+                </div>
+                <div className="text-muted text-sm">
+                  Pilih kurir atau gunakan Auto-assign.
+                </div>
+              </div>
+
+              <div style={{ minWidth: 240 }}>
+                <AssignCourierSelect
+                  value={data.assigned_to ?? null}
+                  allowAuto
+                  onChange={async (val) => {
+                    const auto = val === -1;
+                    try {
+                      if (auto) {
+                        await assignCourier(data.id, { auto: true });
+                      } else {
+                        const payload = val !== null ? { assigned_to: val } : {};
+                        await assignCourier(data.id, payload);
+                      }
+                      const fresh = await getDelivery(data.id);
+                      setData(fresh);
+                    } catch (err: unknown) {
+                      if (isAxiosError(err)) {
+                        if (err.response?.status === 403) {
+                          alert("Anda tidak memiliki izin untuk assign kurir di cabang ini.");
+                        } else {
+                          const serverMsg = (err.response?.data as { message?: string } | undefined)?.message;
+                          alert(serverMsg ?? err.message ?? "Gagal assign kurir.");
+                        }
+                      } else {
+                        alert((err as Error).message);
+                      }
+                    }
+                  }}
+                />
+              </div>
+            </div>
           </div>
         )}
 
         {/* Progress actions */}
-        {canProgress && ["ASSIGNED", "PICKED_UP", "ON_ROUTE"].includes(data.status) && (
-          <div className="toolbar">
-            {data.status === "ASSIGNED" && (
-              <button
-                className="button button-outline"
-                onClick={async () => {
-                  await updateStatus(data.id, { status: "PICKED_UP" });
-                  setData(await getDelivery(data.id));
-                }}
-              >
-                Mark Picked
+        {showProgressBlock && (
+          <div
+            className="card card--sub"
+            style={{
+              marginTop: "0.9rem",
+              padding: "1rem",
+            }}
+          >
+            <div style={{ fontWeight: 700, marginBottom: "0.6rem" }}>
+              Aksi Status
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                gap: "0.5rem",
+                flexWrap: "wrap",
+                alignItems: "center",
+              }}
+            >
+              {data.status === "ASSIGNED" && (
+                <button
+                  className="button button-outline"
+                  onClick={async () => {
+                    await updateStatus(data.id, { status: "PICKED_UP" });
+                    setData(await getDelivery(data.id));
+                  }}
+                >
+                  Mark Picked
+                </button>
+              )}
+
+              {data.status === "PICKED_UP" && (
+                <button
+                  className="button button-outline"
+                  onClick={async () => {
+                    await updateStatus(data.id, { status: "ON_ROUTE" });
+                    setData(await getDelivery(data.id));
+                  }}
+                >
+                  On Route
+                </button>
+              )}
+
+              {data.status === "ON_ROUTE" && (
+                <button
+                  className="button button-primary"
+                  onClick={async () => {
+                    await updateStatus(data.id, { status: "DELIVERED" });
+                    setData(await getDelivery(data.id));
+                  }}
+                >
+                  Delivered
+                </button>
+              )}
+
+              <button className="button" onClick={() => setOpenClaim(true)}>
+                Klaim Kerusakan…
               </button>
-            )}
-            {data.status === "PICKED_UP" && (
-              <button
-                className="button button-outline"
-                onClick={async () => {
-                  await updateStatus(data.id, { status: "ON_ROUTE" });
-                  setData(await getDelivery(data.id));
-                }}
-              >
-                On Route
-              </button>
-            )}
-            {data.status === "ON_ROUTE" && (
-              <button
-                className="button button-primary"
-                onClick={async () => {
-                  await updateStatus(data.id, { status: "DELIVERED" });
-                  setData(await getDelivery(data.id));
-                }}
-              >
-                Delivered
-              </button>
-            )}
-            <button className="button" onClick={() => setOpenClaim(true)}>
-              Klaim Kerusakan…
-            </button>
+
+              <span className="text-muted text-sm" style={{ marginLeft: "0.25rem" }}>
+                (Aksi muncul sesuai status &amp; role.)
+              </span>
+            </div>
           </div>
         )}
-      </div>
 
-      {/* Surat Jalan (muncul setelah assign kurir) */}
-      {data.assigned_to && ["ASSIGNED", "PICKED_UP", "ON_ROUTE", "DELIVERED"].includes(data.status) && (
-        <div className="toolbar">
-          <button className="button button-outline" onClick={onOpenWaybill}>
-            Lihat / Print Surat Jalan
-          </button>
-          <button className="button" onClick={onSendToCourier}>
-            Kirim ke WhatsApp Kurir
-          </button>
-          <span className="text-muted text-sm">Surat Jalan otomatis tersedia setelah kurir di-assign.</span>
-        </div>
-      )}
+        {/* Surat Jalan: dimasukkan ke dalam card agar tidak menggantung */}
+        {showWaybillBlock && (
+          <div
+            className="card card--sub"
+            style={{
+              marginTop: "0.9rem",
+              padding: "1rem",
+            }}
+          >
+            <div style={{ fontWeight: 700, marginBottom: "0.6rem" }}>Surat Jalan</div>
+
+            <div
+              style={{
+                display: "flex",
+                gap: "0.5rem",
+                flexWrap: "wrap",
+                alignItems: "center",
+              }}
+            >
+              <button className="button button-outline" onClick={onOpenWaybill}>
+                Lihat / Print Surat Jalan
+              </button>
+              <button className="button" onClick={onSendToCourier}>
+                Kirim ke WhatsApp Kurir
+              </button>
+              <span className="text-muted text-sm">
+                Tersedia setelah kurir di-assign.
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Responsif grid info */}
+        <style>
+          {`
+            @media (max-width: 900px) {
+              .page .card[style*="grid-template-columns: 1fr 1fr"] {
+                grid-template-columns: 1fr !important;
+              }
+            }
+          `}
+        </style>
+      </div>
 
       {/* Timeline */}
       <div className="card">
-        <div className="card-header">Timeline</div>
-        <ul className="list">
-          {data.events.length === 0 && <li className="text-muted">Belum ada event.</li>}
+        <div
+          className="toolbar"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "1rem",
+            flexWrap: "wrap",
+          }}
+        >
+          <div className="card-header" style={{ margin: 0 }}>
+            Timeline
+          </div>
+          <span className="text-muted text-sm">
+            Total event: <b>{data.events.length}</b>
+          </span>
+        </div>
+
+        <ul className="list" style={{ paddingTop: "0.25rem" }}>
+          {data.events.length === 0 && (
+            <li className="text-muted" style={{ padding: "0.75rem 0.25rem" }}>
+              Belum ada event.
+            </li>
+          )}
+
           {data.events.map((ev) => (
-            <li key={ev.id} className="card card--sub">
-              <div className="toolbar">
-                <div className="strong">{ev.status}</div>
-                <div className="text-muted text-sm">{new Date(ev.occurred_at).toLocaleString()}</div>
+            <li
+              key={ev.id}
+              className="card card--sub"
+              style={{
+                padding: "1rem",
+                marginBottom: "0.6rem",
+              }}
+            >
+              <div
+                className="toolbar"
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  justifyContent: "space-between",
+                  gap: "0.75rem",
+                  flexWrap: "wrap",
+                }}
+              >
+                <div style={{ minWidth: 220 }}>
+                  <div className="strong" style={{ fontWeight: 800 }}>
+                    {ev.status}
+                  </div>
+                  <div className="text-muted text-sm">{fmt(ev.occurred_at)}</div>
+                </div>
+
+                {ev.photo_url && (
+                  <a
+                    href={ev.photo_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="button button-outline"
+                    style={{ textDecoration: "none" }}
+                  >
+                    Lihat Foto
+                  </a>
+                )}
               </div>
-              {ev.note && <div className="mt-1">{ev.note}</div>}
-              {ev.photo_url && (
-                <a href={ev.photo_url} target="_blank" rel="noreferrer" className="link text-sm">
-                  Lihat foto
-                </a>
+
+              {ev.note && (
+                <div style={{ marginTop: "0.5rem", lineHeight: 1.6 }}>
+                  {ev.note}
+                </div>
               )}
             </li>
           ))}
@@ -15296,6 +20106,7 @@ export default function DeliveryDetail(): React.ReactElement {
           setData(await getDelivery(data.id));
         }}
       />
+
       {wbOpen && <WaybillPreview html={wbHtml} onClose={() => setWbOpen(false)} />}
     </div>
   );
@@ -15306,15 +20117,20 @@ export default function DeliveryDetail(): React.ReactElement {
 
 ### src/pages/delivery/DeliveryIndex.tsx
 
-- SHA: `7c1acf651248`  
-- Ukuran: 11 KB
+- SHA: `af50149baa09`  
+- Ukuran: 18 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
 // src/pages/delivery/DeliveryIndex.tsx
 import React, { useEffect, useMemo, useState } from "react";
-import { listDeliveries, assignCourier, updateStatus } from "../../api/deliveries";
-import { sendWaybillWhatsapp, getWaybillHtml } from "../../api/deliveries";
+import {
+  listDeliveries,
+  assignCourier,
+  updateStatus,
+  sendWaybillWhatsapp,
+  getWaybillHtml,
+} from "../../api/deliveries";
 import type { Delivery, DeliveryQuery } from "../../types/delivery";
 import DeliveryTabs from "../../components/delivery/DeliveryTabs";
 import AssignCourierSelect from "../../components/delivery/AssignCourierSelect";
@@ -15325,14 +20141,34 @@ import { useAuth } from "../../store/auth";
 
 export default function DeliveryIndex(): React.ReactElement {
   const { user, hasRole } = useAuth();
-  const [query, setQuery] = useState<DeliveryQuery>({ per_page: 10, page: 1, sort: "-requested_at" });
+
+  const [query, setQuery] = useState<DeliveryQuery>({
+    per_page: 10,
+    page: 1,
+    sort: "-requested_at",
+  });
   const [tab, setTab] = useState<DeliveryQuery["status"] | "ALL">("ALL");
   const [items, setItems] = useState<Delivery[]>([]);
   const [loading, setLoading] = useState(false);
-  const [meta, setMeta] = useState({ current_page: 1, per_page: 10, total: 0, last_page: 1 });
+  const [meta, setMeta] = useState({
+    current_page: 1,
+    per_page: 10,
+    total: 0,
+    last_page: 1,
+  });
 
-  const canAssign = hasRole("superadmin") || hasRole("admin_cabang") || hasRole("kasir") || hasRole("gudang");
-  const canProgress = hasRole("superadmin") || hasRole("admin_cabang") || hasRole("kurir") || hasRole("kasir") || hasRole("gudang");
+  const canAssign =
+    hasRole("superadmin") ||
+    hasRole("admin_cabang") ||
+    hasRole("kasir") ||
+    hasRole("gudang");
+
+  const canProgress =
+    hasRole("superadmin") ||
+    hasRole("admin_cabang") ||
+    hasRole("kurir") ||
+    hasRole("kasir") ||
+    hasRole("gudang");
 
   const appliedQuery = useMemo(() => {
     const base: DeliveryQuery = { ...query };
@@ -15357,7 +20193,7 @@ export default function DeliveryIndex(): React.ReactElement {
     };
   }, [appliedQuery]);
 
-  async function openWaybill(id: number) { // ADD
+  async function openWaybill(id: number) {
     try {
       const html = await getWaybillHtml(id);
       const w = window.open("", "_blank", "noopener,noreferrer");
@@ -15373,146 +20209,362 @@ export default function DeliveryIndex(): React.ReactElement {
     }
   }
 
+  function renderTypeChip(type: string | null | undefined): React.ReactElement {
+    const t = (type ?? "-").toString();
+    return (
+      <span
+        className="badge"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "0.4rem",
+          padding: "0.25rem 0.55rem",
+          borderRadius: "999px",
+          fontSize: "0.78rem",
+          lineHeight: 1.2,
+          opacity: 0.9,
+        }}
+      >
+        {t}
+      </span>
+    );
+  }
+
+  function renderStatusLabel(status: Delivery["status"]): React.ReactElement {
+    return (
+      <span
+        className="badge"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          padding: "0.25rem 0.55rem",
+          borderRadius: "999px",
+          fontSize: "0.78rem",
+          lineHeight: 1.2,
+          opacity: 0.9,
+          border: "1px solid rgba(0,0,0,0.08)",
+          background: "rgba(0,0,0,0.03)",
+          marginTop: "0.35rem",
+        }}
+      >
+        {status}
+      </span>
+    );
+  }
+
   return (
     <div className="page">
-      <div className="page-header">
-        <h1 className="page-title">Pickup & Delivery</h1>
+      {/* Header: lebih “rapi” + ada info ringkas */}
+      <div
+        className="page-header"
+        style={{
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          gap: "1rem",
+          flexWrap: "wrap",
+        }}
+      >
+        <div style={{ minWidth: 260 }}>
+          <h1 className="page-title" style={{ marginBottom: "0.25rem" }}>
+            Pickup &amp; Delivery
+          </h1>
+          <div className="text-muted" style={{ fontSize: "0.95rem" }}>
+            Kelola permintaan pickup/delivery, assign kurir, update status, dan surat jalan.
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            gap: "0.5rem",
+            alignItems: "center",
+            flexWrap: "wrap",
+          }}
+        >
+          <span className="badge" style={{ borderRadius: "999px" }}>
+            Total: <b style={{ marginLeft: 6 }}>{meta.total}</b>
+          </span>
+          <button
+            type="button"
+            className="button button-outline"
+            onClick={() => setQuery((q) => ({ ...q, page: 1 }))}
+            disabled={loading}
+          >
+            Refresh
+          </button>
+        </div>
       </div>
 
-      {/* Toolbar */}
-      <div className="card">
-        <div className="toolbar">
-          <div className="toolbar-left">
-            <DeliveryTabs value={tab ?? "ALL"} onChange={(k) => setTab(k === "ALL" ? "ALL" : k)} />
+      {/* Toolbar: tabs + search + per page (lebih konsisten, tidak mepet) */}
+      <div className="card" style={{ marginBottom: "0.9rem" }}>
+        <div
+          className="toolbar"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "1rem",
+            flexWrap: "wrap",
+          }}
+        >
+          <div className="toolbar-left" style={{ minWidth: 260 }}>
+            <DeliveryTabs
+              value={tab ?? "ALL"}
+              onChange={(k) => setTab(k === "ALL" ? "ALL" : k)}
+            />
           </div>
-          <div className="toolbar-right">
+
+          <div
+            className="toolbar-right"
+            style={{
+              display: "flex",
+              gap: "0.6rem",
+              alignItems: "center",
+              flexWrap: "wrap",
+              justifyContent: "flex-end",
+              flex: 1,
+            }}
+          >
             <input
               className="input"
-              placeholder="Cari kode/alamat…"
+              placeholder="Cari kode / alamat…"
               value={query.q ?? ""}
-              onChange={(e) => setQuery((q) => ({ ...q, q: e.target.value, page: 1 }))}
+              onChange={(e) =>
+                setQuery((q) => ({ ...q, q: e.target.value, page: 1 }))
+              }
+              style={{ minWidth: 240 }}
             />
+
+            <select
+              className="input"
+              value={query.per_page ?? 10}
+              onChange={(e) =>
+                setQuery((q) => ({
+                  ...q,
+                  per_page: Number(e.target.value),
+                  page: 1,
+                }))
+              }
+              style={{ width: 130 }}
+              aria-label="Per page"
+            >
+              <option value={10}>10 / page</option>
+              <option value={20}>20 / page</option>
+              <option value={50}>50 / page</option>
+            </select>
           </div>
         </div>
       </div>
 
-      {/* Tabel daftar */}
+      {/* List: Tabel lebih “stabil” (kolom punya lebar, aksi wrap) */}
       <div className="card">
         <div className="table-responsive">
-          <table className="table table-hover">
+          <table className="table table-hover" style={{ tableLayout: "fixed" }}>
             <thead>
               <tr>
-                <th>Kode</th>
-                <th>Jenis</th>
-                <th>Kurir</th>
-                <th>Status</th>
+                <th style={{ width: 150 }}>Kode</th>
+                <th style={{ width: 110 }}>Jenis</th>
+                <th style={{ width: 260 }}>Kurir</th>
+                <th style={{ width: 230 }}>Status</th>
                 <th>Alamat</th>
-                <th className="text-center">Aksi</th>
+                <th className="text-center" style={{ width: 340 }}>
+                  Aksi
+                </th>
               </tr>
             </thead>
+
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={6}>Memuat…</td>
+                  <td colSpan={6} style={{ padding: "1.25rem" }}>
+                    Memuat…
+                  </td>
                 </tr>
               )}
+
               {!loading && items.length === 0 && (
                 <tr>
-                  <td colSpan={6}>Tidak ada data.</td>
+                  <td colSpan={6} style={{ padding: "1.25rem" }}>
+                    Tidak ada data.
+                  </td>
                 </tr>
               )}
-              {items.map((d) => (
-                <tr key={d.id}>
-                  <td className="mono">
-                    <Link to={`/delivery/${d.id}`} className="link">
-                      {d.order_code ?? `#${d.order_id}`}
-                    </Link>
-                  </td>
-                  <td>{d.type}</td>
-                  <td>
-                    <div className="inline-flex gap-8">
-                      <span>{d.courier_name ?? "-"}</span>
-                      {canAssign && ["REQUESTED", "ASSIGNED"].includes(d.status) && (
-                        <AssignCourierSelect
-                          value={d.assigned_to ?? null}
-                          allowAuto
-                          onChange={async (val) => {
-                            const auto = val === -1;
-                            try {
-                              if (auto) {
-                                await assignCourier(d.id, { auto: true });
-                                setItems((arr) => arr.map((x) => (x.id === d.id ? { ...x } : x)));
-                              } else {
-                                const payload = val !== null ? { assigned_to: val } : {};
-                                await assignCourier(d.id, payload);
-                                setItems((arr) => arr.map((x) => (x.id === d.id ? { ...x, assigned_to: val } : x)));
-                              }
-                            } catch (err: unknown) {
-                              if (isAxiosError(err)) {
-                                if (err.response?.status === 403) {
-                                  alert("Anda tidak memiliki izin untuk assign kurir di cabang ini.");
-                                } else {
-                                  const serverMsg = (err.response?.data as { message?: string } | undefined)?.message;
-                                  alert(serverMsg ?? err.message ?? "Gagal assign kurir.");
+
+              {items.map((d) => {
+                const canShowAssign =
+                  canAssign && ["REQUESTED", "ASSIGNED"].includes(d.status);
+
+                const canShowProgress =
+                  canProgress &&
+                  ["ASSIGNED", "PICKED_UP", "ON_ROUTE"].includes(d.status);
+
+                const canShowWaybill =
+                  !!d.assigned_to &&
+                  ["ASSIGNED", "PICKED_UP", "ON_ROUTE", "DELIVERED"].includes(
+                    d.status
+                  );
+
+                return (
+                  <tr key={d.id}>
+                    {/* Kode */}
+                    <td className="mono">
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                        <Link to={`/delivery/${d.id}`} className="link">
+                          {d.order_code ?? `#${d.order_id}`}
+                        </Link>
+                        <span className="text-muted" style={{ fontSize: "0.8rem" }}>
+                          ID: {d.id}
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* Jenis */}
+                    <td>{renderTypeChip(d.type)}</td>
+
+                    {/* Kurir + Assign */}
+                    <td>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.75rem",
+                          justifyContent: "space-between",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <div style={{ minWidth: 140 }}>
+                          <div style={{ fontWeight: 600 }}>
+                            {d.courier_name ?? "-"}
+                          </div>
+                          <div className="text-muted" style={{ fontSize: "0.82rem" }}>
+                            {d.assigned_to ? "Sudah di-assign" : "Belum di-assign"}
+                          </div>
+                        </div>
+
+                        {canShowAssign && (
+                          <div style={{ minWidth: 160 }}>
+                            <AssignCourierSelect
+                              value={d.assigned_to ?? null}
+                              allowAuto
+                              onChange={async (val) => {
+                                const auto = val === -1;
+                                try {
+                                  if (auto) {
+                                    await assignCourier(d.id, { auto: true });
+                                    setItems((arr) =>
+                                      arr.map((x) => (x.id === d.id ? { ...x } : x))
+                                    );
+                                  } else {
+                                    const payload = val !== null ? { assigned_to: val } : {};
+                                    await assignCourier(d.id, payload);
+                                    setItems((arr) =>
+                                      arr.map((x) =>
+                                        x.id === d.id ? { ...x, assigned_to: val } : x
+                                      )
+                                    );
+                                  }
+                                } catch (err: unknown) {
+                                  if (isAxiosError(err)) {
+                                    if (err.response?.status === 403) {
+                                      alert("Anda tidak memiliki izin untuk assign kurir di cabang ini.");
+                                    } else {
+                                      const serverMsg = (
+                                        err.response?.data as { message?: string } | undefined
+                                      )?.message;
+                                      alert(serverMsg ?? err.message ?? "Gagal assign kurir.");
+                                    }
+                                  } else {
+                                    alert((err as Error).message);
+                                  }
                                 }
-                              } else {
-                                alert((err as Error).message);
-                              }
-                            }
-                          }}
-                        />
-                      )}
-                    </div>
-                  </td>
-                  <td>
-                    <DeliveryStatusStepper status={d.status} />
-                  </td>
-                  <td>
-                    <div className="truncate-1">
-                      {(d.pickup_address || d.delivery_address)
-                        ? `${d.pickup_address ?? ""} ${d.delivery_address ? "→ " + d.delivery_address : ""}`
-                        : "-"}
-                    </div>
-                  </td>
-                  <td className="text-center">
-                    {canProgress && ["ASSIGNED", "PICKED_UP", "ON_ROUTE"].includes(d.status) && (
-                      <div className="inline-flex gap-8">
-                        {d.status === "ASSIGNED" && (
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </td>
+
+                    {/* Status */}
+                    <td>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                        <DeliveryStatusStepper status={d.status} />
+                        {renderStatusLabel(d.status)}
+                      </div>
+                    </td>
+
+                    {/* Alamat */}
+                    <td>
+                      <div className="truncate-1" style={{ fontWeight: 600 }}>
+                        {(d.pickup_address || d.delivery_address)
+                          ? `${d.pickup_address ?? ""}${
+                              d.delivery_address ? " → " + d.delivery_address : ""
+                            }`
+                          : "-"}
+                      </div>
+                    </td>
+
+                    {/* Aksi */}
+                    <td className="text-center">
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "center",
+                          gap: "0.5rem",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        {/* Progress buttons */}
+                        {canShowProgress && d.status === "ASSIGNED" && (
                           <button
                             className="button button-outline"
                             onClick={async () => {
                               await updateStatus(d.id, { status: "PICKED_UP" as const });
-                              setItems((xs) => xs.map((x) => (x.id === d.id ? { ...x, status: "PICKED_UP" } : x)));
+                              setItems((xs) =>
+                                xs.map((x) =>
+                                  x.id === d.id ? { ...x, status: "PICKED_UP" } : x
+                                )
+                              );
                             }}
                           >
                             Mark Picked
                           </button>
                         )}
-                        {d.status === "PICKED_UP" && (
+
+                        {canShowProgress && d.status === "PICKED_UP" && (
                           <button
                             className="button button-outline"
                             onClick={async () => {
                               await updateStatus(d.id, { status: "ON_ROUTE" as const });
-                              setItems((xs) => xs.map((x) => (x.id === d.id ? { ...x, status: "ON_ROUTE" } : x)));
+                              setItems((xs) =>
+                                xs.map((x) =>
+                                  x.id === d.id ? { ...x, status: "ON_ROUTE" } : x
+                                )
+                              );
                             }}
                           >
                             On Route
                           </button>
                         )}
-                        {d.status === "ON_ROUTE" && (
+
+                        {canShowProgress && d.status === "ON_ROUTE" && (
                           <button
                             className="button button-primary"
                             onClick={async () => {
                               await updateStatus(d.id, { status: "DELIVERED" as const });
-                              setItems((xs) => xs.map((x) => (x.id === d.id ? { ...x, status: "DELIVERED" } : x)));
+                              setItems((xs) =>
+                                xs.map((x) =>
+                                  x.id === d.id ? { ...x, status: "DELIVERED" } : x
+                                )
+                              );
                             }}
                           >
                             Delivered
                           </button>
                         )}
 
-                        {/* === SURAT JALAN: tampil jika sudah ada kurir yang diassign === */}
-                        {!!d.assigned_to && ["ASSIGNED", "PICKED_UP", "ON_ROUTE", "DELIVERED"].includes(d.status) && (
+                        {/* Surat Jalan */}
+                        {canShowWaybill && (
                           <>
                             <button
                               className="button button-outline"
@@ -15520,6 +20572,7 @@ export default function DeliveryIndex(): React.ReactElement {
                             >
                               Lihat / Print SJ
                             </button>
+
                             <button
                               className="button button-outline"
                               onClick={async () => {
@@ -15535,29 +20588,48 @@ export default function DeliveryIndex(): React.ReactElement {
                             </button>
                           </>
                         )}
+
+                        {/* Link detail: selalu ada, jadi user tidak “bingung” */}
+                        <Link to={`/delivery/${d.id}`} className="button button-ghost">
+                          Detail
+                        </Link>
                       </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Pagination ringkas */}
-      <div className="card">
-        <div className="toolbar">
-          <div className="text-muted">Total: {meta.total}</div>
-          <div className="inline-flex gap-8">
+      {/* Pagination: dibuat lebih konsisten, tidak terlalu “kosong” */}
+      <div className="card" style={{ marginTop: "0.9rem" }}>
+        <div
+          className="toolbar"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "1rem",
+            flexWrap: "wrap",
+          }}
+        >
+          <div className="text-muted">
+            Page <b>{meta.current_page}</b> / <b>{meta.last_page}</b> • Total{" "}
+            <b>{meta.total}</b>
+          </div>
+
+          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
             <button
               className="button"
               disabled={meta.current_page <= 1}
-              onClick={() => setQuery((q) => ({ ...q, page: Math.max(1, (q.page ?? 1) - 1) }))}
+              onClick={() =>
+                setQuery((q) => ({ ...q, page: Math.max(1, (q.page ?? 1) - 1) }))
+              }
             >
               Prev
             </button>
-            <div className="text-muted">Page {meta.current_page} / {meta.last_page}</div>
             <button
               className="button"
               disabled={meta.current_page >= meta.last_page}
@@ -16242,29 +21314,101 @@ export default function FeeMaster(): React.ReactElement {
 
 ### src/pages/inventory/ReceiveLotPage.tsx
 
-- SHA: `5defbf095e67`  
-- Ukuran: 749 B
+- SHA: `24f5af000962`  
+- Ukuran: 3 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
+// src/pages/inventory/ReceiveLotPage.tsx
 import { useMemo } from "react";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import ReceiveLotForm from "../../components/inventory/ReceiveLotForm";
 
-export default function ReceiveLotPage() {
+export default function ReceiveLotPage(): React.ReactElement {
   const loc = useLocation();
   const qs = useMemo(() => new URLSearchParams(loc.search), [loc.search]);
 
   const defaultGudangId = qs.get("gudang_id") ? Number(qs.get("gudang_id")) : undefined;
   const defaultVariantId = qs.get("variant_id") ? Number(qs.get("variant_id")) : undefined;
 
+  const hasPrefill = Boolean(defaultGudangId || defaultVariantId);
+
   return (
     <div className="container" style={{ display: "grid", gap: 16 }}>
-      <h2>Inventory » Penerimaan Stok (Lot)</h2>
-      <ReceiveLotForm
-        defaultGudangId={defaultGudangId}
-        defaultVariantId={defaultVariantId}
-      />
+      {/* Header */}
+      <div
+        className="card"
+        style={{
+          padding: "1.25rem 1.25rem",
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          gap: "1rem",
+          flexWrap: "wrap",
+        }}
+      >
+        <div style={{ minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <span className="badge">Inventory</span>
+            <span style={{ opacity: 0.6 }}>›</span>
+            <span className="badge" style={{ background: "rgba(0,0,0,.04)", color: "var(--color-text)" }}>
+              Penerimaan Stok (Lot)
+            </span>
+            {hasPrefill && (
+              <span className="badge" style={{ background: "rgba(22,163,74,.10)", color: "var(--color-success)" }}>
+                Prefill aktif
+              </span>
+            )}
+          </div>
+
+          <h2 style={{ marginTop: 10, marginBottom: 6 }}>Penerimaan Stok (Lot)</h2>
+          <p style={{ margin: 0 }}>
+            Input barang masuk per lot untuk menjaga akurasi stok dan histori penerimaan.
+          </p>
+
+          {hasPrefill && (
+            <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {defaultGudangId ? (
+                <span className="badge" style={{ background: "rgba(0,0,0,.04)", color: "var(--color-text)" }}>
+                  Gudang: #{defaultGudangId}
+                </span>
+              ) : null}
+              {defaultVariantId ? (
+                <span className="badge" style={{ background: "rgba(0,0,0,.04)", color: "var(--color-text)" }}>
+                  Variant: #{defaultVariantId}
+                </span>
+              ) : null}
+            </div>
+          )}
+        </div>
+
+        {/* Actions (opsional, tetap aman karena hanya UI) */}
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <Link
+            to="/inventory"
+            className="button button-outline"
+            style={{ textDecoration: "none" }}
+          >
+            Kembali
+          </Link>
+
+          <Link
+            to="/inventory/lots"
+            className="button button-ghost"
+            style={{ textDecoration: "none" }}
+          >
+            Lihat Lot
+          </Link>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="card" style={{ padding: "1.25rem" }}>
+        <ReceiveLotForm
+          defaultGudangId={defaultGudangId}
+          defaultVariantId={defaultVariantId}
+        />
+      </div>
     </div>
   );
 }
@@ -16274,11 +21418,12 @@ export default function ReceiveLotPage() {
 
 ### src/pages/master/Cabangs.tsx
 
-- SHA: `6a866876bbb7`  
-- Ukuran: 4 KB
+- SHA: `eb4660632518`  
+- Ukuran: 8 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
+// src/pages/master/Cabangs.tsx
 import React, { useMemo, useState } from "react";
 import { useBranches } from "../../store/useBranches";
 import BranchFilters from "../../components/cabangs/BranchFilters";
@@ -16288,7 +21433,18 @@ import type { Branch, BranchCreatePayload, BranchQuery } from "../../types/branc
 import RequireRole from "../../components/routing/RequireRole";
 
 export default function CabangsPage(): React.ReactElement {
-  const { items, loading, error, query, fetchList, create, update, remove, pagination } = useBranches();
+  const {
+    items,
+    loading,
+    error,
+    query,
+    fetchList,
+    create,
+    update,
+    remove,
+    pagination,
+  } = useBranches();
+
   const [openForm, setOpenForm] = useState(false);
   const [editing, setEditing] = useState<Branch | null>(null);
 
@@ -16303,80 +21459,202 @@ export default function CabangsPage(): React.ReactElement {
     return ok;
   };
 
+  const openCreate = (): void => {
+    setEditing(null);
+    setOpenForm(true);
+  };
+
+  const openEdit = (row: Branch): void => {
+    setEditing(row);
+    setOpenForm(true);
+  };
+
+  const confirmDelete = (row: Branch): void => {
+    if (confirm(`Hapus cabang "${row.nama}"?`)) {
+      void remove(row.id);
+    }
+  };
+
+  const goPrev = (): void => pagination.setPage(Math.max(1, pagination.page - 1));
+  const goNext = (): void => pagination.setPage(Math.min(pagination.last_page, pagination.page + 1));
+
+  const isFirst = pagination.page <= 1;
+  const isLast = pagination.page >= pagination.last_page;
+
   return (
     <RequireRole roles={["superadmin", "admin_cabang"]}>
       <div className="page">
-        {/* Header / Toolbar */}
-        <div className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <h1 className="h1">{title}</h1>
-          <button
-            className="button button-primary"
-            onClick={() => { setEditing(null); setOpenForm(true); }}
-          >
-            Tambah
-          </button>
-        </div>
+        {/* PAGE HEADER */}
+        <div
+          className="card"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "1rem",
+            padding: "1.25rem",
+          }}
+        >
+          <div style={{ minWidth: 0 }}>
+            <h1 className="h1" style={{ margin: 0 }}>
+              {title}
+            </h1>
+            <p className="text-sm" style={{ margin: "0.35rem 0 0", opacity: 0.75 }}>
+              Kelola data cabang, akses gudang per cabang, dan lakukan pemeliharaan data secara terpusat.
+            </p>
 
-        {/* Filters */}
-        <div className="card">
-          <BranchFilters
-            value={query as BranchQuery}
-            onChange={(next) => fetchList(next)}
-            onSearch={() => fetchList()}
-          />
-        </div>
-
-        {/* Error / Loading / Table */}
-        {error && (
-          <div className="card" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-            <span className="badge badge-danger">Error</span>
-            <span className="text-sm">{error}</span>
+            <div style={{ marginTop: "0.75rem", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+              <span className="badge" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <span style={{ opacity: 0.75 }}>Total:</span>
+                <strong>{pagination.total}</strong>
+              </span>
+              <span className="badge" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <span style={{ opacity: 0.75 }}>Halaman:</span>
+                <strong>
+                  {pagination.page} / {pagination.last_page}
+                </strong>
+              </span>
+              <span className="badge" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <span style={{ opacity: 0.75 }}>Per halaman:</span>
+                <strong>{pagination.per_page}</strong>
+              </span>
+            </div>
           </div>
-        )}
 
-        {loading ? (
-          <div className="card text-sm">Memuat…</div>
-        ) : (
-          <div className="card">
-            <BranchTable
-              items={items}
-              onEdit={(row) => { setEditing(row); setOpenForm(true); }}
-              onDelete={(row) => {
-                if (confirm(`Hapus cabang "${row.nama}"?`)) {
-                  void remove(row.id);
-                }
-              }}
-              onOpenGudang={(row) => { window.location.href = `/master/warehouses?cabang_id=${row.id}`; }}
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexShrink: 0 }}>
+            <button className="button button-primary" onClick={openCreate}>
+              Tambah Cabang
+            </button>
+          </div>
+        </div>
+
+        {/* MAIN WORKSPACE */}
+        <div className="card" style={{ padding: "1.25rem" }}>
+          {/* Workspace Header */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "1rem",
+              marginBottom: "0.9rem",
+            }}
+          >
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontWeight: 800, letterSpacing: "-0.01em" }}>Daftar Cabang</div>
+              <div className="text-sm" style={{ opacity: 0.75, marginTop: "0.25rem" }}>
+                Gunakan filter untuk mempercepat pencarian data.
+              </div>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexShrink: 0 }}>
+              <button
+                className="button button-outline"
+                onClick={() => fetchList()}
+                disabled={loading}
+                title="Muat ulang data"
+              >
+                Refresh
+              </button>
+            </div>
+          </div>
+
+          {/* Filters Area */}
+          <div
+            style={{
+              borderRadius: 14,
+              border: "1px solid rgba(0,0,0,0.06)",
+              padding: "0.9rem",
+              background: "rgba(0,0,0,0.01)",
+            }}
+          >
+            <BranchFilters
+              value={query as BranchQuery}
+              onChange={(next) => fetchList(next)}
+              onSearch={() => fetchList()}
             />
           </div>
-        )}
 
-        {/* Pagination */}
-        <div className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div className="text-sm">
-            Halaman {pagination.page} / {pagination.last_page} • Total {pagination.total}
-          </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button
-              className="button button-outline"
-              onClick={() => pagination.setPage(Math.max(1, pagination.page - 1))}
+          {/* Divider */}
+          <div
+            style={{
+              height: 1,
+              background: "rgba(0,0,0,0.06)",
+              margin: "1rem 0",
+            }}
+          />
+
+          {/* Error Banner */}
+          {error && (
+            <div
+              className="card"
+              style={{
+                padding: "0.75rem 0.9rem",
+                marginBottom: "1rem",
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                borderRadius: 14,
+              }}
             >
+              <span className="badge badge-danger">Error</span>
+              <span className="text-sm" style={{ opacity: 0.9 }}>
+                {error}
+              </span>
+            </div>
+          )}
+
+          {/* Table / Loading */}
+          {loading ? (
+            <div className="text-sm" style={{ opacity: 0.75 }}>
+              Memuat…
+            </div>
+          ) : (
+            <BranchTable
+              items={items}
+              onEdit={openEdit}
+              onDelete={confirmDelete}
+              onOpenGudang={(row) => {
+                window.location.href = `/master/warehouses?cabang_id=${row.id}`;
+              }}
+            />
+          )}
+        </div>
+
+        {/* PAGINATION TOOLBAR */}
+        <div
+          className="card"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "1rem",
+            padding: "1rem 1.25rem",
+          }}
+        >
+          <div className="text-sm" style={{ opacity: 0.75 }}>
+            Menampilkan halaman <strong>{pagination.page}</strong> dari <strong>{pagination.last_page}</strong> • Total{" "}
+            <strong>{pagination.total}</strong>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <button className="button button-outline" onClick={goPrev} disabled={loading || isFirst}>
               Sebelumnya
             </button>
-            <button
-              className="button button-outline"
-              onClick={() => pagination.setPage(Math.min(pagination.last_page, pagination.page + 1))}
-            >
+            <button className="button button-outline" onClick={goNext} disabled={loading || isLast}>
               Berikutnya
             </button>
+
             <select
               className="select"
               value={pagination.per_page}
               onChange={(e) => pagination.setPerPage(Number(e.target.value))}
+              disabled={loading}
+              title="Jumlah data per halaman"
             >
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
+              <option value={10}>10 / halaman</option>
+              <option value={25}>25 / halaman</option>
+              <option value={50}>50 / halaman</option>
             </select>
           </div>
         </div>
@@ -16385,7 +21663,10 @@ export default function CabangsPage(): React.ReactElement {
         <BranchFormDialog
           open={openForm}
           initial={editing ?? undefined}
-          onClose={() => { setOpenForm(false); setEditing(null); }}
+          onClose={() => {
+            setOpenForm(false);
+            setEditing(null);
+          }}
           onSubmit={submit}
         />
       </div>
@@ -16398,8 +21679,8 @@ export default function CabangsPage(): React.ReactElement {
 
 ### src/pages/master/Warehouses.tsx
 
-- SHA: `90accb6e6dac`  
-- Ukuran: 4 KB
+- SHA: `f91ccbad3800`  
+- Ukuran: 8 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -16409,7 +21690,11 @@ import { useWarehouses } from "../../store/useWarehouses";
 import WarehouseFilters from "../../components/warehouses/WarehouseFilters";
 import WarehouseFormDialog from "../../components/warehouses/WarehouseFormDialog";
 import WarehouseTable from "../../components/warehouses/WarehouseTable";
-import type { Warehouse, WarehouseCreatePayload, WarehouseQuery } from "../../types/warehouse";
+import type {
+  Warehouse,
+  WarehouseCreatePayload,
+  WarehouseQuery,
+} from "../../types/warehouse";
 import RequireRole from "../../components/routing/RequireRole";
 
 export default function WarehousesPage(): React.ReactElement {
@@ -16417,9 +21702,18 @@ export default function WarehousesPage(): React.ReactElement {
   const cabangFromUrl = url.searchParams.get("cabang_id");
   const initialCabang = cabangFromUrl ? Number(cabangFromUrl) : undefined;
 
-  // fetch otomatis berdasarkan cabang_id awal
-  const { items, loading, error, query, fetchList, create, update, remove, pagination } =
-    useWarehouses({ cabang_id: initialCabang });
+  // fetch otomatis berdasarkan cabang_id awal (tetap)
+  const {
+    items,
+    loading,
+    error,
+    query,
+    fetchList,
+    create,
+    update,
+    remove,
+    pagination,
+  } = useWarehouses({ cabang_id: initialCabang });
 
   const [openForm, setOpenForm] = useState(false);
   const [editing, setEditing] = useState<Warehouse | null>(null);
@@ -16437,23 +21731,98 @@ export default function WarehousesPage(): React.ReactElement {
 
   return (
     <RequireRole roles={["superadmin", "admin_cabang", "gudang"]}>
-      <div className="page"> {/* gunakan wrapper umum; tidak memengaruhi logika */}
-        {/* Header */}
-        <div className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <h1 className="card-title">{title}</h1>
-          <button
-            className="button button-primary"
-            onClick={() => {
-              setEditing(null);
-              setOpenForm(true);
+      <div className="page">
+        {/* ===== Toolbar / Header (lebih rapi & responsif) ===== */}
+        <div
+          className="card"
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            gap: "1rem",
+            flexWrap: "wrap",
+          }}
+        >
+          <div style={{ minWidth: 240 }}>
+            <h1 className="card-title" style={{ marginBottom: ".25rem" }}>
+              {title}
+            </h1>
+
+            <div
+              className="muted"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                flexWrap: "wrap",
+              }}
+            >
+              <span>Kelola data gudang dan penempatan stok per cabang.</span>
+
+              {typeof initialCabang === "number" && (
+                <span className="badge" title="Filter cabang dari URL">
+                  Cabang ID: {initialCabang}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              flexWrap: "wrap",
+              justifyContent: "flex-end",
+              marginLeft: "auto",
             }}
           >
-            Tambah
-          </button>
+            <button
+              className="button button-outline"
+              type="button"
+              onClick={() => fetchList()}
+              title="Refresh data"
+            >
+              Refresh
+            </button>
+
+            <button
+              className="button button-primary"
+              type="button"
+              onClick={() => {
+                setEditing(null);
+                setOpenForm(true);
+              }}
+            >
+              Tambah
+            </button>
+          </div>
         </div>
 
-        {/* Filters */}
-        <div className="card">
+        {/* ===== Filters (tetap komponen Anda, hanya dibungkus rapi) ===== */}
+        <div className="card" style={{ marginTop: "1rem" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              flexWrap: "wrap",
+              marginBottom: "0.75rem",
+            }}
+          >
+            <div style={{ minWidth: 240 }}>
+              <div style={{ fontWeight: 700, marginBottom: 2 }}>Filter</div>
+              <div className="muted" style={{ fontSize: ".9rem" }}>
+                Gunakan filter untuk mempersempit data.
+              </div>
+            </div>
+
+            <div className="muted" style={{ fontSize: ".9rem" }}>
+              Total: <b>{pagination.total}</b>
+            </div>
+          </div>
+
           <WarehouseFilters
             value={query as WarehouseQuery}
             onChange={(next) => fetchList(next)}
@@ -16461,20 +21830,45 @@ export default function WarehousesPage(): React.ReactElement {
           />
         </div>
 
-        {/* Error / Loading / Table */}
+        {/* ===== Error ===== */}
         {error && (
-          <div className="card" role="alert">
-            <span className="badge badge-danger" style={{ marginRight: 8 }}>Error</span>
-            <span>{error}</span>
+          <div
+            className="card"
+            role="alert"
+            style={{
+              marginTop: "1rem",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            <span className="badge badge-danger">Error</span>
+            <span className="text-sm">{error}</span>
           </div>
         )}
 
-        {loading ? (
-          <div className="card">
-            <div className="loading">Memuat…</div>
+        {/* ===== Table ===== */}
+        <div className="card" style={{ marginTop: "1rem" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              flexWrap: "wrap",
+              marginBottom: "0.75rem",
+            }}
+          >
+            <div style={{ fontWeight: 700 }}>Daftar Gudang</div>
+
+            <div className="muted" style={{ fontSize: ".9rem" }}>
+              Halaman {pagination.page} / {pagination.last_page}
+            </div>
           </div>
-        ) : (
-          <div className="card">
+
+          {loading ? (
+            <div className="loading">Memuat…</div>
+          ) : (
             <WarehouseTable
               items={items}
               onEdit={(row) => {
@@ -16487,31 +21881,53 @@ export default function WarehousesPage(): React.ReactElement {
                 }
               }}
             />
-          </div>
-        )}
+          )}
+        </div>
 
-        {/* Pagination */}
-        <div className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        {/* ===== Pagination (lebih konsisten, tombol outline) ===== */}
+        <div
+          className="card"
+          style={{
+            marginTop: "1rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+            flexWrap: "wrap",
+          }}
+        >
           <div className="muted">
-            Halaman {pagination.page} / {pagination.last_page} • Total {pagination.total}
+            Halaman {pagination.page} / {pagination.last_page} • Total{" "}
+            {pagination.total}
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
+
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <button
-              className="button"
+              className="button button-outline"
+              type="button"
               onClick={() => pagination.setPage(Math.max(1, pagination.page - 1))}
+              disabled={pagination.page <= 1}
             >
               Sebelumnya
             </button>
+
             <button
-              className="button"
-              onClick={() => pagination.setPage(Math.min(pagination.last_page, pagination.page + 1))}
+              className="button button-outline"
+              type="button"
+              onClick={() =>
+                pagination.setPage(Math.min(pagination.last_page, pagination.page + 1))
+              }
+              disabled={pagination.page >= pagination.last_page}
             >
               Berikutnya
             </button>
+
             <select
               className="select"
               value={pagination.per_page}
               onChange={(e) => pagination.setPerPage(Number(e.target.value))}
+              aria-label="Jumlah data per halaman"
+              style={{ width: 110 }}
             >
               <option value={10}>10</option>
               <option value={25}>25</option>
@@ -16520,7 +21936,7 @@ export default function WarehousesPage(): React.ReactElement {
           </div>
         </div>
 
-        {/* Form Dialog */}
+        {/* ===== Form Dialog (tetap) ===== */}
         <WarehouseFormDialog
           open={openForm}
           initial={editing ?? undefined}
@@ -16541,21 +21957,22 @@ export default function WarehousesPage(): React.ReactElement {
 
 ### src/pages/pos/Orders.tsx
 
-- SHA: `b076e0628bbb`  
-- Ukuran: 10 KB
+- SHA: `290289fa173b`  
+- Ukuran: 13 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
 // src/pages/pos/Orders.tsx
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import ProductSearch from '../../components/pos/ProductSearch';
-import ProductGrid from '../../components/pos/ProductGrid';
-import CartPanel from '../../components/pos/CartPanel';
-import CheckoutDialog from '../../components/pos/CheckoutDialog';
-import ReceiptPreview from '../../components/pos/ReceiptPreview';
-import { useCart } from '../../store/cart';
-import type { Order } from '../../types/pos';
-import type { Product } from '../../types/product';
+import React, { useEffect, useMemo, useState, useCallback } from "react";
+import ProductSearch from "../../components/pos/ProductSearch";
+import ProductGrid from "../../components/pos/ProductGrid";
+import CartPanel from "../../components/pos/CartPanel";
+import CheckoutDialog from "../../components/pos/CheckoutDialog";
+import ReceiptPreview from "../../components/pos/ReceiptPreview";
+import { useCart } from "../../store/cart";
+import type { Order } from "../../types/pos";
+import type { Product } from "../../types/product";
+import { listVariants } from "../../api/products";
 
 /** Helpers */
 const getInt = (v: unknown): number | null => {
@@ -16563,29 +21980,32 @@ const getInt = (v: unknown): number | null => {
   return Number.isFinite(n) && n > 0 ? n : null;
 };
 const setScope = (branchId: number, warehouseId: number): void => {
-  localStorage.setItem('active_branch_id', String(branchId));
-  localStorage.setItem('active_warehouse_id', String(warehouseId));
-  window.dispatchEvent(new Event('scope:changed'));
+  localStorage.setItem("active_branch_id", String(branchId));
+  localStorage.setItem("active_warehouse_id", String(warehouseId));
+  window.dispatchEvent(new Event("scope:changed"));
 };
 
 /** ✅ Reactive scope + auto-pick default (first branch & warehouse) */
-function useActiveScope(): { branch: { id: number } | null; warehouse: { id: number } | null } {
+function useActiveScope(): {
+  branch: { id: number } | null;
+  warehouse: { id: number } | null;
+} {
   const [branchId, setBranchId] = useState<number | null>(null);
   const [warehouseId, setWarehouseId] = useState<number | null>(null);
 
   const read = useCallback((): void => {
-    setBranchId(getInt(localStorage.getItem('active_branch_id')));
-    setWarehouseId(getInt(localStorage.getItem('active_warehouse_id')));
+    setBranchId(getInt(localStorage.getItem("active_branch_id")));
+    setWarehouseId(getInt(localStorage.getItem("active_warehouse_id")));
   }, []);
 
   useEffect(() => {
     read();
     const onScopeChanged = (): void => read();
-    window.addEventListener('scope:changed', onScopeChanged);
-    window.addEventListener('storage', onScopeChanged);
+    window.addEventListener("scope:changed", onScopeChanged);
+    window.addEventListener("storage", onScopeChanged);
     return () => {
-      window.removeEventListener('scope:changed', onScopeChanged);
-      window.removeEventListener('storage', onScopeChanged);
+      window.removeEventListener("scope:changed", onScopeChanged);
+      window.removeEventListener("storage", onScopeChanged);
     };
   }, [read]);
 
@@ -16593,12 +22013,15 @@ function useActiveScope(): { branch: { id: number } | null; warehouse: { id: num
     if (branchId && warehouseId) return;
     (async () => {
       try {
-        const branchesApi = await import('../../api/branches');
-        const warehousesApi = await import('../../api/warehouses');
+        const branchesApi = await import("../../api/branches");
+        const warehousesApi = await import("../../api/warehouses");
         const branches = await branchesApi.listBranches({ per_page: 1 });
         const b = branches?.data?.[0] as { id: number } | undefined;
         if (!b) return;
-        const warehouses = await warehousesApi.listWarehouses({ cabang_id: b.id, per_page: 1 });
+        const warehouses = await warehousesApi.listWarehouses({
+          cabang_id: b.id,
+          per_page: 1,
+        });
         const w = warehouses?.data?.[0] as { id: number } | undefined;
         if (!w) return;
         setScope(b.id, w.id);
@@ -16620,71 +22043,170 @@ export default function OrdersPage(): React.ReactElement {
   const [lastOrder, setLastOrder] = useState<Order | null>(null);
 
   // ✅ Ambil state/aksi via selector (tanpa any/unknown)
-  const items = useCart(s => s.items);
-  const quote = useCart(s => s.quote);
-  const add   = useCart(s => s.add);
+  const items = useCart((s) => s.items);
+  const quote = useCart((s) => s.quote);
+  const add = useCart((s) => s.add);
 
   const hasItems = items.length > 0;
   const scoped = Boolean(warehouse?.id && branch?.id);
   const grand = quote?.totals?.grand_total ?? 0;
   const grandOk = Number.isFinite(grand) && grand >= 0;
 
-  const canCheckout = useMemo<boolean>(() => hasItems && scoped && grandOk, [hasItems, scoped, grandOk]);
+  const canCheckout = useMemo<boolean>(
+    () => hasItems && scoped && grandOk,
+    [hasItems, scoped, grandOk]
+  );
 
   const disableReason = useMemo<string | null>(() => {
-    if (!hasItems) return 'Tambahkan item ke keranjang.';
-    if (!scoped) return 'Pilih Cabang & Gudang terlebih dahulu.';
-    if (!grandOk) return 'Total belum siap. Coba lagi sebentar.';
+    if (!hasItems) return "Tambahkan item ke keranjang.";
+    if (!scoped) return "Pilih Cabang & Gudang terlebih dahulu.";
+    if (!grandOk) return "Total belum siap. Coba lagi sebentar.";
     return null;
   }, [hasItems, scoped, grandOk]);
 
   // Enter → buka dialog bayar jika siap
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Enter' && canCheckout) setOpenPay(true);
+      if (e.key === "Enter" && canCheckout) setOpenPay(true);
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [canCheckout]);
 
   // Klik kartu produk → tambah 1 ke cart (ambil varian pertama bila ada)
-  const onPickProduct = (p: Product): void => {
-    const firstVariantId =
-      Array.isArray(p.variants) && p.variants.length > 0 ? Number(p.variants[0].id) : null;
+  const onPickProduct = async (p: Product): Promise<void> => {
+    let variantId =
+      Array.isArray(p.variants) && p.variants.length > 0
+        ? Number(p.variants.find((v) => v.is_active)?.id ?? p.variants[0].id)
+        : null;
 
-    // Store `add` membutuhkan CartItem: minimal { variant_id, qty }
-    const variantIdToUse = firstVariantId ?? Number(p.id); // fallback kalau produk = varian tunggal
-    if (!Number.isFinite(variantIdToUse)) {
-      console.warn('Tidak bisa menambahkan item: variant_id tidak valid.');
+    if (!variantId) {
+      const variants = await listVariants(p.id);
+      const v = variants.find((x) => x.is_active) ?? variants[0];
+      variantId = v ? Number(v.id) : null;
+    }
+
+    if (!variantId || !Number.isFinite(variantId)) {
+      console.warn("Tidak bisa menambahkan item: produk tidak memiliki variant yang valid.");
       return;
     }
 
-    add({ variant_id: variantIdToUse, qty: 1 });
+    add({ variant_id: variantId, qty: 1 });
   };
+
 
   return (
     <div className="page">
-      {/* Layout dua kolom responsif tanpa Tailwind */}
-      <div
-        style={{
-          display: 'flex',
-          gap: '16px',
-          flexWrap: 'wrap',
-          alignItems: 'flex-start'
-        }}
-      >
-        {/* Kiri: Search + Grid */}
-        <div style={{ flex: '1 1 680px', minWidth: 320 }}>
+      {/* CSS lokal khusus Orders (tidak mengganggu halaman lain) */}
+      <style>{`
+        .pos-shell{
+          display:grid;
+          gap: 16px;
+          align-items:start;
+        }
+        /* desktop: 2 kolom */
+        @media (min-width: 1024px){
+          .pos-shell{
+            grid-template-columns: minmax(0, 1fr) 380px;
+          }
+        }
+
+        .pos-header{
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+          gap: 12px;
+          flex-wrap: wrap;
+        }
+        .pos-header__left{
+          display:flex;
+          align-items:baseline;
+          gap: 10px;
+          min-width: 0;
+        }
+        .pos-title{
+          font-size: 18px;
+          font-weight: 800;
+          margin: 0;
+          line-height: 1.1;
+        }
+        .pos-sub{
+          font-size: 12px;
+          opacity: .72;
+          white-space: nowrap;
+        }
+        .pos-header__right{
+          display:flex;
+          align-items:center;
+          gap: 8px;
+          flex-wrap: wrap;
+          justify-content:flex-end;
+        }
+
+        .pos-stack{
+          display:flex;
+          flex-direction:column;
+          gap: 12px;
+        }
+
+        .pos-aside{
+          display:flex;
+          flex-direction:column;
+          gap: 12px;
+        }
+        @media (min-width: 1024px){
+          .pos-aside{
+            position: sticky;
+            top: 14px;
+          }
+        }
+
+        .pos-paybtn{
+          width: 100%;
+        }
+
+        .pos-divider{
+          height: 1px;
+          background: rgba(0,0,0,.06);
+          margin: 10px 0 0;
+        }
+      `}</style>
+
+      {/* Header ringkas agar terasa rapi & konsisten */}
+      <div className="card" style={{ marginBottom: 12 }}>
+        <div className="pos-header">
+          <div className="pos-header__left">
+            <h1 className="pos-title">Orders</h1>
+            <span className="pos-sub">Enter = Bayar (jika siap)</span>
+          </div>
+
+          <div className="pos-header__right">
+            {scoped ? (
+              <span className="badge badge-success">
+                Scope: Cabang #{branch!.id} • Gudang #{warehouse!.id}
+              </span>
+            ) : (
+              <span className="badge badge-warning">Scope belum dipilih</span>
+            )}
+          </div>
+        </div>
+        <div className="pos-divider" />
+        <div style={{ marginTop: 10, opacity: 0.8, fontSize: 12 }}>
+          Cari produk → klik kartu untuk tambah cepat ke keranjang. Katalog muncul setelah Gudang dipilih.
+        </div>
+      </div>
+
+      <div className="pos-shell">
+        {/* MAIN (kiri): Scope + Search + Grid */}
+        <div className="pos-stack">
           {!scoped && <ScopePickerBanner />}
 
-          <div className="card" style={{ marginTop: scoped ? 0 : 12 }}>
-            {/* 🔎 Search tetap ada; jika komponen Anda butuh warehouseId NUMBER, kirim 0 ketika belum ada */}
+          <div className="card">
             <ProductSearch warehouseId={warehouse?.id ?? 0} />
           </div>
 
-          {/* 🧱 Katalog hanya dirender setelah Gudang siap agar tidak error ke backend */}
           {warehouse?.id ? (
-            <div className="card" style={{ marginTop: 12 }}>
+            <div className="card">
               <ProductGrid
                 onPick={onPickProduct}
                 perPage={24}
@@ -16693,37 +22215,39 @@ export default function OrdersPage(): React.ReactElement {
               />
             </div>
           ) : (
-            <div className="card" style={{ marginTop: 12 }}>
+            <div className="card">
               <div className="empty-state">Pilih Cabang &amp; Gudang untuk melihat katalog.</div>
             </div>
           )}
         </div>
 
-        {/* Kanan: Cart + tombol bayar */}
-        <div style={{ flex: '1 1 320px', minWidth: 300, maxWidth: 420 }}>
+        {/* ASIDE (kanan): Cart + tombol bayar (sticky desktop) */}
+        <aside className="pos-aside">
           <div className="card">
             <CartPanel />
           </div>
 
-          <div className="card" style={{ marginTop: 12 }}>
-            <div className="form-actions" style={{ justifyContent: 'stretch' }}>
+          <div className="card">
+            <div className="form-actions" style={{ justifyContent: "stretch" }}>
               <button
-                className="button button-primary"
+                className="button button-primary pos-paybtn"
                 onClick={() => setOpenPay(true)}
                 disabled={!canCheckout}
                 aria-disabled={!canCheckout}
                 aria-label="Bayar pesanan"
                 data-testid="btn-pay"
-                style={{ width: '100%' }}
               >
                 Bayar
               </button>
             </div>
+
             {!canCheckout && disableReason && (
-              <div className="alert alert-warning" style={{ marginTop: 8 }}>{disableReason}</div>
+              <div className="alert alert-warning" style={{ marginTop: 8 }}>
+                {disableReason}
+              </div>
             )}
           </div>
-        </div>
+        </aside>
       </div>
 
       {openPay && branch && warehouse && (
@@ -16754,15 +22278,15 @@ function ScopePickerBanner(): React.ReactElement {
 
   const [branches, setBranches] = useState<IdNama[]>([]);
   const [warehouses, setWarehouses] = useState<IdNama[]>([]);
-  const [bId, setBId] = useState<number | ''>('');
-  const [wId, setWId] = useState<number | ''>('');
+  const [bId, setBId] = useState<number | "">("");
+  const [wId, setWId] = useState<number | "">("");
   const [loadingB, setLoadingB] = useState<boolean>(true);
   const [loadingW, setLoadingW] = useState<boolean>(false);
 
   useEffect(() => {
     (async () => {
       try {
-        const api = await import('../../api/branches');
+        const api = await import("../../api/branches");
         setLoadingB(true);
         const res = await api.listBranches({ per_page: 50 });
         const data = (res?.data ?? []) as IdNama[];
@@ -16775,14 +22299,18 @@ function ScopePickerBanner(): React.ReactElement {
 
   useEffect(() => {
     (async () => {
-      if (!bId) { setWarehouses([]); setWId(''); return; }
+      if (!bId) {
+        setWarehouses([]);
+        setWId("");
+        return;
+      }
       try {
-        const api = await import('../../api/warehouses');
+        const api = await import("../../api/warehouses");
         setLoadingW(true);
         const res = await api.listWarehouses({ cabang_id: Number(bId), per_page: 50 });
         const data = (res?.data ?? []) as IdNama[];
         setWarehouses(Array.isArray(data) ? data : []);
-        setWId(data.length > 0 ? data[0].id : '');
+        setWId(data.length > 0 ? data[0].id : "");
       } finally {
         setLoadingW(false);
       }
@@ -16799,21 +22327,22 @@ function ScopePickerBanner(): React.ReactElement {
       <div className="badge badge-warning" style={{ marginBottom: 8 }}>
         Scope belum dipilih
       </div>
+
       <div className="form-row form-row--3">
         <div className="form-field">
           <label className="label">Cabang</label>
           <select
             className="select"
             value={bId}
-            onChange={(e) => setBId(e.target.value ? Number(e.target.value) : '')}
+            onChange={(e) => setBId(e.target.value ? Number(e.target.value) : "")}
             aria-label="Pilih cabang"
           >
-            <option value="">{loadingB ? 'Memuat cabang…' : 'Pilih cabang…'}</option>
-            {!loadingB && branches.length === 0 && (
-              <option value="">Tidak ada cabang</option>
-            )}
+            <option value="">{loadingB ? "Memuat cabang…" : "Pilih cabang…"}</option>
+            {!loadingB && branches.length === 0 && <option value="">Tidak ada cabang</option>}
             {branches.map((b) => (
-              <option key={b.id} value={b.id}>{b.nama}</option>
+              <option key={b.id} value={b.id}>
+                {b.nama}
+              </option>
             ))}
           </select>
         </div>
@@ -16823,20 +22352,22 @@ function ScopePickerBanner(): React.ReactElement {
           <select
             className="select"
             value={wId}
-            onChange={(e) => setWId(e.target.value ? Number(e.target.value) : '')}
+            onChange={(e) => setWId(e.target.value ? Number(e.target.value) : "")}
             disabled={!bId || loadingW}
             aria-label="Pilih gudang"
           >
             <option value="">
-              {!bId ? 'Pilih cabang dahulu' : (loadingW ? 'Memuat gudang…' : 'Pilih gudang…')}
+              {!bId ? "Pilih cabang dahulu" : loadingW ? "Memuat gudang…" : "Pilih gudang…"}
             </option>
             {warehouses.map((w) => (
-              <option key={w.id} value={w.id}>{w.nama}</option>
+              <option key={w.id} value={w.id}>
+                {w.nama}
+              </option>
             ))}
           </select>
         </div>
 
-        <div className="form-actions" style={{ alignItems: 'end' }}>
+        <div className="form-actions" style={{ alignItems: "end" }}>
           <button
             className="button button-primary"
             disabled={!bId || !wId}
@@ -16856,8 +22387,8 @@ function ScopePickerBanner(): React.ReactElement {
 
 ### src/pages/pos/OrdersIndex.tsx
 
-- SHA: `b7155605aeac`  
-- Ukuran: 29 KB
+- SHA: `52036220c349`  
+- Ukuran: 36 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -16865,10 +22396,23 @@ function ScopePickerBanner(): React.ReactElement {
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import {
-  listOrders, getOrder, updateOrderItems, reprintReceipt, resendWhatsApp, addPayment, setOrderCashPosition // <— setOrderCashPosition sudah di sini
+  listOrders,
+  getOrder,
+  updateOrderItems,
+  reprintReceipt,
+  resendWhatsApp,
+  addPayment,
+  setOrderCashPosition,
 } from "../../api/pos";
 import type {
-  ID, Order, OrderItem, OrdersQuery, UpdateOrderItemsPayload, OrderStatus, CheckoutPayment, CashPosition // <— CashPosition type
+  ID,
+  Order,
+  OrderItem,
+  OrdersQuery,
+  UpdateOrderItemsPayload,
+  OrderStatus,
+  CheckoutPayment,
+  CashPosition,
 } from "../../types/pos";
 import { createDelivery, assignCourier } from "../../api/deliveries";
 import type { DeliveryType } from "../../types/delivery";
@@ -16877,7 +22421,11 @@ import type { CashHolder } from "../../types/cash";
 import { useAuth } from "../../store/auth";
 
 const formatIDR = (n: number) =>
-  new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(n);
+  new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0,
+  }).format(n);
 
 /* ---------- FilterBar ---------- */
 type FilterState = OrdersQuery & { local_q?: string; cash_position?: CashPosition };
@@ -16893,108 +22441,127 @@ function FilterBar(props: {
 
   return (
     <div className="card">
-      <div className="form-row form-row--3">
-        <div className="form-field">
-          <label className="label">Cari</label>
-          <input
-            className="input"
-            placeholder="kode/nama/telepon"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") onChange({ ...value, q: search || undefined, page: 1 });
-            }}
-          />
+      <div className="posx-filter">
+        <div className="form-row form-row--3">
+          <div className="form-field">
+            <label className="label">Cari</label>
+            <input
+              className="input"
+              placeholder="kode/nama/telepon"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  onChange({ ...value, q: search || undefined, page: 1 });
+                  onApply();
+                }
+              }}
+            />
+          </div>
+
+          <div className="form-field">
+            <label className="label">Cabang ID</label>
+            <input
+              type="number"
+              className="input"
+              value={value.cabang_id ?? ""}
+              onChange={(e) =>
+                onChange({
+                  ...value,
+                  cabang_id: e.target.value ? Number(e.target.value) : undefined,
+                  page: 1,
+                })
+              }
+            />
+          </div>
+
+          <div className="form-field">
+            <label className="label">Status</label>
+            <select
+              className="select"
+              value={value.status ?? ""}
+              onChange={(e) =>
+                onChange({
+                  ...value,
+                  status: (e.target.value || undefined) as OrderStatus | undefined,
+                  page: 1,
+                })
+              }
+            >
+              <option value="">Semua</option>
+              <option value="DRAFT">DRAFT</option>
+              <option value="UNPAID">UNPAID</option>
+              <option value="PAID">PAID</option>
+              <option value="VOID">VOID</option>
+              <option value="REFUND">REFUND</option>
+            </select>
+          </div>
+
+          <div className="form-field">
+            <label className="label">Posisi Uang</label>
+            <select
+              className="select"
+              value={value.cash_position ?? ""}
+              onChange={(e) =>
+                onChange({
+                  ...value,
+                  cash_position: (e.target.value || undefined) as CashPosition | undefined,
+                  page: 1,
+                })
+              }
+            >
+              <option value="">Semua</option>
+              <option value="CUSTOMER">Konsumen</option>
+              <option value="CASHIER">Kasir</option>
+              <option value="SALES">Sales</option>
+              <option value="ADMIN">Admin</option>
+            </select>
+          </div>
+
+          <div className="form-field">
+            <label className="label">Dari</label>
+            <input
+              type="date"
+              className="input"
+              value={value.date_from ?? ""}
+              onChange={(e) => onChange({ ...value, date_from: e.target.value || undefined, page: 1 })}
+            />
+          </div>
+
+          <div className="form-field">
+            <label className="label">Sampai</label>
+            <input
+              type="date"
+              className="input"
+              value={value.date_to ?? ""}
+              onChange={(e) => onChange({ ...value, date_to: e.target.value || undefined, page: 1 })}
+            />
+          </div>
+
+          <div className="form-actions posx-filter-actions">
+            <button
+              className="button button-outline"
+              onClick={() => {
+                onChange({ page: 1, per_page: value.per_page ?? 10, sort: "-ordered_at" });
+                onApply();
+              }}
+            >
+              Reset
+            </button>
+            <button
+              className="button button-primary"
+              onClick={() => {
+                onChange({ ...value, q: search || undefined, page: 1 });
+                onApply();
+              }}
+            >
+              Terapkan
+            </button>
+          </div>
         </div>
 
-        <div className="form-field">
-          <label className="label">Cabang ID</label>
-          <input
-            type="number"
-            className="input"
-            value={value.cabang_id ?? ""}
-            onChange={(e) =>
-              onChange({ ...value, cabang_id: e.target.value ? Number(e.target.value) : undefined, page: 1 })
-            }
-          />
-        </div>
-
-        <div className="form-field">
-          <label className="label">Status</label>
-          <select
-            className="select"
-            value={value.status ?? ""}
-            onChange={(e) =>
-              onChange({ ...value, status: (e.target.value || undefined) as OrderStatus | undefined, page: 1 })
-            }
-          >
-            <option value="">Semua</option>
-            <option value="DRAFT">DRAFT</option>
-            <option value="UNPAID">UNPAID</option>
-            <option value="PAID">PAID</option>
-            <option value="VOID">VOID</option>
-            <option value="REFUND">REFUND</option>
-          </select>
-        </div>
-
-        {/* Filter Posisi Uang */}
-        <div className="form-field">
-          <label className="label">Posisi Uang</label>
-          <select
-            className="select"
-            value={value.cash_position ?? ""}
-            onChange={(e) =>
-              onChange({
-                ...value,
-                cash_position: (e.target.value || undefined) as CashPosition | undefined,
-                page: 1,
-              })
-            }
-          >
-            <option value="">Semua</option>
-            <option value="CUSTOMER">Konsumen</option>
-            <option value="CASHIER">Kasir</option>
-            <option value="SALES">Sales</option>
-            <option value="ADMIN">Admin</option>
-          </select>
-        </div>
-
-        <div className="form-field">
-          <label className="label">Dari</label>
-          <input
-            type="date"
-            className="input"
-            value={value.date_from ?? ""}
-            onChange={(e) => onChange({ ...value, date_from: e.target.value || undefined, page: 1 })}
-          />
-        </div>
-
-        <div className="form-field">
-          <label className="label">Sampai</label>
-          <input
-            type="date"
-            className="input"
-            value={value.date_to ?? ""}
-            onChange={(e) => onChange({ ...value, date_to: e.target.value || undefined, page: 1 })}
-          />
-        </div>
-
-        <div className="form-actions" style={{ marginLeft: "auto" }}>
-          <button
-            className="button button-outline"
-            onClick={() => onChange({ page: 1, per_page: value.per_page ?? 10, sort: "-ordered_at" })}
-          >
-            Reset
-          </button>
-          <button
-            className="button button-primary"
-            onClick={() => {
-              onChange({ ...value, q: search || undefined, page: 1 });
-              onApply();
-            }}
-          >
-            Terapkan
-          </button>
+        <div className="posx-filter-hint">
+          Tips: tekan <span className="mono">Enter</span> di kolom Cari untuk menerapkan filter.
         </div>
       </div>
     </div>
@@ -17004,31 +22571,34 @@ function FilterBar(props: {
 /* ---------- helpers ---------- */
 function statusBadgeClass(status: OrderStatus): string {
   switch (status) {
-    case "PAID": return "badge badge-success";
-    case "UNPAID": return "badge badge-warning";
+    case "PAID":
+      return "badge badge-success";
+    case "UNPAID":
+      return "badge badge-warning";
     case "VOID":
-    case "REFUND": return "badge badge-danger";
-    default: return "badge";
+    case "REFUND":
+      return "badge badge-danger";
+    default:
+      return "badge";
   }
 }
 
 function normalizePhoneForWa(raw?: string | null): string | null {
   if (!raw) return null;
-  let digits = raw.replace(/\D/g, '');
+  let digits = raw.replace(/\D/g, "");
   if (!digits) return null;
-  if (digits.startsWith('0')) digits = '62' + digits.slice(1);
-  if (digits.startsWith('62')) return digits;
+  if (digits.startsWith("0")) digits = "62" + digits.slice(1);
+  if (digits.startsWith("62")) return digits;
   return digits;
 }
 
 const CASH_POSITION_OPTIONS: { value: CashPosition; label: string }[] = [
-  { value: 'CUSTOMER', label: 'Konsumen' },
-  { value: 'CASHIER', label: 'Kasir' },
-  { value: 'SALES', label: 'Sales' },
-  { value: 'ADMIN', label: 'Admin' },
+  { value: "CUSTOMER", label: "Konsumen" },
+  { value: "CASHIER", label: "Kasir" },
+  { value: "SALES", label: "Sales" },
+  { value: "ADMIN", label: "Admin" },
 ];
 
-// Cell dropdown editable
 function CashPositionCell({
   order,
   onChanged,
@@ -17036,7 +22606,7 @@ function CashPositionCell({
   order: Order;
   onChanged: (updated: Order) => void;
 }) {
-  const [val, setVal] = React.useState<CashPosition>(order.cash_position ?? 'CASHIER');
+  const [val, setVal] = React.useState<CashPosition>(order.cash_position ?? "CASHIER");
   const [saving, setSaving] = React.useState(false);
 
   async function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
@@ -17047,23 +22617,19 @@ function CashPositionCell({
       const updated = await setOrderCashPosition(order.id, next);
       onChanged(updated);
     } catch (err) {
-      setVal(order.cash_position ?? 'CASHIER'); // rollback jika gagal
-      alert((err as Error)?.message ?? 'Gagal mengubah Posisi Uang.');
+      setVal(order.cash_position ?? "CASHIER");
+      alert((err as Error)?.message ?? "Gagal mengubah Posisi Uang.");
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <select
-      className="select"
-      value={val}
-      onChange={handleChange}
-      disabled={saving}
-      style={{ minWidth: 140 }}
-    >
-      {CASH_POSITION_OPTIONS.map(opt => (
-        <option key={opt.value} value={opt.value}>{opt.label}</option>
+    <select className="select" value={val} onChange={handleChange} disabled={saving} style={{ minWidth: 140 }}>
+      {CASH_POSITION_OPTIONS.map((opt) => (
+        <option key={opt.value} value={opt.value}>
+          {opt.label}
+        </option>
       ))}
     </select>
   );
@@ -17077,27 +22643,41 @@ function OrdersTable(props: {
   per_page: number;
   total: number;
   onPage: (p: number) => void;
-  onCashPositionChanged: (updated: Order) => void; // NEW prop
+  onCashPositionChanged: (updated: Order) => void;
 }) {
   const { rows, onOpenDetail, page, per_page, total, onPage, onCashPositionChanged } = props;
   const last = Math.max(1, Math.ceil(total / Math.max(1, per_page || 10)));
 
   return (
     <div className="card">
-      <div className="table-responsive">
-        <table className="table">
+      <div className="posx-table-head">
+        <div className="muted text-sm">
+          Halaman {page} dari {last} • Total {total} data
+        </div>
+        <div className="btn-group">
+          <button className="button button-outline" disabled={page <= 1} onClick={() => onPage(page - 1)}>
+            Prev
+          </button>
+          <button className="button button-outline" disabled={page >= last} onClick={() => onPage(page + 1)}>
+            Next
+          </button>
+        </div>
+      </div>
+
+      <div className="table-responsive posx-table-wrap">
+        <table className="table posx-table">
           <thead>
             <tr>
               <th>Tanggal</th>
               <th>Kode</th>
               <th>Pelanggan</th>
-              <th>No HP</th>
-              <th>Alamat</th>
+              <th className="posx-col-phone">No HP</th>
+              <th className="posx-col-address">Alamat</th>
               <th>Status</th>
               <th className="text-right">Subtotal</th>
-              <th className="text-right">Diskon</th>
+              <th className="text-right posx-col-discount">Diskon</th>
               <th className="text-right">Grand Total</th>
-              <th className="text-right">Dibayar</th>
+              <th className="text-right posx-col-paid">Dibayar</th>
               <th>Posisi Uang</th>
               <th className="w-1">Aksi</th>
             </tr>
@@ -17106,15 +22686,23 @@ function OrdersTable(props: {
             {rows.map((o) => (
               <tr key={o.id}>
                 <td>{new Date(o.ordered_at).toLocaleString("id-ID")}</td>
-                <td><span className="mono">{o.kode}</span></td>
-                <td>{o.customer_name ?? '-'}</td>
-                <td>{o.customer_phone ?? '-'}</td>
-                <td className="truncate max-w-[240px]">{o.customer_address ?? '-'}</td>
-                <td><span className={statusBadgeClass(o.status)}>{o.status}</span></td>
+                <td>
+                  <span className="mono">{o.kode}</span>
+                </td>
+                <td>{o.customer_name ?? "-"}</td>
+                <td className="posx-col-phone">{o.customer_phone ?? "-"}</td>
+                <td className="posx-col-address">
+                  <span className="posx-truncate">{o.customer_address ?? "-"}</span>
+                </td>
+                <td>
+                  <span className={statusBadgeClass(o.status)}>{o.status}</span>
+                </td>
                 <td className="text-right">{formatIDR(o.subtotal)}</td>
-                <td className="text-right">{formatIDR(o.discount)}</td>
-                <td className="text-right"><strong>{formatIDR(o.grand_total)}</strong></td>
-                <td className="text-right">{formatIDR(o.paid_total)}</td>
+                <td className="text-right posx-col-discount">{formatIDR(o.discount)}</td>
+                <td className="text-right">
+                  <strong>{formatIDR(o.grand_total)}</strong>
+                </td>
+                <td className="text-right posx-col-paid">{formatIDR(o.paid_total)}</td>
                 <td>
                   <CashPositionCell order={o} onChanged={onCashPositionChanged} />
                 </td>
@@ -17127,6 +22715,7 @@ function OrdersTable(props: {
                 </td>
               </tr>
             ))}
+
             {rows.length === 0 && (
               <tr>
                 <td colSpan={12}>
@@ -17138,7 +22727,7 @@ function OrdersTable(props: {
         </table>
       </div>
 
-      <div className="table-footer">
+      <div className="table-footer posx-table-footer">
         <div className="muted text-sm">
           Halaman {page} dari {last} • Total {total} data
         </div>
@@ -17159,20 +22748,20 @@ function OrdersTable(props: {
 const overlayStyle: React.CSSProperties = {
   position: "fixed",
   inset: 0,
-  background: "rgba(0,0,0,0.4)",
+  background: "rgba(0,0,0,0.45)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   padding: "16px",
-  zIndex: 1000
+  zIndex: 1000,
 };
 
 const modalStyle: React.CSSProperties = {
   width: "100%",
-  maxWidth: 960,
-  background: "#fff",
-  borderRadius: 16,
-  boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+  maxWidth: 980,
+  borderRadius: 18,
+  boxShadow: "0 18px 60px rgba(0,0,0,0.25)",
+  overflow: "hidden",
 };
 
 /* ---------- Detail Dialog (Portal) ---------- */
@@ -17202,7 +22791,11 @@ function OrderDetailDialog(props: {
     try {
       const res = await createDelivery({ order_id: o.id, type: dlType });
       if (dlAuto) {
-        try { await assignCourier(res.data.id, { auto: true }); } catch { /* noop */ }
+        try {
+          await assignCourier(res.data.id, { auto: true });
+        } catch {
+          /* noop */
+        }
       }
       alert("Delivery berhasil dibuat.");
       setDlOpen(false);
@@ -17217,25 +22810,54 @@ function OrderDetailDialog(props: {
   return createPortal(
     <div style={overlayStyle}>
       <div className="card" style={modalStyle} role="dialog" aria-modal="true">
-        <div className="modal-header" style={{ padding: 16, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <h3 className="modal-title">
-            Detail Pesanan — <span className="mono">{o.kode}</span>
-          </h3>
-          <button className="button button-ghost" onClick={onClose}>Tutup</button>
+        <div className="posx-modal-head">
+          <div>
+            <div className="posx-modal-title">
+              Detail Pesanan — <span className="mono">{o.kode}</span>
+            </div>
+            <div className="muted text-sm">{new Date(o.ordered_at).toLocaleString("id-ID")}</div>
+          </div>
+          <button className="button button-ghost" onClick={onClose}>
+            Tutup
+          </button>
         </div>
 
         <div className="divider" />
 
-        <div className="kv-grid" style={{ padding: "0 16px 12px" }}>
-          <div className="kv"><span className="kv-key">Status</span><span className="kv-val"><span className={statusBadgeClass(o.status)}>{o.status}</span></span></div>
-          <div className="kv"><span className="kv-key">Tanggal</span><span className="kv-val">{new Date(o.ordered_at).toLocaleString("id-ID")}</span></div>
-          <div className="kv"><span className="kv-key">Subtotal</span><span className="kv-val">{formatIDR(o.subtotal)}</span></div>
-          <div className="kv"><span className="kv-key">Diskon</span><span className="kv-val">{formatIDR(o.discount)}</span></div>
-          <div className="kv"><span className="kv-key">Total</span><span className="kv-val"><strong>{formatIDR(o.grand_total)}</strong></span></div>
-          <div className="kv"><span className="kv-key">Dibayar</span><span className="kv-val">{formatIDR(o.paid_total)}</span></div>
+        <div className="kv-grid posx-kv-pad">
+          <div className="kv">
+            <span className="kv-key">Status</span>
+            <span className="kv-val">
+              <span className={statusBadgeClass(o.status)}>{o.status}</span>
+            </span>
+          </div>
+          <div className="kv">
+            <span className="kv-key">Subtotal</span>
+            <span className="kv-val">{formatIDR(o.subtotal)}</span>
+          </div>
+          <div className="kv">
+            <span className="kv-key">Diskon</span>
+            <span className="kv-val">{formatIDR(o.discount)}</span>
+          </div>
+          <div className="kv">
+            <span className="kv-key">Total</span>
+            <span className="kv-val">
+              <strong>{formatIDR(o.grand_total)}</strong>
+            </span>
+          </div>
+          <div className="kv">
+            <span className="kv-key">Dibayar</span>
+            <span className="kv-val">{formatIDR(o.paid_total)}</span>
+          </div>
+          <div className="kv">
+            <span className="kv-key">Sisa</span>
+            <span className="kv-val">
+              <strong>{formatIDR(sisa)}</strong>
+            </span>
+          </div>
         </div>
 
-        <div className="card soft" style={{ margin: "0 16px 16px" }}>
+        <div className="card soft posx-modal-section">
           <div className="table-responsive">
             <table className="table">
               <thead>
@@ -17258,26 +22880,39 @@ function OrderDetailDialog(props: {
                   </tr>
                 ))}
                 {o.items.length === 0 && (
-                  <tr><td colSpan={5}><div className="empty-state">Tidak ada item.</div></td></tr>
+                  <tr>
+                    <td colSpan={5}>
+                      <div className="empty-state">Tidak ada item.</div>
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </table>
           </div>
         </div>
 
-        <div className="modal-actions" style={{ padding: "0 16px 16px", display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+        <div className="posx-modal-actions">
           {o.status === "UNPAID" && sisa > 0 && (
             <button
               className="button button-primary"
               onClick={async () => {
-                const nominalStr = prompt(`Nominal pelunasan (sisa ${formatIDR(sisa)}):`, String(Math.round(sisa)));
+                const nominalStr = prompt(
+                  `Nominal pelunasan (sisa ${formatIDR(sisa)}):`,
+                  String(Math.round(sisa))
+                );
                 if (!nominalStr) return;
                 const nominal = Number(nominalStr);
-                if (!Number.isFinite(nominal) || nominal <= 0) { alert("Nominal tidak valid."); return; }
+                if (!Number.isFinite(nominal) || nominal <= 0) {
+                  alert("Nominal tidak valid.");
+                  return;
+                }
 
                 const methodInputRaw = (prompt("Metode (CASH/TRANSFER/QRIS):", "CASH") || "CASH");
                 const methodInput = methodInputRaw.trim().toUpperCase();
-                const payment: CheckoutPayment = { method: methodInput as CheckoutPayment["method"], amount: nominal };
+                const payment: CheckoutPayment = {
+                  method: methodInput as CheckoutPayment["method"],
+                  amount: nominal,
+                };
 
                 try {
                   if (methodInput === "CASH" && payment.amount > 0) {
@@ -17287,11 +22922,14 @@ function OrderDetailDialog(props: {
                       alert("Tidak ada CashHolder. Buat holder lebih dulu di modul Cash.");
                       return;
                     }
-                    const choices = list.map((h) => `${h.id} — ${h.name}`).join('\n');
+                    const choices = list.map((h) => `${h.id} — ${h.name}`).join("\n");
                     const picked = prompt(`Pilih Holder penerima CASH (masukkan ID):\n${choices}`);
                     const holderId = picked ? Number(picked.trim()) : NaN;
                     const holder = list.find((h) => h.id === holderId);
-                    if (!holder) { alert("Holder tidak valid."); return; }
+                    if (!holder) {
+                      alert("Holder tidak valid.");
+                      return;
+                    }
 
                     payment.payload_json = {
                       holder_id: holder.id,
@@ -17311,55 +22949,68 @@ function OrderDetailDialog(props: {
             </button>
           )}
 
-          <button className="button button-outline" onClick={() => onEdit(o)}>Edit Item</button>
-          <button className="button button-outline" onClick={() => onReprint(o.id, "58")}>Reprint 58</button>
-          <button className="button button-outline" onClick={() => onReprint(o.id, "80")}>Reprint 80</button>
-          <button className="button" onClick={() => onResendWa(o.id)}>Kirim WA</button>
-          <button className="button button-primary" onClick={() => setDlOpen(true)}>Buat Delivery…</button>
+          <button className="button button-outline" onClick={() => onEdit(o)}>
+            Edit Item
+          </button>
+          <button className="button button-outline" onClick={() => onReprint(o.id, "58")}>
+            Reprint 58
+          </button>
+          <button className="button button-outline" onClick={() => onReprint(o.id, "80")}>
+            Reprint 80
+          </button>
+          <button className="button" onClick={() => onResendWa(o.id)}>
+            Kirim WA
+          </button>
+          <button className="button button-primary" onClick={() => setDlOpen(true)}>
+            Buat Delivery…
+          </button>
         </div>
 
-        {dlOpen && createPortal(
-          <div style={{ ...overlayStyle, zIndex: 1100 }}>
-            <div className="card" style={{ ...modalStyle, maxWidth: 520 }} role="dialog" aria-modal="true">
-              <div className="modal-header" style={{ padding: 16, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <h4 className="modal-title">Buat Pickup/Delivery</h4>
-                <button className="button button-ghost" onClick={() => setDlOpen(false)}>Tutup</button>
-              </div>
-
-              <div className="form-row" style={{ padding: "0 16px 16px" }}>
-                <div className="form-field">
-                  <label className="label">Jenis</label>
-                  <select
-                    className="select"
-                    value={dlType}
-                    onChange={(e) => setDlType(e.target.value as DeliveryType)}
-                  >
-                    <option value="PICKUP">PICKUP (Jemput)</option>
-                    <option value="DELIVERY">DELIVERY (Antar)</option>
-                    <option value="BOTH">BOTH (Jemput & Antar)</option>
-                  </select>
-                </div>
-
-                <div className="form-field">
-                  <label className="checkbox">
-                    <input type="checkbox" checked={dlAuto} onChange={(e) => setDlAuto(e.target.checked)} />
-                    <span>Auto-assign kurir</span>
-                  </label>
-                </div>
-
-                {dlError && <div className="alert alert-danger">{dlError}</div>}
-
-                <div className="form-actions" style={{ marginLeft: "auto" }}>
-                  <button className="button button-outline" onClick={() => setDlOpen(false)} disabled={dlSubmitting}>Batal</button>
-                  <button className="button button-primary" onClick={doCreateDelivery} disabled={dlSubmitting}>
-                    {dlSubmitting ? "Membuat…" : "Buat"}
+        {dlOpen &&
+          createPortal(
+            <div style={{ ...overlayStyle, zIndex: 1100 }}>
+              <div className="card" style={{ ...modalStyle, maxWidth: 560 }} role="dialog" aria-modal="true">
+                <div className="posx-modal-head">
+                  <div className="posx-modal-title">Buat Pickup/Delivery</div>
+                  <button className="button button-ghost" onClick={() => setDlOpen(false)}>
+                    Tutup
                   </button>
                 </div>
+
+                <div className="divider" />
+
+                <div className="form-row posx-modal-form">
+                  <div className="form-field">
+                    <label className="label">Jenis</label>
+                    <select className="select" value={dlType} onChange={(e) => setDlType(e.target.value as DeliveryType)}>
+                      <option value="PICKUP">PICKUP (Jemput)</option>
+                      <option value="DELIVERY">DELIVERY (Antar)</option>
+                      <option value="BOTH">BOTH (Jemput & Antar)</option>
+                    </select>
+                  </div>
+
+                  <div className="form-field">
+                    <label className="checkbox">
+                      <input type="checkbox" checked={dlAuto} onChange={(e) => setDlAuto(e.target.checked)} />
+                      <span>Auto-assign kurir</span>
+                    </label>
+                  </div>
+
+                  {dlError && <div className="alert alert-danger">{dlError}</div>}
+
+                  <div className="form-actions posx-modal-actions-row">
+                    <button className="button button-outline" onClick={() => setDlOpen(false)} disabled={dlSubmitting}>
+                      Batal
+                    </button>
+                    <button className="button button-primary" onClick={doCreateDelivery} disabled={dlSubmitting}>
+                      {dlSubmitting ? "Membuat…" : "Buat"}
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>,
-          document.body
-        )}
+            </div>,
+            document.body
+          )}
       </div>
     </div>,
     document.body
@@ -17420,12 +23071,18 @@ function EditOrderDialog(props: {
   return createPortal(
     <div style={overlayStyle}>
       <div className="card" style={modalStyle} role="dialog" aria-modal="true">
-        <div className="modal-header" style={{ padding: 16, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <h3 className="modal-title">Edit Item — <span className="mono">{order.kode}</span></h3>
-          <button className="button button-ghost" onClick={onClose}>Tutup</button>
+        <div className="posx-modal-head">
+          <div className="posx-modal-title">
+            Edit Item — <span className="mono">{order.kode}</span>
+          </div>
+          <button className="button button-ghost" onClick={onClose}>
+            Tutup
+          </button>
         </div>
 
-        <div className="card soft" style={{ margin: "0 16px 16px" }}>
+        <div className="divider" />
+
+        <div className="card soft posx-modal-section">
           <div className="table-responsive">
             <table className="table">
               <thead>
@@ -17479,20 +23136,27 @@ function EditOrderDialog(props: {
           </div>
         </div>
 
-        <div className="form-row" style={{ padding: "0 16px 16px" }}>
+        <div className="form-row posx-modal-form">
           <div className="form-field">
             <label className="label">Catatan Koreksi (opsional)</label>
             <input className="input" value={note} onChange={(e) => setNote(e.target.value)} />
           </div>
-          <div className="form-field" style={{ marginLeft: "auto", textAlign: "right" }}>
-            <div>Subtotal (preview): <strong>{formatIDR(totals.subtotal)}</strong></div>
-            <div>Total (preview): <strong>{formatIDR(totals.grand_total)}</strong></div>
+
+          <div className="form-field posx-totals">
+            <div>
+              Subtotal (preview): <strong>{formatIDR(totals.subtotal)}</strong>
+            </div>
+            <div>
+              Total (preview): <strong>{formatIDR(totals.grand_total)}</strong>
+            </div>
             <div className="muted text-xs">Total final mengikuti hasil server setelah simpan.</div>
           </div>
         </div>
 
-        <div className="modal-actions" style={{ padding: "0 16px 16px", display: "flex", gap: 8, justifyContent: "flex-end" }}>
-          <button className="button button-outline" onClick={onClose} disabled={saving}>Batal</button>
+        <div className="posx-modal-actions">
+          <button className="button button-outline" onClick={onClose} disabled={saving}>
+            Batal
+          </button>
           <button className="button button-primary" onClick={save} disabled={saving}>
             {saving ? "Menyimpan…" : "Simpan Perubahan"}
           </button>
@@ -17515,7 +23179,10 @@ export default function OrdersIndex(): React.ReactElement {
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState<Order[]>([]);
   const [meta, setMeta] = useState<{ current_page: number; per_page: number; total: number; last_page: number }>({
-    current_page: 1, per_page: 10, total: 0, last_page: 1
+    current_page: 1,
+    per_page: 10,
+    total: 0,
+    last_page: 1,
   });
 
   const [detailOpen, setDetailOpen] = useState(false);
@@ -17526,9 +23193,15 @@ export default function OrdersIndex(): React.ReactElement {
     setLoading(true);
     try {
       const res = await listOrders({
-        page: q.page, per_page: q.per_page, q: q.q, cabang_id: q.cabang_id, status: q.status,
-        date_from: q.date_from, date_to: q.date_to, sort: q.sort,
-        cash_position: q.cash_position, // sudah dikirim
+        page: q.page,
+        per_page: q.per_page,
+        q: q.q,
+        cabang_id: q.cabang_id,
+        status: q.status,
+        date_from: q.date_from,
+        date_to: q.date_to,
+        sort: q.sort,
+        cash_position: q.cash_position,
       });
 
       setRows(res.data);
@@ -17549,7 +23222,6 @@ export default function OrdersIndex(): React.ReactElement {
     } finally {
       setLoading(false);
     }
-  // NEW: tambahkan q.cash_position di deps agar reload saat filter posisi berubah
   }, [q.page, q.per_page, q.q, q.cabang_id, q.status, q.date_from, q.date_to, q.sort, q.cash_position]);
 
   useEffect(() => {
@@ -17566,7 +23238,7 @@ export default function OrdersIndex(): React.ReactElement {
     }
   };
 
-  const onReprint = async (id: ID, format: '58' | '80') => {
+  const onReprint = async (id: ID, format: "58" | "80") => {
     try {
       await reprintReceipt(id, { format });
       alert(`Berhasil reprint (${format}mm).`);
@@ -17576,20 +23248,14 @@ export default function OrdersIndex(): React.ReactElement {
   };
 
   const onResendWa = async (id: ID) => {
-    const snapPhone = detail?.customer_phone
-      ?? rows.find(r => r.id === id)?.customer_phone
-      ?? null;
-
+    const snapPhone = detail?.customer_phone ?? rows.find((r) => r.id === id)?.customer_phone ?? null;
     const normalized = normalizePhoneForWa(snapPhone);
 
     if (normalized) {
       try {
         const res = await resendWhatsApp(id, { phone: normalized });
-        if (res.wa_url) {
-          window.open(res.wa_url, "_blank", "noopener,noreferrer");
-        } else {
-          alert("Pesan WA diproses.");
-        }
+        if (res.wa_url) window.open(res.wa_url, "_blank", "noopener,noreferrer");
+        else alert("Pesan WA diproses.");
         return;
       } catch (e) {
         alert((e as Error).message || "Gagal kirim WA.");
@@ -17603,33 +23269,201 @@ export default function OrdersIndex(): React.ReactElement {
 
     try {
       const res = await resendWhatsApp(id, { phone: normalizedManual });
-      if (res.wa_url) {
-        window.open(res.wa_url, "_blank", "noopener,noreferrer");
-      } else {
-        alert("Pesan WA diproses.");
-      }
+      if (res.wa_url) window.open(res.wa_url, "_blank", "noopener,noreferrer");
+      else alert("Pesan WA diproses.");
     } catch (e) {
       alert((e as Error).message || "Gagal kirim WA.");
     }
   };
 
-  // NEW: handler untuk merge update posisi uang ke state rows
   const onCashPositionChanged = useCallback((updated: Order) => {
-    setRows((prev) => prev.map(r => (r.id === updated.id ? { ...r, cash_position: updated.cash_position } : r)));
-    // optional: kalau detail sedang terbuka & sama id-nya, sinkronkan juga
-    setDetail((cur) => (cur && cur.id === updated.id ? { ...cur, cash_position: updated.cash_position } as Order : cur));
+    setRows((prev) => prev.map((r) => (r.id === updated.id ? { ...r, cash_position: updated.cash_position } : r)));
+    setDetail((cur) => (cur && cur.id === updated.id ? ({ ...cur, cash_position: updated.cash_position } as Order) : cur));
   }, []);
+
+  // ringkasan cepat (hanya UI)
+  const summary = useMemo(() => {
+    const totalRows = rows.length;
+    const paid = rows.filter((r) => r.status === "PAID").length;
+    const unpaid = rows.filter((r) => r.status === "UNPAID").length;
+    const voided = rows.filter((r) => r.status === "VOID" || r.status === "REFUND").length;
+    return { totalRows, paid, unpaid, voided };
+  }, [rows]);
 
   return (
     <div className="page">
-      <div className="page-header">
-        <h2 className="page-title">Daftar Pesanan</h2>
+      {/* CSS lokal khusus halaman OrdersIndex */}
+      <style>{`
+        .posx-top{
+          display:flex;
+          align-items:flex-end;
+          justify-content:space-between;
+          gap: 12px;
+          flex-wrap: wrap;
+          margin-bottom: 12px;
+        }
+        .posx-title{
+          margin:0;
+          font-size: 18px;
+          font-weight: 800;
+          letter-spacing: -0.02em;
+        }
+        .posx-sub{
+          margin-top: 4px;
+          font-size: 12px;
+          opacity: .75;
+        }
+        .posx-stats{
+          display:flex;
+          gap: 8px;
+          flex-wrap: wrap;
+          justify-content:flex-end;
+        }
+        .posx-stat{
+          padding: 8px 10px;
+          border-radius: 12px;
+          border: 1px solid rgba(0,0,0,.06);
+          background: rgba(0,0,0,.02);
+          min-width: 120px;
+        }
+        .posx-stat .k{ font-size: 11px; opacity:.72; }
+        .posx-stat .v{ font-size: 14px; font-weight: 800; margin-top: 2px; }
+
+        .posx-filter-actions{
+          margin-left:auto;
+          display:flex;
+          gap: 8px;
+          align-items:end;
+          justify-content:flex-end;
+          width: 100%;
+        }
+        @media (min-width: 860px){
+          .posx-filter-actions{ width: auto; }
+        }
+        .posx-filter-hint{
+          margin-top: 10px;
+          font-size: 12px;
+          opacity: .70;
+        }
+
+        .posx-table-head{
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+          gap: 10px;
+          flex-wrap: wrap;
+          margin-bottom: 10px;
+        }
+        .posx-table-wrap{
+          border-radius: 12px;
+          overflow: hidden;
+          border: 1px solid rgba(0,0,0,.06);
+        }
+        .posx-table thead th{
+          position: sticky;
+          top: 0;
+          z-index: 1;
+          background: #fff;
+        }
+        .posx-table tbody tr:nth-child(even){
+          background: rgba(0,0,0,.015);
+        }
+        .posx-truncate{
+          display:inline-block;
+          max-width: 240px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          vertical-align: bottom;
+        }
+
+        /* Responsif: sembunyikan kolom berat di layar kecil */
+        @media (max-width: 980px){
+          .posx-col-address{ display:none; }
+        }
+        @media (max-width: 860px){
+          .posx-col-phone{ display:none; }
+          .posx-col-discount{ display:none; }
+        }
+        @media (max-width: 720px){
+          .posx-col-paid{ display:none; }
+        }
+
+        .posx-table-footer{
+          margin-top: 12px;
+        }
+
+        .posx-modal-head{
+          padding: 14px 16px;
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+          gap: 12px;
+        }
+        .posx-modal-title{
+          font-weight: 900;
+          letter-spacing: -0.02em;
+        }
+        .posx-kv-pad{
+          padding: 12px 16px;
+        }
+        .posx-modal-section{
+          margin: 0 16px 14px;
+        }
+        .posx-modal-actions{
+          padding: 0 16px 16px;
+          display:flex;
+          gap: 8px;
+          flex-wrap: wrap;
+          justify-content:flex-end;
+        }
+        .posx-modal-form{
+          padding: 12px 16px 16px;
+        }
+        .posx-modal-actions-row{
+          margin-left:auto;
+        }
+        .posx-totals{
+          margin-left:auto;
+          text-align:right;
+        }
+        @media (max-width: 860px){
+          .posx-totals{ margin-left:0; text-align:left; }
+        }
+      `}</style>
+
+      <div className="posx-top">
+        <div>
+          <h2 className="posx-title">Daftar Pesanan</h2>
+          <div className="posx-sub">Filter, lihat detail, edit item, reprint, kirim WhatsApp, dan buat delivery.</div>
+        </div>
+
+        <div className="posx-stats">
+          <div className="posx-stat">
+            <div className="k">Rows tampil</div>
+            <div className="v">{summary.totalRows}</div>
+          </div>
+          <div className="posx-stat">
+            <div className="k">PAID</div>
+            <div className="v">{summary.paid}</div>
+          </div>
+          <div className="posx-stat">
+            <div className="k">UNPAID</div>
+            <div className="v">{summary.unpaid}</div>
+          </div>
+          <div className="posx-stat">
+            <div className="k">VOID/REFUND</div>
+            <div className="v">{summary.voided}</div>
+          </div>
+        </div>
       </div>
 
       <FilterBar value={q} onChange={setQ} onApply={load} />
 
       {loading ? (
-        <div className="card"><div className="skeleton h-64" /></div>
+        <div className="card">
+          <div className="skeleton h-64" />
+        </div>
       ) : (
         <OrdersTable
           rows={rows}
@@ -17638,7 +23472,7 @@ export default function OrdersIndex(): React.ReactElement {
           per_page={meta.per_page}
           total={meta.total}
           onPage={(p) => setQ((s) => ({ ...s, page: p }))}
-          onCashPositionChanged={onCashPositionChanged} // NEW: pass down
+          onCashPositionChanged={onCashPositionChanged}
         />
       )}
 
@@ -17647,10 +23481,20 @@ export default function OrdersIndex(): React.ReactElement {
         order={detail}
         onClose={() => {
           setDetailOpen(false);
-          setQ((s) => ({ ...s })); // reload daftar
+          setQ((s) => ({ ...s })); // reload daftar (tetap)
         }}
-        onEdit={(o) => { setDetail(o); setEditOpen(true); }}
-        onReprint={onReprint}
+        onEdit={(o) => {
+          setDetail(o);
+          setEditOpen(true);
+        }}
+        onReprint={async (id, format) => {
+          try {
+            await reprintReceipt(id, { format });
+            alert(`Berhasil reprint (${format}mm).`);
+          } catch (e) {
+            alert((e as Error).message || "Gagal reprint.");
+          }
+        }}
         onResendWa={onResendWa}
       />
 
@@ -17662,7 +23506,7 @@ export default function OrdersIndex(): React.ReactElement {
           setEditOpen(false);
           setDetailOpen(false);
           setDetail(null);
-          setQ((s) => ({ ...s })); // refresh
+          setQ((s) => ({ ...s })); // refresh (tetap)
         }}
       />
     </div>
@@ -17674,8 +23518,8 @@ export default function OrdersIndex(): React.ReactElement {
 
 ### src/pages/products/ProductDetail.tsx
 
-- SHA: `c5c4710c26e1`  
-- Ukuran: 7 KB
+- SHA: `bbd46659b59d`  
+- Ukuran: 15 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -17741,7 +23585,10 @@ export default function ProductDetail(): React.ReactElement {
   const [err, setErr] = useState<string | null>(null);
   const [row, setRow] = useState<Product | null>(null);
 
-  const autoSlug = useMemo(() => (row?.nama ? slugify(row.nama) : ""), [row?.nama]);
+  const autoSlug = useMemo(
+    () => (row?.nama ? slugify(row.nama) : ""),
+    [row?.nama]
+  );
 
   async function refresh(): Promise<void> {
     if (!isPositiveInt(id)) {
@@ -17757,7 +23604,10 @@ export default function ProductDetail(): React.ReactElement {
       setRow(product);
     } catch (e: unknown) {
       const status = getStatus(e);
-      const msg = status === 404 ? "Produk tidak ditemukan (404)." : getErrorMessage(e, "Gagal memuat produk.");
+      const msg =
+        status === 404
+          ? "Produk tidak ditemukan (404)."
+          : getErrorMessage(e, "Gagal memuat produk.");
       setRow(null);
       setErr(msg);
     } finally {
@@ -17801,16 +23651,91 @@ export default function ProductDetail(): React.ReactElement {
     }
   }
 
-  if (loading) return <div className="card">Memuat produk…</div>;
+  // ====== UI styles (layout only, no logic changes) ======
+  const headerWrap: React.CSSProperties = {
+    display: "flex",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+    gap: "1rem",
+    flexWrap: "wrap",
+  };
 
-  if (err) {
+  const titleStyle: React.CSSProperties = {
+    margin: 0,
+    fontSize: "1.55rem",
+    fontWeight: 800,
+    letterSpacing: "-0.02em",
+    lineHeight: 1.2,
+    color: "var(--color-text)",
+  };
+
+  const crumbStyle: React.CSSProperties = {
+    fontSize: "0.95rem",
+    opacity: 0.75,
+    marginBottom: "0.35rem",
+  };
+
+  const tabWrap: React.CSSProperties = {
+    display: "flex",
+    gap: "0.5rem",
+    flexWrap: "wrap",
+    alignItems: "center",
+  };
+
+  const twoColGrid: React.CSSProperties = {
+    display: "grid",
+    gridTemplateColumns: "1.2fr 0.8fr",
+    gap: "1rem",
+  };
+
+  const fieldGroup: React.CSSProperties = {
+    display: "grid",
+    gap: "0.9rem",
+  };
+
+  const fieldLabel: React.CSSProperties = {
+    display: "grid",
+    gap: "0.35rem",
+  };
+
+  const helpText: React.CSSProperties = {
+    fontSize: "0.85rem",
+    opacity: 0.7,
+  };
+
+  const actionsRow: React.CSSProperties = {
+    display: "flex",
+    justifyContent: "flex-end",
+    gap: "0.6rem",
+    flexWrap: "wrap",
+    marginTop: "0.25rem",
+  };
+
+  // ====== States ======
+  if (loading) {
     return (
-      <div className="card stack stack--sm">
-        <div className="text-danger">{err}</div>
-        <div>
-          <NavLink to="/catalog/products" className="link">
-            ← Kembali ke daftar produk
-          </NavLink>
+      <div className="container">
+        <div className="section">
+          <div className="card p-5">Memuat produk…</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (err && !row) {
+    return (
+      <div className="container">
+        <div className="section">
+          <div className="card p-5">
+            <div className="badge badge-danger" style={{ display: "inline-block", marginBottom: "0.8rem" }}>
+              {err}
+            </div>
+            <div>
+              <NavLink to="/catalog/products" className="link">
+                ← Kembali ke daftar produk
+              </NavLink>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -17818,112 +23743,282 @@ export default function ProductDetail(): React.ReactElement {
 
   if (!row) {
     return (
-      <div className="card stack stack--sm">
-        <div>Produk tidak ditemukan.</div>
-        <div>
-          <NavLink to="/catalog/products" className="link">
-            ← Kembali ke daftar produk
-          </NavLink>
+      <div className="container">
+        <div className="section">
+          <div className="card p-5">
+            <div style={{ marginBottom: "0.6rem" }}>Produk tidak ditemukan.</div>
+            <div>
+              <NavLink to="/catalog/products" className="link">
+                ← Kembali ke daftar produk
+              </NavLink>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
+  // ====== Main ======
   return (
-    <div className="page page--stack">
-      {/* Header */}
-      <div className="page-header row row--between">
-        <div className="stack stack--xs">
-          <div className="muted">
-            <NavLink to="/catalog/products" className="link">Produk</NavLink> / Detail
+    <div className="container">
+      {/* ====== Header ====== */}
+      <div className="section">
+        <div style={headerWrap}>
+          <div style={{ minWidth: 260 }}>
+            <div style={crumbStyle}>
+              <NavLink to="/catalog/products" className="link">
+                Produk
+              </NavLink>{" "}
+              <span style={{ opacity: 0.6 }}>/</span> Detail
+            </div>
+            <h1 style={titleStyle}>{row.nama}</h1>
           </div>
-          <h1 className="page-title">{row.nama}</h1>
-        </div>
-        <button className="button" onClick={onDelete}>Hapus</button>
-      </div>
 
-      {/* Tabs */}
-      <div className="card">
-        <div className="row row--gap-sm">
-          <button
-            className={tab === "info" ? "button button-primary" : "button"}
-            onClick={() => setTab("info")}
-            type="button"
-          >
-            Info
-          </button>
-          <button
-            className={tab === "variant-stock" ? "button button-primary" : "button"}
-            onClick={() => setTab("variant-stock")}
-            type="button"
-          >
-            Varian &amp; Stok
-          </button>
-        </div>
-      </div>
-
-      {tab === "info" ? (
-        <div className="card stack stack--sm">
-          <label className="stack stack--xs">
-            <span className="label">Nama</span>
-            <input
-              className="input"
-              value={row.nama}
-              onChange={(e) => setRow({ ...(row as Product), nama: e.target.value })}
-            />
-          </label>
-
-          <label className="stack stack--xs">
-            <span className="label">Slug</span>
-            <input
-              className="input"
-              placeholder={autoSlug}
-              value={row.slug ?? ""}
-              onChange={(e) => setRow({ ...(row as Product), slug: e.target.value })}
-            />
-            <span className="help muted">Kosongkan untuk otomatis: {autoSlug || "-"}</span>
-          </label>
-
-          <label className="stack stack--xs">
-            <span className="label">Deskripsi</span>
-            <textarea
-              className="textarea"
-              rows={3}
-              value={row.deskripsi ?? ""}
-              onChange={(e) => setRow({ ...(row as Product), deskripsi: e.target.value })}
-            />
-          </label>
-
-          <label className="row row--gap-xs">
-            <input
-              type="checkbox"
-              checked={!!row.is_active}
-              onChange={(e) => setRow({ ...(row as Product), is_active: e.target.checked })}
-            />
-            <span>Aktif</span>
-          </label>
-
-          {err && <div className="alert alert-danger">{err}</div>}
-
-          <div className="row row--end row--gap-sm">
-            <button className="button" onClick={() => void refresh()} disabled={saving}>Reset</button>
+          <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap" }}>
             <button
-              className="button button-primary"
-              onClick={() => void onSaveInfo()}
+              className="button button-outline"
+              type="button"
+              onClick={() => void refresh()}
               disabled={saving}
+              style={{ borderRadius: "999px" }}
             >
-              {saving ? "Menyimpan…" : "Simpan"}
+              Refresh
+            </button>
+
+            <button
+              className="button button-danger"
+              type="button"
+              onClick={() => void onDelete()}
+              style={{ borderRadius: "999px" }}
+            >
+              Hapus
             </button>
           </div>
         </div>
-      ) : (
-        <div className="page-section stack stack--md">
-          <div className="card">
-            <VariantManager productId={row.id} />
+      </div>
+
+      {/* ====== Tabs ====== */}
+      <div className="section">
+        <div className="card p-5">
+          <div style={tabWrap}>
+            <button
+              className={tab === "info" ? "button button-primary" : "button button-outline"}
+              onClick={() => setTab("info")}
+              type="button"
+              style={{ borderRadius: "999px" }}
+            >
+              Info
+            </button>
+
+            <button
+              className={tab === "variant-stock" ? "button button-primary" : "button button-outline"}
+              onClick={() => setTab("variant-stock")}
+              type="button"
+              style={{ borderRadius: "999px" }}
+            >
+              Varian &amp; Stok
+            </button>
+
+            <span style={{ marginLeft: "auto" }} />
+
+            <span className="badge" style={{ borderRadius: "999px" }}>
+              ID: {row.id}
+            </span>
+            <span
+              className={row.is_active ? "badge badge-success" : "badge badge-warning"}
+              style={{ borderRadius: "999px" }}
+            >
+              {row.is_active ? "Aktif" : "Nonaktif"}
+            </span>
           </div>
-          <div className="card stack stack--sm">
-            <div className="title-sm">Media Gambar</div>
-            <ImageDropzone productId={row.id} />
+        </div>
+      </div>
+
+      {/* ====== Content ====== */}
+      {tab === "info" ? (
+        <div className="section">
+          <div className="card p-5">
+            <div style={twoColGrid}>
+              {/* Left: form */}
+              <div style={fieldGroup}>
+                <label style={fieldLabel}>
+                  <span style={{ fontWeight: 700 }}>Nama</span>
+                  <input
+                    className="input"
+                    value={row.nama}
+                    onChange={(e) =>
+                      setRow({ ...(row as Product), nama: e.target.value })
+                    }
+                    placeholder="Nama produk"
+                  />
+                </label>
+
+                <label style={fieldLabel}>
+                  <span style={{ fontWeight: 700 }}>Slug</span>
+                  <input
+                    className="input"
+                    placeholder={autoSlug}
+                    value={row.slug ?? ""}
+                    onChange={(e) =>
+                      setRow({ ...(row as Product), slug: e.target.value })
+                    }
+                  />
+                  <span style={helpText}>
+                    Kosongkan untuk otomatis: <b>{autoSlug || "-"}</b>
+                  </span>
+                </label>
+
+                <label style={fieldLabel}>
+                  <span style={{ fontWeight: 700 }}>Deskripsi</span>
+                  <textarea
+                    className="textarea"
+                    rows={4}
+                    value={row.deskripsi ?? ""}
+                    onChange={(e) =>
+                      setRow({ ...(row as Product), deskripsi: e.target.value })
+                    }
+                    placeholder="Deskripsi singkat produk"
+                  />
+                </label>
+
+                {err && (
+                  <div
+                    className="badge badge-danger"
+                    style={{ display: "block", padding: "0.7rem 0.85rem", borderRadius: "14px" }}
+                  >
+                    {err}
+                  </div>
+                )}
+
+                <div style={actionsRow}>
+                  <button
+                    className="button button-outline"
+                    type="button"
+                    onClick={() => void refresh()}
+                    disabled={saving}
+                    style={{ borderRadius: "999px" }}
+                  >
+                    Reset
+                  </button>
+                  <button
+                    className="button button-primary"
+                    type="button"
+                    onClick={() => void onSaveInfo()}
+                    disabled={saving}
+                    style={{ borderRadius: "999px" }}
+                  >
+                    {saving ? "Menyimpan…" : "Simpan"}
+                  </button>
+                </div>
+              </div>
+
+              {/* Right: status card */}
+              <div style={{ display: "grid", gap: "0.75rem" }}>
+                <div
+                  className="card"
+                  style={{
+                    padding: "1rem",
+                    borderRadius: "16px",
+                    border: "1px solid rgba(15, 23, 42, 0.06)",
+                    background: "rgba(15, 23, 42, 0.02)",
+                  }}
+                >
+                  <div style={{ fontWeight: 800, marginBottom: "0.5rem" }}>
+                    Status Produk
+                  </div>
+
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.6rem",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={!!row.is_active}
+                      onChange={(e) =>
+                        setRow({ ...(row as Product), is_active: e.target.checked })
+                      }
+                    />
+                    <span>Aktif</span>
+                  </label>
+
+                  <div style={{ marginTop: "0.75rem", fontSize: "0.9rem", opacity: 0.8 }}>
+                    Produk nonaktif tidak ditampilkan pada area katalog/penjualan (tergantung aturan project Anda).
+                  </div>
+                </div>
+
+                <div
+                  className="card"
+                  style={{
+                    padding: "1rem",
+                    borderRadius: "16px",
+                    border: "1px solid rgba(15, 23, 42, 0.06)",
+                  }}
+                >
+                  <div style={{ fontWeight: 800, marginBottom: "0.5rem" }}>
+                    Aksi Cepat
+                  </div>
+
+                  <div style={{ display: "grid", gap: "0.5rem" }}>
+                    <button
+                      className="button button-outline"
+                      type="button"
+                      onClick={() => setTab("variant-stock")}
+                      style={{ borderRadius: "999px", width: "100%" }}
+                    >
+                      Kelola Varian & Stok
+                    </button>
+
+                    <button
+                      className="button button-outline"
+                      type="button"
+                      onClick={() => setTab("variant-stock")}
+                      style={{ borderRadius: "999px", width: "100%" }}
+                    >
+                      Kelola Media Gambar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* responsive */}
+            <style>
+              {`
+                @media (max-width: 980px) {
+                  .container .section div[style*="grid-template-columns: 1.2fr 0.8fr"]{
+                    grid-template-columns: 1fr !important;
+                  }
+                }
+              `}
+            </style>
+          </div>
+        </div>
+      ) : (
+        <div className="section">
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr",
+              gap: "1rem",
+            }}
+          >
+            <div className="card p-5">
+              <div style={{ fontWeight: 800, marginBottom: "0.75rem" }}>
+                Varian &amp; Stok
+              </div>
+              <VariantManager productId={row.id} />
+            </div>
+
+            <div className="card p-5">
+              <div style={{ fontWeight: 800, marginBottom: "0.75rem" }}>
+                Media Gambar
+              </div>
+              <ImageDropzone productId={row.id} />
+            </div>
           </div>
         </div>
       )}
@@ -17936,17 +24031,26 @@ export default function ProductDetail(): React.ReactElement {
 
 ### src/pages/products/ProductsPage.tsx
 
-- SHA: `cbd62c205f68`  
-- Ukuran: 5 KB
+- SHA: `7ec99ad9fa1f`  
+- Ukuran: 9 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
 // src/pages/products/ProductsPage.tsx
 import { useEffect, useMemo, useState, useCallback } from "react";
-import type { Product, ProductQuery, ProductCreatePayload, ProductUpdatePayload } from "../../types/product";
-import { createProduct, deleteProduct, listProducts, updateProduct } from "../../api/products";
+import type {
+  Product,
+  ProductQuery,
+  ProductCreatePayload,
+  ProductUpdatePayload,
+} from "../../types/product";
+import {
+  createProduct,
+  deleteProduct,
+  listProducts,
+  updateProduct,
+} from "../../api/products";
 
-// Jika kamu sudah punya API & types kategori, import saja seperti ini (sesuaikan path proyekmu):
 import { listCategories } from "../../api/categories";
 import type { Category } from "../../types/category";
 
@@ -17960,7 +24064,11 @@ type CategoryLite = Pick<Category, "id" | "nama">;
 
 export default function ProductsPage() {
   const [categories, setCategories] = useState<CategoryLite[]>([]);
-  const [query, setQuery] = useState<ProductQuery>({ page: 1, per_page: 10, sort: "-created_at" });
+  const [query, setQuery] = useState<ProductQuery>({
+    page: 1,
+    per_page: 10,
+    sort: "-created_at",
+  });
   const [rows, setRows] = useState<Product[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -18000,7 +24108,9 @@ export default function ProductsPage() {
   const page = useMemo(() => query.page ?? 1, [query]);
   const perPage = useMemo(() => query.per_page ?? 10, [query]);
 
-  async function handleSubmit(payload: ProductCreatePayload | ProductUpdatePayload) {
+  async function handleSubmit(
+    payload: ProductCreatePayload | ProductUpdatePayload
+  ) {
     if (editing?.id) {
       await updateProduct(editing.id, payload);
     } else {
@@ -18015,75 +24125,204 @@ export default function ProductsPage() {
     deleteProduct(row.id).then(refresh);
   }
 
+  const headerWrap: React.CSSProperties = {
+    display: "flex",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+    gap: "1rem",
+    flexWrap: "wrap",
+  };
+
+  const titleStyle: React.CSSProperties = {
+    margin: 0,
+    fontSize: "1.6rem",
+    fontWeight: 800,
+    letterSpacing: "-0.02em",
+    lineHeight: 1.2,
+    color: "var(--color-text)",
+  };
+
+  const subStyle: React.CSSProperties = {
+    margin: "0.35rem 0 0 0",
+    fontSize: "0.95rem",
+    opacity: 0.75,
+  };
+
+  const cardHeader: React.CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "1rem",
+    flexWrap: "wrap",
+    marginBottom: "0.9rem",
+  };
+
+  const cardTitle: React.CSSProperties = {
+    fontWeight: 800,
+    letterSpacing: "-0.01em",
+  };
+
+  const metaPillsWrap: React.CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    gap: "0.5rem",
+    flexWrap: "wrap",
+  };
+
   return (
-    <div className="page page--stack">
-      {/* Header */}
-      <div className="page-header row row--between">
-        <h1 className="page-title">Produk</h1>
-        <button
-          className="button button-primary"
-          onClick={() => {
-            setEditing(null);
-            setDialogOpen(true);
-          }}
-        >
-          Tambah Produk
-        </button>
+    <div className="container">
+      {/* ====== Page Header ====== */}
+      <div className="section">
+        <div style={headerWrap}>
+          <div style={{ minWidth: 240 }}>
+            <h1 style={titleStyle}>Produk</h1>
+            <p style={subStyle}>
+              Kelola data produk, varian, dan media. Tampilan dirapikan tanpa
+              mengubah logika.
+            </p>
+          </div>
+
+          <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap" }}>
+            <button
+              className="button button-outline"
+              type="button"
+              onClick={refresh}
+              disabled={loading}
+              style={{ borderRadius: "999px" }}
+            >
+              {loading ? "Memuat…" : "Refresh"}
+            </button>
+
+            <button
+              className="button button-primary"
+              type="button"
+              onClick={() => {
+                setEditing(null);
+                setDialogOpen(true);
+              }}
+              style={{ borderRadius: "999px" }}
+            >
+              Tambah Produk
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Filters */}
-      <div className="card">
-        <ProductFilters value={query} categories={categories} onChange={setQuery} />
+      {/* ====== Filters Card ====== */}
+      <div className="section">
+        <div className="card p-5">
+          <div style={cardHeader}>
+            <div style={cardTitle}>Filter Produk</div>
+            <div style={metaPillsWrap}>
+              <span className="badge" style={{ borderRadius: "999px" }}>
+                Total: {total}
+              </span>
+              <span className="badge" style={{ borderRadius: "999px" }}>
+                Per halaman: {perPage}
+              </span>
+              <span className="badge" style={{ borderRadius: "999px" }}>
+                Halaman: {page}
+              </span>
+            </div>
+          </div>
+
+          <ProductFilters value={query} categories={categories} onChange={setQuery} />
+        </div>
       </div>
 
-      {/* Table */}
-      <div className="card">
-        <ProductTable
-          rows={rows}
-          loading={loading}
-          page={page}
-          perPage={perPage}
-          total={total}
-          onPageChange={(p) => setQuery((q) => ({ ...q, page: p }))}
-          onEdit={(r) => {
-            setEditing(r);
-            setDialogOpen(true);
-          }}
-          onVariants={(r) => setVariantsFor(r)}
-          onMedia={(r) => setMediaFor(r)}
-          onDelete={onDelete}
-        />
+      {/* ====== Table Card ====== */}
+      <div className="section">
+        <div className="card p-5">
+          <div style={cardHeader}>
+            <div style={cardTitle}>Daftar Produk</div>
+
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+              <span
+                className={loading ? "badge badge-warning" : "badge badge-success"}
+                style={{ borderRadius: "999px" }}
+              >
+                {loading ? "Loading" : "Ready"}
+              </span>
+            </div>
+          </div>
+
+          <ProductTable
+            rows={rows}
+            loading={loading}
+            page={page}
+            perPage={perPage}
+            total={total}
+            onPageChange={(p) => setQuery((q) => ({ ...q, page: p }))}
+            onEdit={(r) => {
+              setEditing(r);
+              setDialogOpen(true);
+            }}
+            onVariants={(r) => setVariantsFor(r)}
+            onMedia={(r) => setMediaFor(r)}
+            onDelete={onDelete}
+          />
+        </div>
       </div>
 
-      {/* Variants Dialog */}
+      {/* ====== Variants Dialog ====== */}
       {variantsFor && (
         <div className="dialog is-open" role="dialog" aria-modal="true">
           <div className="dialog__overlay" onClick={() => setVariantsFor(null)} />
           <div className="dialog__content card card--lg">
-            <div className="row row--between">
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "1rem",
+                flexWrap: "wrap",
+                marginBottom: "0.75rem",
+              }}
+            >
               <div className="title-sm">Varian — {variantsFor.nama}</div>
-              <button className="button" onClick={() => setVariantsFor(null)}>Tutup</button>
+              <button
+                className="button button-outline"
+                style={{ borderRadius: "999px" }}
+                onClick={() => setVariantsFor(null)}
+              >
+                Tutup
+              </button>
             </div>
             <VariantManager productId={variantsFor.id} />
           </div>
         </div>
       )}
 
-      {/* Media Dialog */}
+      {/* ====== Media Dialog ====== */}
       {mediaFor && (
         <div className="dialog is-open" role="dialog" aria-modal="true">
           <div className="dialog__overlay" onClick={() => setMediaFor(null)} />
           <div className="dialog__content card card--lg">
-            <div className="row row--between">
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "1rem",
+                flexWrap: "wrap",
+                marginBottom: "0.75rem",
+              }}
+            >
               <div className="title-sm">Media — {mediaFor.nama}</div>
-              <button className="button" onClick={() => setMediaFor(null)}>Tutup</button>
+              <button
+                className="button button-outline"
+                style={{ borderRadius: "999px" }}
+                onClick={() => setMediaFor(null)}
+              >
+                Tutup
+              </button>
             </div>
             <ImageDropzone productId={mediaFor.id} />
           </div>
         </div>
       )}
 
-      {/* Create/Update Dialog */}
+      {/* ====== Create/Update Dialog ====== */}
       <ProductFormDialog
         open={dialogOpen}
         initial={editing}
@@ -18322,8 +24561,8 @@ export default function SettingsIndex() {
 
 ### src/pages/stock/StockIndex.tsx
 
-- SHA: `bbe14c76bed2`  
-- Ukuran: 8 KB
+- SHA: `48aa95af5558`  
+- Ukuran: 12 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -18351,13 +24590,15 @@ type QueryUpdater = (patch: Partial<StockQuery>) => void;
 
 function useQueryState() {
   const [q, setQ] = useState<StockQuery>({ page: 1, per_page: 10, low: false });
+
   const update: QueryUpdater = useCallback((patch) => {
-    setQ(prev => {
+    setQ((prev) => {
       const next = { ...prev, ...patch };
       const resetPage =
         (patch.cabang_id !== undefined && patch.cabang_id !== prev.cabang_id) ||
         (patch.gudang_id !== undefined && patch.gudang_id !== prev.gudang_id) ||
-        (patch.product_variant_id !== undefined && patch.product_variant_id !== prev.product_variant_id) ||
+        (patch.product_variant_id !== undefined &&
+          patch.product_variant_id !== prev.product_variant_id) ||
         (patch.low !== undefined && patch.low !== prev.low) ||
         (patch.per_page !== undefined && patch.per_page !== prev.per_page);
 
@@ -18367,7 +24608,7 @@ function useQueryState() {
   }, []);
 
   const setQDirect = useCallback((next: StockQuery) => {
-    setQ(prev => (shallowEqual(prev, next) ? prev : next));
+    setQ((prev) => (shallowEqual(prev, next) ? prev : next));
   }, []);
 
   return { q, update, setQ: setQDirect };
@@ -18428,8 +24669,14 @@ export default function StockIndex() {
     const qs = new URLSearchParams(
       Object.entries(stableQuery).reduce<Record<string, string>>((acc, [k, v]) => {
         if (v == null) return acc;
-        if (typeof v === "boolean") { acc[k] = v ? "1" : "0"; return acc; }
-        if (typeof v === "number") { if (!Number.isNaN(v)) acc[k] = String(v); return acc; }
+        if (typeof v === "boolean") {
+          acc[k] = v ? "1" : "0";
+          return acc;
+        }
+        if (typeof v === "number") {
+          if (!Number.isNaN(v)) acc[k] = String(v);
+          return acc;
+        }
         const s = String(v);
         if (s !== "") acc[k] = s;
         return acc;
@@ -18462,122 +24709,231 @@ export default function StockIndex() {
     if (mountedOnce.current) return;
     mountedOnce.current = true;
     void reload();
-    return () => { abortRef.current?.abort(); };
+    return () => {
+      abortRef.current?.abort();
+    };
   }, [reload]);
 
   useEffect(() => {
     if (!mountedOnce.current) return;
     void reload();
-    return () => { abortRef.current?.abort(); };
+    return () => {
+      abortRef.current?.abort();
+    };
   }, [reload]);
 
-  const onEditMin = useCallback(async (row: Stock) => {
-    const current = row.variant?.sku ?? String(row.product_variant_id);
-    const val = window.prompt(`Ubah Min Stok untuk SKU ${current}`, String(row.min_stok));
-    if (val == null) return;
+  const onEditMin = useCallback(
+    async (row: Stock) => {
+      const current = row.variant?.sku ?? String(row.product_variant_id);
+      const val = window.prompt(`Ubah Min Stok untuk SKU ${current}`, String(row.min_stok));
+      if (val == null) return;
 
-    const parsed = Number(val);
-    const payload: UpdateMinStockPayload = { min_stok: Number.isFinite(parsed) ? parsed : 0 };
+      const parsed = Number(val);
+      const payload: UpdateMinStockPayload = { min_stok: Number.isFinite(parsed) ? parsed : 0 };
 
-    try {
-      await updateMinStock(row.id, payload);
-      void reload();
-    } catch (e: unknown) {
-      window.alert(getErrorMessage(e, "Gagal update min stok"));
-    }
-  }, [reload]);
+      try {
+        await updateMinStock(row.id, payload);
+        void reload();
+      } catch (e: unknown) {
+        window.alert(getErrorMessage(e, "Gagal update min stok"));
+      }
+    },
+    [reload]
+  );
+
+  // --- UI helpers (tanpa ubah logika) ---
+  const totalText = useMemo(() => {
+    const n = rows?.length ?? 0;
+    return `${n} baris`;
+  }, [rows]);
 
   return (
     <div className="container">
-      {/* FILTERS */}
-      <div className="card mb-4">
-        <h2 className="mb-3">Manajemen Stok</h2>
+      {/* Header page: judul + aksi utama */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-end",
+          justifyContent: "space-between",
+          gap: 12,
+          flexWrap: "wrap",
+          marginBottom: 12,
+        }}
+      >
+        <div style={{ minWidth: 260 }}>
+          <h2 style={{ marginBottom: 4 }}>Manajemen Stok</h2>
+          <div className="text-dim" style={{ fontSize: ".92rem" }}>
+            Atur filter cabang/gudang/varian, pantau low stock, dan set stok awal.
+          </div>
+        </div>
 
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <span className="badge" title="Jumlah baris saat ini">
+            {loading ? "Memuat…" : totalText}
+          </span>
+
+          <button
+            onClick={() => setOpenSet(true)}
+            className="button button-primary"
+            style={{ whiteSpace: "nowrap" }}
+          >
+            Set Stok Awal
+          </button>
+        </div>
+      </div>
+
+      {/* Filters card */}
+      <div className="card mb-4">
         {/* Baris 1: Cabang | Gudang | Per Page */}
         <div className="form-row form-row--3 mb-3">
           <div>
-            <label className="mb-2">Cabang</label>
+            <label className="mb-2" style={{ display: "block", fontWeight: 700 }}>
+              Cabang
+            </label>
             <CabangSelect allowAll value={q.cabang_id} onChange={onCabangChange} />
+            <div className="text-dim" style={{ fontSize: ".85rem", marginTop: 6 }}>
+              Pilih cabang untuk memfilter gudang & stok.
+            </div>
           </div>
 
           <div>
-            <label className="mb-2">Gudang</label>
+            <label className="mb-2" style={{ display: "block", fontWeight: 700 }}>
+              Gudang
+            </label>
             <GudangSelect
               allowAll
               cabangId={q.cabang_id}
               value={q.gudang_id}
               onChange={onGudangChange}
             />
-          </div>
-
-          <div>
-            <label className="mb-2">Per Page</label>
-            <select
-              className="select"
-              value={q.per_page ?? 10}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => update({ per_page: Number(e.target.value) })}
-            >
-              {[10, 20, 50].map((n) => (
-                <option key={n} value={n}>{n}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Baris 2: Variant (lebar) | Low Stock | Tombol Set Stok */}
-        <div className="form-row form-row--3">
-          <div>
-            <label className="mb-2">Varian Produk</label>
-            <VariantPicker value={q.product_variant_id} onChange={onVariantChange} />
-          </div>
-
-          <div>
-            <label className="mb-2">Filter</label>
-            <div>
-              <label>
-                <input
-                  id="low"
-                  type="checkbox"
-                  checked={Boolean(q.low)}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => update({ low: e.target.checked })}
-                />{" "}
-                Hanya Low Stock
-              </label>
+            <div className="text-dim" style={{ fontSize: ".85rem", marginTop: 6 }}>
+              Gudang mengikuti cabang yang dipilih.
             </div>
           </div>
 
           <div>
-            <label className="mb-2">&nbsp;</label>
-            <button
-              onClick={() => setOpenSet(true)}
-              className="button button-primary"
+            <label className="mb-2" style={{ display: "block", fontWeight: 700 }}>
+              Per Page
+            </label>
+            <select
+              className="select"
+              value={q.per_page ?? 10}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                update({ per_page: Number(e.target.value) })
+              }
             >
-              Set Stok Awal
-            </button>
+              {[10, 20, 50].map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
+            <div className="text-dim" style={{ fontSize: ".85rem", marginTop: 6 }}>
+              Mengatur jumlah data per halaman.
+            </div>
+          </div>
+        </div>
+
+        {/* Divider halus (tanpa perlu CSS baru) */}
+        <div
+          style={{
+            height: 1,
+            background: "rgba(0,0,0,0.06)",
+            margin: "12px 0",
+          }}
+        />
+
+        {/* Baris 2: Varian (lebar) | Filter Low Stock */}
+        <div className="form-row form-row--3">
+          <div style={{ gridColumn: "1 / -1" }}>
+            <label className="mb-2" style={{ display: "block", fontWeight: 700 }}>
+              Varian Produk
+            </label>
+            <VariantPicker value={q.product_variant_id} onChange={onVariantChange} />
+            <div className="text-dim" style={{ fontSize: ".85rem", marginTop: 6 }}>
+              Opsional. Pilih varian untuk mempersempit hasil.
+            </div>
+          </div>
+
+          <div style={{ gridColumn: "1 / -1" }}>
+            <label className="mb-2" style={{ display: "block", fontWeight: 700 }}>
+              Filter
+            </label>
+
+            <label
+              htmlFor="low"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "10px 12px",
+                border: "1px solid rgba(0,0,0,0.10)",
+                borderRadius: 12,
+                background: "rgba(0,0,0,0.02)",
+                cursor: "pointer",
+                userSelect: "none",
+              }}
+            >
+              <input
+                id="low"
+                type="checkbox"
+                checked={Boolean(q.low)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  update({ low: e.target.checked })
+                }
+              />
+              <div>
+                <div style={{ fontWeight: 700, lineHeight: 1.2 }}>Hanya Low Stock</div>
+                <div className="text-dim" style={{ fontSize: ".85rem", marginTop: 2 }}>
+                  Tampilkan stok yang berada di bawah min stok.
+                </div>
+              </div>
+            </label>
           </div>
         </div>
       </div>
 
-      {/* ERROR */}
+      {/* Error */}
       {error && (
         <div className="card mb-4">
-          <div className="badge badge-danger" style={{ marginRight: 8 }}>Error</div>
-          <span>{error}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <span className="badge badge-danger">Error</span>
+            <span>{error}</span>
+            <button
+              className="button button-outline"
+              onClick={() => void reload()}
+              style={{ marginLeft: "auto" }}
+            >
+              Coba lagi
+            </button>
+          </div>
         </div>
       )}
 
-      {/* TABLE */}
+      {/* Table */}
       <div className="card">
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+            flexWrap: "wrap",
+            marginBottom: 12,
+          }}
+        >
+          <div style={{ fontWeight: 800 }}>Daftar Stok</div>
+          <div className="text-dim" style={{ fontSize: ".9rem" }}>
+            {loading ? "Sedang memuat data…" : "Klik aksi pada tabel untuk ubah Min Stok."}
+          </div>
+        </div>
+
         <StockTable rows={rows} loading={loading} onEditMin={onEditMin} />
       </div>
 
-      {/* DIALOG */}
+      {/* Dialog */}
       {openSet && (
-        <SetInitialStockDialog
-          open={openSet}
-          onClose={() => setOpenSet(false)}
-          onSuccess={reload}
-        />
+        <SetInitialStockDialog open={openSet} onClose={() => setOpenSet(false)} onSuccess={reload} />
       )}
     </div>
   );
