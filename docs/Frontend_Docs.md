@@ -1,6 +1,6 @@
 # Dokumentasi Frontend (FULL Source)
 
-_Dihasilkan otomatis: 2026-01-31 17:01:32_  
+_Dihasilkan otomatis: 2026-01-31 19:45:00_  
 **Root:** `/home/galuhdwicandra/workspace/clone_prime/frontend`
 
 
@@ -21957,8 +21957,8 @@ export default function WarehousesPage(): React.ReactElement {
 
 ### src/pages/pos/Orders.tsx
 
-- SHA: `290289fa173b`  
-- Ukuran: 13 KB
+- SHA: `cc85f244470d`  
+- Ukuran: 16 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -22047,6 +22047,12 @@ export default function OrdersPage(): React.ReactElement {
   const quote = useCart((s) => s.quote);
   const add = useCart((s) => s.add);
 
+  type Variant = { id: number; nama?: string; sku?: string; is_active?: boolean };
+
+  const [variantOpen, setVariantOpen] = useState(false);
+  const [variantProductName, setVariantProductName] = useState<string>("");
+  const [variantOptions, setVariantOptions] = useState<Variant[]>([]);
+
   const hasItems = items.length > 0;
   const scoped = Boolean(warehouse?.id && branch?.id);
   const grand = quote?.totals?.grand_total ?? 0;
@@ -22075,16 +22081,25 @@ export default function OrdersPage(): React.ReactElement {
 
   // Klik kartu produk → tambah 1 ke cart (ambil varian pertama bila ada)
   const onPickProduct = async (p: Product): Promise<void> => {
-    let variantId =
+    let variants: Variant[] =
       Array.isArray(p.variants) && p.variants.length > 0
-        ? Number(p.variants.find((v) => v.is_active)?.id ?? p.variants[0].id)
-        : null;
+        ? (p.variants as unknown as Variant[])
+        : [];
 
-    if (!variantId) {
-      const variants = await listVariants(p.id);
-      const v = variants.find((x) => x.is_active) ?? variants[0];
-      variantId = v ? Number(v.id) : null;
+    if (variants.length === 0) {
+      const apiVariants = await listVariants(p.id);
+      variants = Array.isArray(apiVariants) ? (apiVariants as unknown as Variant[]) : [];
     }
+
+    if (variants.length > 1) {
+      setVariantProductName((p as any)?.nama ?? "Produk");
+      setVariantOptions(variants);
+      setVariantOpen(true);
+      return;
+    }
+
+    const v = variants.find((x) => x.is_active) ?? variants[0];
+    const variantId = v ? Number(v.id) : null;
 
     if (!variantId || !Number.isFinite(variantId)) {
       console.warn("Tidak bisa menambahkan item: produk tidak memiliki variant yang valid.");
@@ -22266,6 +22281,68 @@ export default function OrdersPage(): React.ReactElement {
       {lastOrder && (
         <div className="card" style={{ marginTop: 16 }}>
           <ReceiptPreview orderId={lastOrder.id} phone={undefined} />
+        </div>
+      )}
+      {variantOpen && (
+        <div
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setVariantOpen(false);
+          }}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 9999,
+            background: "rgba(0,0,0,0.45)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 16,
+          }}
+        >
+          <div className="card" style={{ width: "100%", maxWidth: 640 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontWeight: 900, fontSize: 16 }}>Pilih Variant</div>
+                <div style={{ fontSize: 12, opacity: 0.75 }}>{variantProductName}</div>
+              </div>
+              <button className="button button-ghost" onClick={() => setVariantOpen(false)} type="button">
+                ✕
+              </button>
+            </div>
+
+            <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
+              {variantOptions.map((v) => (
+                <button
+                  key={v.id}
+                  type="button"
+                  className="button"
+                  onClick={() => {
+                    const variantId = Number(v.id);
+                    if (!Number.isFinite(variantId)) return;
+                    add({ variant_id: variantId, qty: 1 });
+                    setVariantOpen(false);
+                  }}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "12px 14px",
+                    borderRadius: 14,
+                  }}
+                >
+                  <div style={{ textAlign: "left", minWidth: 0 }}>
+                    <div style={{ fontWeight: 800, lineHeight: 1.1 }}>
+                      {v.nama ?? v.sku ?? `Variant #${v.id}`}
+                    </div>
+                    <div style={{ fontSize: 12, opacity: 0.75, marginTop: 4 }}>
+                      {v.sku ? `SKU: ${v.sku}` : ""}
+                    </div>
+                  </div>
+                  <span className="badge">Pilih</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>
