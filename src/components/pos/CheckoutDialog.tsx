@@ -7,6 +7,9 @@ import { checkout } from "../../api/pos";
 import CustomerSelect from "../customers/CustomerSelect";
 import type { Customer } from "../../types/customers";
 
+import { createCustomer } from "../../api/customers";
+import { useAuth } from "../../store/auth";
+
 type Props = {
   open: boolean;
   onClose: () => void;
@@ -68,6 +71,50 @@ export default function CheckoutDialog({
   // State proses
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  const { hasRole } = useAuth();
+
+  const canCreateCustomer =
+    hasRole("superadmin") ||
+    hasRole("admin_cabang") ||
+    hasRole("kasir") ||
+    hasRole("sales");
+
+  const [creatingCustomer, setCreatingCustomer] = useState(false);
+
+  const handleCreateCustomer = useCallback(async () => {
+    if (!canCreateCustomer || creatingCustomer) return;
+
+    const namaBaru = window.prompt("Nama pelanggan?")?.trim();
+    if (!namaBaru) return;
+
+    const phoneBaru = window.prompt("No HP (contoh 08xxxxxxxxxx)?")?.trim();
+    if (!phoneBaru) return;
+
+    setCreatingCustomer(true);
+    setErr(null);
+
+    try {
+      const c = await createCustomer({
+        branch_id: branchId,     // penting: supaya customer masuk cabang yang sedang diproses
+        nama: namaBaru,
+        phone: phoneBaru,
+      });
+
+      setSelectedCustomer(c);
+
+      // opsional: prefilling juga langsung (biar terasa “langsung kepilih”)
+      setNama((v) => v || c.nama || "");
+      setPhone((v) => v || c.phone || "");
+      setAlamat((v) => v || c.alamat || "");
+    } catch (e) {
+      const msg = (e as Error)?.message || "Gagal membuat pelanggan.";
+      setErr(msg);
+    } finally {
+      setCreatingCustomer(false);
+    }
+  }, [canCreateCustomer, creatingCustomer, branchId]);
+
 
   // Sinkronisasi jumlah saat total berubah
   useEffect(() => {
@@ -143,10 +190,10 @@ export default function CheckoutDialog({
         customer_id: selectedCustomer?.id,
         customer: nama || phone || alamat || selectedCustomer
           ? {
-              nama: nama || selectedCustomer?.nama || "",
-              phone: phone || selectedCustomer?.phone || "",
-              alamat: alamat || selectedCustomer?.alamat || "",
-            }
+            nama: nama || selectedCustomer?.nama || "",
+            phone: phone || selectedCustomer?.phone || "",
+            alamat: alamat || selectedCustomer?.alamat || "",
+          }
           : undefined,
         cash_position: cashPosition,
       };
@@ -368,7 +415,27 @@ export default function CheckoutDialog({
               <div className="form-row">
                 <div className="form-field" style={{ width: "100%" }}>
                   <label className="label">Pelanggan Terdaftar</label>
-                  <CustomerSelect branchId={branchId} value={selectedCustomer} onChange={setSelectedCustomer} />
+
+                  <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                    <div style={{ flex: 1, minWidth: 240 }}>
+                      <CustomerSelect branchId={branchId} value={selectedCustomer} onChange={setSelectedCustomer} />
+                    </div>
+
+                    {canCreateCustomer && (
+                      <button
+                        type="button"
+                        className="button button-outline"
+                        onClick={() => void handleCreateCustomer()}
+                        disabled={creatingCustomer || loading}
+                        aria-disabled={creatingCustomer || loading}
+                        title="Buat pelanggan baru tanpa pindah halaman"
+                        style={{ whiteSpace: "nowrap" }}
+                      >
+                        {creatingCustomer ? "Membuat…" : "+ Pelanggan Baru"}
+                      </button>
+                    )}
+                  </div>
+
                   <div className="muted text-xs" style={{ marginTop: 6 }}>
                     Pilih pelanggan untuk mem-prefill nama/HP/alamat. Data ini akan di-snapshot ke order.
                   </div>

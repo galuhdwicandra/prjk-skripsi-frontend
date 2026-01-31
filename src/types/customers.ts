@@ -74,3 +74,12 @@ export interface CustomerTimelineEvent {
     happened_at: string;
     created_at: string;
 }
+
+export interface CustomerUpsertPayload {
+  branch_id?: number; // ✅ opsional, untuk Orders/Customers multi-cabang
+  nama: string;
+  phone: string;
+  email?: string | null;
+  alamat?: string | null;
+  catatan?: string | null;
+}
