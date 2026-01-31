@@ -1,6 +1,6 @@
 # Dokumentasi Frontend (FULL Source)
 
-_Dihasilkan otomatis: 2026-02-01 00:53:04_  
+_Dihasilkan otomatis: 2026-02-01 02:46:49_  
 **Root:** `/home/galuhdwicandra/workspace/clone_prime/frontend`
 
 
@@ -261,7 +261,7 @@ export function assertFilesBaseOrWarn(): void {
 
 ### src/api/accounting.ts
 
-- SHA: `420bb6ef8ecc`  
+- SHA: `3bb4f859a679`  
 - Ukuran: 6 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
@@ -283,6 +283,7 @@ import type {
     ReportQuery,
 } from "../types/accounting";
 import type { Paginated } from "../types/http";
+import type { BalanceSheetAgg } from "../types/accounting";
 
 // ========== Accounts ==========
 export async function listAccounts(params?: {
@@ -433,12 +434,17 @@ export async function getProfitLoss(q: ReportQuery): Promise<ProfitLossAgg> {
     return out as unknown as ProfitLossAgg;
 }
 
-export async function getBalanceSheet(q: ReportQuery) {
-    const resp = await api.get("/accounting/reports/balance-sheet", { params: q });
-    const obj = (resp.data?.data ?? resp.data) as Record<string, number | string>;
-    const out: Record<string, number> = {};
-    for (const k of Object.keys(obj)) out[k] = toNum((obj as any)[k]);
-    return out;
+export async function getBalanceSheet(q: ReportQuery): Promise<BalanceSheetAgg> {
+  const resp = await api.get("/accounting/reports/balance-sheet", { params: q });
+
+  // raw = objek hasil backend: { Asset: {debit, credit}, Liability: {...}, Equity: {...} }
+  const raw = (resp.data?.data ?? resp.data) as Record<string, { debit: unknown; credit: unknown }>;
+
+  const out: Record<string, { debit: number; credit: number }> = {};
+  for (const [k, v] of Object.entries(raw)) {
+    out[k] = { debit: toNum(v?.debit), credit: toNum(v?.credit) };
+  }
+  return out as unknown as BalanceSheetAgg;
 }
 
 ```
@@ -2506,7 +2512,7 @@ export async function deleteWarehouse(id: number): Promise<void> {
 
 ### src/types/accounting.ts
 
-- SHA: `28804d78c494`  
+- SHA: `b7acffb6842e`  
 - Ukuran: 3 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
@@ -2632,6 +2638,12 @@ export type ReportQuery = Partial<{
 
 // generic pagination types already exist in src/types/http.ts
 export type { Paginated, PaginatedMeta } from "./http";
+
+export type BalanceSheetAgg = {
+  Asset?: { debit: number; credit: number };
+  Liability?: { debit: number; credit: number };
+  Equity?: { debit: number; credit: number };
+};
 
 ```
 </details>
@@ -4012,7 +4024,7 @@ export default function AccountTable({ onEdit, onDelete }: Props) {
 
 ### src/components/accounting/JournalEditor.tsx
 
-- SHA: `8fbb37e4531d`  
+- SHA: `45c80da947db`  
 - Ukuran: 5 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
@@ -4044,7 +4056,14 @@ export default function JournalEditor({ lines, onChange, accounts, readOnly = fa
   function addLine() {
     onChange([
       ...lines,
-      { account_id: accounts[0]?.id ?? 0, cabang_id: 0, debit: 0, credit: 0, ref_type: null, ref_id: null },
+      {
+        account_id: 0,
+        cabang_id: lines[0]?.cabang_id ?? 0,
+        debit: 0,
+        credit: 0,
+        ref_type: null,
+        ref_id: null,
+      },
     ]);
   }
 
@@ -4077,9 +4096,10 @@ export default function JournalEditor({ lines, onChange, accounts, readOnly = fa
                     onChange={(e) => setLine(i, { account_id: Number(e.target.value) })}
                     disabled={readOnly}
                   >
+                    <option value={0} disabled>-- Pilih akun --</option>
                     {accounts.map((a) => (
                       <option key={a.id} value={a.id}>
-                        {a.code} — {a.name}
+                        {a.name}
                       </option>
                     ))}
                   </select>
@@ -17216,8 +17236,8 @@ function AccountFormMini(props: {
 
 ### src/pages/accounting/AccountingJournalsIndex.tsx
 
-- SHA: `1baa6a2105db`  
-- Ukuran: 11 KB
+- SHA: `574e9eeda944`  
+- Ukuran: 13 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -17252,6 +17272,34 @@ export default function AccountingJournalsIndex() {
   const [editorOpen, setEditorOpen] = useState(false);
   const [lines, setLines] = useState<JournalLine[]>([]);
   const [accounts, setAccounts] = useState<{ id: number; code: string; name: string }[]>([]);
+  const [journalNumber, setJournalNumber] = useState<string>("");
+  const [journalNumberOptions, setJournalNumberOptions] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!editorOpen) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setEditorOpen(false);
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [editorOpen]);
+
+  useEffect(() => {
+    if (!editorOpen) return;
+
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const base = `JRNL-${y}${m}${day}`;
+    const options = Array.from({ length: 10 }, (_, i) => `${base}-${String(i + 1).padStart(4, "0")}`);
+
+    setJournalNumber(options[0]);
+    setJournalNumberOptions(options);
+  }, [editorOpen]);
+
 
   // helper refresh (biar tidak duplikasi panggilan list)
   const refresh = useCallback(async () => {
@@ -17274,7 +17322,8 @@ export default function AccountingJournalsIndex() {
           })(),
         ]);
         setRows(j.data);
-        setAccounts(a);
+        const sorted = a.slice().sort((x, y) => (x.code || "").localeCompare(y.code || ""));
+         setAccounts(sorted);
       } catch {
         setErr("Gagal memuat jurnal.");
       } finally {
@@ -17507,43 +17556,92 @@ export default function AccountingJournalsIndex() {
         </div>
       </div>
 
-      {/* Inline dialog editor (Card) */}
+      {/* Popup (Modal) - Jurnal Baru */}
       {editorOpen && (
-        <div className="card">
-          <div className="card__body">
-            <div className="card__title">Jurnal Baru</div>
+        <div
+          className="modal-overlay"
+          onMouseDown={(e) => {
+            // klik backdrop => tutup
+            if (e.target === e.currentTarget) setEditorOpen(false);
+          }}
+        >
+          <div
+            className="modal card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="journal-dialog-title"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <div className="modal-header">
+              <h2 className="modal-title" id="journal-dialog-title">
+                Jurnal Baru
+              </h2>
 
-            <div className="form-row form-row--3" style={{ marginBottom: 12 }}>
-              <div className="form-field">
-                <label className="form-label" htmlFor="je-date">Tanggal</label>
-                <input type="date" className="input" id="je-date" defaultValue={new Date().toISOString().slice(0, 10)} />
-              </div>
-              <div className="form-field">
-                <label className="form-label" htmlFor="je-number">Nomor</label>
-                <input type="text" className="input" id="je-number" placeholder="Nomor jurnal" />
-              </div>
-              <div className="form-field">
-                <label className="form-label" htmlFor="je-desc">Deskripsi</label>
-                <input type="text" className="input" id="je-desc" placeholder="Deskripsi (opsional)" />
-              </div>
+              <button
+                className="button button-ghost"
+                type="button"
+                onClick={() => setEditorOpen(false)}
+              >
+                Tutup
+              </button>
             </div>
 
-            <JournalEditor lines={lines} onChange={setLines} accounts={accounts} />
+            <div className="card__body">
+              <div className="form-row form-row--3" style={{ marginBottom: 12 }}>
+                <div className="form-field">
+                  <label className="form-label" htmlFor="je-date">Tanggal</label>
+                  <input
+                    type="date"
+                    className="input"
+                    id="je-date"
+                    defaultValue={new Date().toISOString().slice(0, 10)}
+                  />
+                </div>
 
-            <div className="form-actions">
+                <div className="form-field">
+                  <label className="form-label" htmlFor="je-number">Nomor</label>
+
+                  <select
+                    id="je-number"
+                    className="input"
+                    value={journalNumber}
+                    onChange={(e) => setJournalNumber(e.target.value)}
+                  >
+                    {journalNumberOptions.map((n) => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                  </select>
+
+                  <div className="help-text" style={{ marginTop: 6 }}>
+                    Pilih nomor jurnal dari daftar (format konsisten).
+                  </div>
+                </div>
+
+                <div className="form-field">
+                  <label className="form-label" htmlFor="je-desc">Deskripsi</label>
+                  <input type="text" className="input" id="je-desc" placeholder="Deskripsi (opsional)" />
+                </div>
+              </div>
+
+              <JournalEditor lines={lines} onChange={setLines} accounts={accounts} />
+            </div>
+
+            <div className="modal-actions">
               <button
                 className="button button-primary"
+                type="button"
                 onClick={() =>
                   onSave(
                     (document.getElementById("je-date") as HTMLInputElement).value,
-                    (document.getElementById("je-number") as HTMLInputElement).value,
+                    journalNumber,
                     (document.getElementById("je-desc") as HTMLInputElement).value || null
                   )
                 }
               >
                 Simpan
               </button>
-              <button className="button" onClick={() => setEditorOpen(false)}>
+
+              <button className="button" type="button" onClick={() => setEditorOpen(false)}>
                 Batal
               </button>
             </div>
@@ -17559,8 +17657,8 @@ export default function AccountingJournalsIndex() {
 
 ### src/pages/accounting/AccountingReports.tsx
 
-- SHA: `756bbf3dc58b`  
-- Ukuran: 9 KB
+- SHA: `351c11145fca`  
+- Ukuran: 13 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -17568,6 +17666,7 @@ export default function AccountingJournalsIndex() {
 import { useEffect, useState, useCallback } from "react";
 import { getTrialBalance, getGeneralLedger, getProfitLoss, getBalanceSheet } from "../../api/accounting";
 import type { TrialBalanceRow, GLRow, ID } from "../../types/accounting";
+import type { BalanceSheetAgg, ProfitLossAgg } from "../../types/accounting";
 import { useAuth } from "../../store/auth";
 
 export default function AccountingReports() {
@@ -17580,8 +17679,9 @@ export default function AccountingReports() {
 
   const [tb, setTb] = useState<TrialBalanceRow[] | null>(null);
   const [gl, setGl] = useState<GLRow[] | null>(null);
-  const [pl, setPl] = useState<Record<string, { debit: number; credit: number }> | null>(null);
-  const [bs, setBs] = useState<Record<string, number> | null>(null);
+  const [pl, setPl] = useState<ProfitLossAgg | null>(null);
+  const [bs, setBs] = useState<BalanceSheetAgg | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // formatter uang (tanpa koma desimal, konsisten dengan style id-ID)
   const fmt = useCallback((n: number) => {
@@ -17599,6 +17699,14 @@ export default function AccountingReports() {
 
   const refresh = useCallback(async () => {
     const cabang_id = getCabangId();
+    setError(null);
+
+    if (!cabang_id) {
+      setError("Cabang tidak terdeteksi. Pastikan user memiliki cabang_id (branch/cabang) yang valid.");
+      setTb([]); setGl([]); setPl({}); setBs({});
+      return;
+    }
+
     try {
       if (tab === "TB") {
         const data = await getTrialBalance({ cabang_id, year, month });
@@ -17606,7 +17714,10 @@ export default function AccountingReports() {
         return;
       }
       if (tab === "GL") {
-        if (!accountId) { setGl([]); setTb(null); setPl(null); setBs(null); return; }
+        if (!accountId) {
+          setGl([]); setTb(null); setPl(null); setBs(null);
+          return;
+        }
         const data = await getGeneralLedger({ cabang_id, year, month, account_id: accountId });
         setGl(data); setTb(null); setPl(null); setBs(null);
         return;
@@ -17621,8 +17732,18 @@ export default function AccountingReports() {
         setBs(data); setTb(null); setGl(null); setPl(null);
         return;
       }
-    } catch {
-      // opsional: tampilkan alert error global kalau sudah punya mekanisme toast
+    } catch (e: any) {
+      // tampilkan error apa adanya kalau ada response message dari backend
+      const msg =
+        e?.response?.data?.message ||
+        e?.message ||
+        "Gagal memuat report. Cek Network/Console (401/403/500) dan pastikan ada jurnal POSTED di periode ini.";
+      setError(String(msg));
+      // set ke empty supaya UI tetap konsisten
+      if (tab === "TB") setTb([]);
+      if (tab === "GL") setGl([]);
+      if (tab === "PL") setPl({});
+      if (tab === "BS") setBs({});
     }
   }, [getCabangId, tab, year, month, accountId]);
 
@@ -17688,6 +17809,11 @@ export default function AccountingReports() {
           </div>
         </div>
       </div>
+      {error && (
+        <div className="alert alert-danger" style={{ marginBottom: 12 }}>
+          {error}
+        </div>
+      )}
 
       {/* Trial Balance */}
       {tab === "TB" && (
@@ -17782,8 +17908,43 @@ export default function AccountingReports() {
       {/* Profit & Loss */}
       {tab === "PL" && (
         <div className="card" style={{ marginBottom: 12 }}>
-          <div className="card__body">
-            <pre className="code-block">{JSON.stringify(pl ?? {}, null, 2)}</pre>
+          <div className="card__body" style={{ padding: 0 }}>
+            <div className="table-responsive">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Kelompok</th>
+                    <th className="text-right">Debit</th>
+                    <th className="text-right">Kredit</th>
+                    <th className="text-right">Net</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(pl ?? {}).map(([k, v]) => {
+                    const debit = Number(v?.debit ?? 0);
+                    const credit = Number(v?.credit ?? 0);
+                    const net = credit - debit; // revenue normal credit, expense normal debit; ini tetap “indikatif”
+                    return (
+                      <tr key={k}>
+                        <td>{k}</td>
+                        <td className="text-right">{fmt(debit)}</td>
+                        <td className="text-right">{fmt(credit)}</td>
+                        <td className="text-right">{fmt(net)}</td>
+                      </tr>
+                    );
+                  })}
+                  {Object.keys(pl ?? {}).length === 0 && (
+                    <tr>
+                      <td colSpan={4}>
+                        <div className="empty text-muted">
+                          Tidak ada data. Pastikan ada jurnal berstatus POSTED untuk periode ini.
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
@@ -17791,8 +17952,63 @@ export default function AccountingReports() {
       {/* Balance Sheet */}
       {tab === "BS" && (
         <div className="card" style={{ marginBottom: 12 }}>
-          <div className="card__body">
-            <pre className="code-block">{JSON.stringify(bs ?? {}, null, 2)}</pre>
+          <div className="card__body" style={{ padding: 0 }}>
+            <div className="table-responsive">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Kelompok</th>
+                    <th className="text-right">Debit</th>
+                    <th className="text-right">Kredit</th>
+                    <th className="text-right">Saldo (Net)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(["Asset", "Liability", "Equity"] as const).map((k) => {
+                    const row = (bs as any)?.[k];
+                    const debit = Number(row?.debit ?? 0);
+                    const credit = Number(row?.credit ?? 0);
+                    const net = k === "Asset" ? debit - credit : credit - debit; // normal balance
+                    return (
+                      <tr key={k}>
+                        <td>{k}</td>
+                        <td className="text-right">{fmt(debit)}</td>
+                        <td className="text-right">{fmt(credit)}</td>
+                        <td className="text-right">{fmt(net)}</td>
+                      </tr>
+                    );
+                  })}
+
+                  {(() => {
+                    const a = (bs as any)?.Asset;
+                    const l = (bs as any)?.Liability;
+                    const e = (bs as any)?.Equity;
+                    const asset = (Number(a?.debit ?? 0) - Number(a?.credit ?? 0));
+                    const lia = (Number(l?.credit ?? 0) - Number(l?.debit ?? 0));
+                    const eq = (Number(e?.credit ?? 0) - Number(e?.debit ?? 0));
+                    const diff = asset - (lia + eq);
+
+                    const empty = !bs || Object.keys(bs as any).length === 0;
+                    if (empty) return (
+                      <tr>
+                        <td colSpan={4}>
+                          <div className="empty text-muted">
+                            Tidak ada data. Pastikan ada jurnal berstatus POSTED untuk periode ini.
+                          </div>
+                        </td>
+                      </tr>
+                    );
+
+                    return (
+                      <tr>
+                        <td><strong>Selisih (Asset - (Liability + Equity))</strong></td>
+                        <td colSpan={3} className="text-right"><strong>{fmt(diff)}</strong></td>
+                      </tr>
+                    );
+                  })()}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
@@ -24546,7 +24762,7 @@ export default function ProductsPage() {
 
 ### src/pages/settings/SettingsIndex.tsx
 
-- SHA: `59cf46f23fe1`  
+- SHA: `45a79e41c204`  
 - Ukuran: 7 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
@@ -24555,9 +24771,9 @@ export default function ProductsPage() {
 import { useEffect, useState } from 'react';
 import { listSettings } from '../../api/settings';
 import type { LaravelPaginator, Setting, SettingQuery, SettingScope } from '../../types/settings';
-import SettingsForm from '../../components/settings/SettingsForm';
-import PreferenceToggles from '../../components/settings/PreferenceToggles';
-import BackupRestorePanel from '../../components/settings/BackupRestorePanel';
+// import SettingsForm from '../../components/settings/SettingsForm';
+// import PreferenceToggles from '../../components/settings/PreferenceToggles';
+// import BackupRestorePanel from '../../components/settings/BackupRestorePanel';
 import { useAuth } from '../../store/auth';
 
 export default function SettingsIndex() {
@@ -24588,11 +24804,11 @@ export default function SettingsIndex() {
     };
   }, [query]);
 
-  const defaultScope: SettingScope = hasRole('superadmin')
-    ? 'GLOBAL'
-    : hasRole('admin_cabang')
-    ? 'BRANCH'
-    : 'USER';
+  // const defaultScope: SettingScope = hasRole('superadmin')
+  //   ? 'GLOBAL'
+  //   : hasRole('admin_cabang')
+  //   ? 'BRANCH'
+  //   : 'USER';
 
   if (!canAccess) {
     return (
@@ -24617,7 +24833,7 @@ export default function SettingsIndex() {
 
       {/* Cards Grid (stacked mobile-first) */}
       <div>
-        <div className="card" style={{ marginBottom: 16 }}>
+        {/* <div className="card" style={{ marginBottom: 16 }}>
           <h2 className="card-title">Numbering — Invoice</h2>
           <SettingsForm
             defaultScope={defaultScope}
@@ -24625,9 +24841,9 @@ export default function SettingsIndex() {
             settingKey="numbering.invoice"
             valueTemplate={{ prefix: 'INV-', pad: 6, reset: 'daily' }}
           />
-        </div>
+        </div> */}
 
-        <div className="card" style={{ marginBottom: 16 }}>
+        {/* <div className="card" style={{ marginBottom: 16 }}>
           <h2 className="card-title">Receipt Footer</h2>
           <SettingsForm
             defaultScope={defaultScope}
@@ -24635,9 +24851,9 @@ export default function SettingsIndex() {
             settingKey="receipt.footer"
             valueTemplate={{ line1: 'Terima kasih', line2: 'Follow @tokokue' }}
           />
-        </div>
+        </div> */}
 
-        <div className="card" style={{ marginBottom: 16 }}>
+        {/* <div className="card" style={{ marginBottom: 16 }}>
           <h2 className="card-title">UI Preferences</h2>
           <PreferenceToggles
             toggles={[
@@ -24645,12 +24861,12 @@ export default function SettingsIndex() {
               { key: 'ui.preferences', path: 'compactTables', label: 'Compact Tables (User)', defaultValue: false, scope: 'USER' },
             ]}
           />
-        </div>
+        </div> */}
 
-        <div className="card" style={{ marginBottom: 16 }}>
+        {/* <div className="card" style={{ marginBottom: 16 }}>
           <h2 className="card-title">Backup &amp; Restore</h2>
           <BackupRestorePanel />
-        </div>
+        </div> */}
       </div>
 
       {/* Current Settings Table */}

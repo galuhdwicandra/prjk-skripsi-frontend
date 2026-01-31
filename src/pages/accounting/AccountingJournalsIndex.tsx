@@ -11,9 +11,10 @@ export default function AccountingJournalsIndex() {
 
   const getCabangId = useCallback((): number => {
     if (!user) return 0;
-    // @ts-expect-error: toleransi berbagai bentuk field cabang pada User
-    const maybe = user.branch_id ?? user.branchId ?? user.cabang_id ?? user.cabangId ?? (user)?.branch?.id;
-    return typeof maybe === "number" && Number.isFinite(maybe) ? maybe : 0;
+    // di project Anda, field yang valid adalah cabang_id (lihat types/user.ts)
+    const raw = (user as unknown as { cabang_id?: number | string }).cabang_id;
+    const n = typeof raw === "string" ? Number(raw) : raw;
+    return Number.isFinite(n) && Number(n) > 0 ? Number(n) : 0;
   }, [user]);
 
   const [tab, setTab] = useState<"DRAFT" | "POSTED">("DRAFT");
@@ -29,6 +30,34 @@ export default function AccountingJournalsIndex() {
   const [editorOpen, setEditorOpen] = useState(false);
   const [lines, setLines] = useState<JournalLine[]>([]);
   const [accounts, setAccounts] = useState<{ id: number; code: string; name: string }[]>([]);
+  const [journalNumber, setJournalNumber] = useState<string>("");
+  const [journalNumberOptions, setJournalNumberOptions] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!editorOpen) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setEditorOpen(false);
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [editorOpen]);
+
+  useEffect(() => {
+    if (!editorOpen) return;
+
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const base = `JRNL-${y}${m}${day}`;
+    const options = Array.from({ length: 10 }, (_, i) => `${base}-${String(i + 1).padStart(4, "0")}`);
+
+    setJournalNumber(options[0]);
+    setJournalNumberOptions(options);
+  }, [editorOpen]);
+
 
   // helper refresh (biar tidak duplikasi panggilan list)
   const refresh = useCallback(async () => {
@@ -46,12 +75,16 @@ export default function AccountingJournalsIndex() {
         const [j, a] = await Promise.all([
           listJournals({ cabang_id: cid, status: tab, page: 1, per_page: 10 }),
           (async () => {
-            const res = await listAccounts({ per_page: 500, cabang_id: cid });
+            const res = await listAccounts({
+              per_page: 500,
+              ...(cid ? { cabang_id: cid } : {}), // kalau cid = 0, jangan kirim cabang_id
+            });
             return res.data.map((x) => ({ id: x.id, code: x.code, name: x.name }));
           })(),
         ]);
         setRows(j.data);
-        setAccounts(a);
+        const sorted = a.slice().sort((x, y) => (x.code || "").localeCompare(y.code || ""));
+        setAccounts(sorted);
       } catch {
         setErr("Gagal memuat jurnal.");
       } finally {
@@ -64,7 +97,7 @@ export default function AccountingJournalsIndex() {
     setEditorOpen(true);
     setLines([
       {
-        account_id: accounts[0]?.id ?? 0,
+        account_id: 0,
         cabang_id: getCabangId(),
         debit: 0,
         credit: 0,
@@ -217,8 +250,8 @@ export default function AccountingJournalsIndex() {
                 <button
                   className="button button-outline"
                   onClick={onPostAll}
-                  disabled={!canWrite || postingAll}
-                  aria-disabled={!canWrite || postingAll}
+                  disabled={!canWrite || postingAll || accounts.length === 0}
+                  aria-disabled={!canWrite || postingAll || accounts.length === 0}
                   title={!canWrite ? "Tidak punya akses" : "Post semua jurnal DRAFT"}
                 >
                   {postingAll ? `POSTING… (${postAllDone}/${postAllTotal || "?"})` : "POST SEMUA"}
@@ -284,43 +317,98 @@ export default function AccountingJournalsIndex() {
         </div>
       </div>
 
-      {/* Inline dialog editor (Card) */}
+      {/* Popup (Modal) - Jurnal Baru */}
       {editorOpen && (
-        <div className="card">
-          <div className="card__body">
-            <div className="card__title">Jurnal Baru</div>
+        <div
+          className="modal-overlay"
+          onMouseDown={(e) => {
+            // klik backdrop => tutup
+            if (e.target === e.currentTarget) setEditorOpen(false);
+          }}
+        >
+          <div
+            className="modal card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="journal-dialog-title"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <div className="modal-header">
+              <h2 className="modal-title" id="journal-dialog-title">
+                Jurnal Baru
+              </h2>
 
-            <div className="form-row form-row--3" style={{ marginBottom: 12 }}>
-              <div className="form-field">
-                <label className="form-label" htmlFor="je-date">Tanggal</label>
-                <input type="date" className="input" id="je-date" defaultValue={new Date().toISOString().slice(0, 10)} />
-              </div>
-              <div className="form-field">
-                <label className="form-label" htmlFor="je-number">Nomor</label>
-                <input type="text" className="input" id="je-number" placeholder="Nomor jurnal" />
-              </div>
-              <div className="form-field">
-                <label className="form-label" htmlFor="je-desc">Deskripsi</label>
-                <input type="text" className="input" id="je-desc" placeholder="Deskripsi (opsional)" />
-              </div>
+              <button
+                className="button button-ghost"
+                type="button"
+                onClick={() => setEditorOpen(false)}
+              >
+                Tutup
+              </button>
             </div>
 
-            <JournalEditor lines={lines} onChange={setLines} accounts={accounts} />
+            <div className="card__body">
+              <div className="form-row form-row--3" style={{ marginBottom: 12 }}>
+                <div className="form-field">
+                  <label className="form-label" htmlFor="je-date">Tanggal</label>
+                  <input
+                    type="date"
+                    className="input"
+                    id="je-date"
+                    defaultValue={new Date().toISOString().slice(0, 10)}
+                  />
+                </div>
 
-            <div className="form-actions">
+                <div className="form-field">
+                  <label className="form-label" htmlFor="je-number">Nomor</label>
+
+                  <select
+                    id="je-number"
+                    className="input"
+                    value={journalNumber}
+                    onChange={(e) => setJournalNumber(e.target.value)}
+                  >
+                    {journalNumberOptions.map((n) => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                  </select>
+
+                  <div className="help-text" style={{ marginTop: 6 }}>
+                    Pilih nomor jurnal dari daftar (format konsisten).
+                  </div>
+                </div>
+
+                <div className="form-field">
+                  <label className="form-label" htmlFor="je-desc">Deskripsi</label>
+                  <input type="text" className="input" id="je-desc" placeholder="Deskripsi (opsional)" />
+                </div>
+              </div>
+
+              {accounts.length === 0 && (
+                <div className="alert alert-danger" style={{ marginBottom: 12 }}>
+                  COA/Akun belum termuat. Pastikan user memiliki <b>cabang_id</b> yang valid dan data akun tersedia.
+                </div>
+              )}
+
+              <JournalEditor lines={lines} onChange={setLines} accounts={accounts} />
+            </div>
+
+            <div className="modal-actions">
               <button
                 className="button button-primary"
+                type="button"
                 onClick={() =>
                   onSave(
                     (document.getElementById("je-date") as HTMLInputElement).value,
-                    (document.getElementById("je-number") as HTMLInputElement).value,
+                    journalNumber,
                     (document.getElementById("je-desc") as HTMLInputElement).value || null
                   )
                 }
               >
                 Simpan
               </button>
-              <button className="button" onClick={() => setEditorOpen(false)}>
+
+              <button className="button" type="button" onClick={() => setEditorOpen(false)}>
                 Batal
               </button>
             </div>

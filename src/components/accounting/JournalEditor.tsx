@@ -25,7 +25,14 @@ export default function JournalEditor({ lines, onChange, accounts, readOnly = fa
   function addLine() {
     onChange([
       ...lines,
-      { account_id: accounts[0]?.id ?? 0, cabang_id: 0, debit: 0, credit: 0, ref_type: null, ref_id: null },
+      {
+        account_id: 0,
+        cabang_id: lines[0]?.cabang_id ?? 0,
+        debit: 0,
+        credit: 0,
+        ref_type: null,
+        ref_id: null,
+      },
     ]);
   }
 
@@ -58,9 +65,10 @@ export default function JournalEditor({ lines, onChange, accounts, readOnly = fa
                     onChange={(e) => setLine(i, { account_id: Number(e.target.value) })}
                     disabled={readOnly}
                   >
+                    <option value={0} disabled>-- Pilih akun --</option>
                     {accounts.map((a) => (
                       <option key={a.id} value={a.id}>
-                        {a.code} — {a.name}
+                        {a.name}
                       </option>
                     ))}
                   </select>
