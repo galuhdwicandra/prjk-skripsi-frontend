@@ -1,6 +1,6 @@
 # Dokumentasi Frontend (FULL Source)
 
-_Dihasilkan otomatis: 2026-01-31 19:45:00_  
+_Dihasilkan otomatis: 2026-01-31 23:56:15_  
 **Root:** `/home/galuhdwicandra/workspace/clone_prime/frontend`
 
 
@@ -10721,7 +10721,7 @@ export default function CheckoutDialog({
 
 ### src/components/pos/ProductGrid.tsx
 
-- SHA: `775d0823e8ab`  
+- SHA: `c438ce6d74d3`  
 - Ukuran: 18 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
@@ -10852,8 +10852,8 @@ function pickStatus(e: unknown): number | undefined {
     resp && isNumber(resp.status)
       ? (resp.status as number)
       : isNumber((e as Record<string, unknown>).status)
-      ? ((e as Record<string, unknown>).status as number)
-      : undefined;
+        ? ((e as Record<string, unknown>).status as number)
+        : undefined;
 
   return st;
 }
@@ -11240,6 +11240,14 @@ export default function ProductGrid({
                 const img = ensureImageUrl(p.image_url ?? null, fallbackPath);
 
                 const minPrice = getMinVariantPrice(p);
+                const minFromBackend = Number(
+                  (p as unknown as { min_variant_harga?: number | string }).min_variant_harga
+                );
+
+                const shown =
+                  Number.isFinite(minPrice ?? NaN)
+                    ? (minPrice as number)
+                    : (Number.isFinite(minFromBackend) ? minFromBackend : 0);
                 const hasVariants = Array.isArray(p.variants) && p.variants.length > 0;
 
                 return (
@@ -11271,7 +11279,7 @@ export default function ProductGrid({
 
                       <div className="pg-row">
                         <div className="pg-price">
-                          Rp{formatIDR(minPrice ?? 0)}
+                          Rp{formatIDR(shown)}
                         </div>
                         <div className="pg-variant">
                           {hasVariants ? `${p.variants!.length} varian` : "—"}

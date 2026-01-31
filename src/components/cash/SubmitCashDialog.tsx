@@ -66,6 +66,22 @@ export default function SubmitCashDialog({
     }));
   }, [defaultFrom, open]);
 
+  const selectedFrom = useMemo(() => {
+    return holders.find((h) => Number(h.id) === Number(form.from_holder_id)) ?? null;
+  }, [holders, form.from_holder_id]);
+
+  // ✅ Auto isi jumlah berdasarkan saldo holder asal
+  useEffect(() => {
+    if (!open) return;
+    if (!selectedFrom) return;
+
+    const bal = Number(selectedFrom.balance);
+    setForm((s) => ({
+      ...s,
+      amount: Number.isFinite(bal) && bal > 0 ? bal : 0,
+    }));
+  }, [open, selectedFrom]);
+
   const canSubmit = useMemo(() => {
     const validAmount = Number.isFinite(form.amount) && form.amount > 0;
     return (
@@ -175,13 +191,15 @@ export default function SubmitCashDialog({
                 inputMode="decimal"
                 min={0}
                 value={form.amount}
-                onChange={(e) =>
-                  setForm((s) => ({ ...s, amount: Number(e.target.value) }))
-                }
                 className="input"
-                placeholder="0"
+                readOnly
+                disabled
               />
+              <div style={{ marginTop: 6, opacity: 0.75, fontSize: 12 }}>
+                Saldo holder asal: <span className="mono">{selectedFrom ? selectedFrom.balance : 0}</span>
+              </div>
             </div>
+
 
             <div className="form-field">
               <label className="form-label">Tanggal Setoran</label>
