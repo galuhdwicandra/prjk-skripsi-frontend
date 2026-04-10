@@ -1,6 +1,6 @@
 # Dokumentasi Frontend (FULL Source)
 
-_Dihasilkan otomatis: 2026-02-01 02:59:31_  
+_Dihasilkan otomatis: 2026-04-10 10:02:07_  
 **Root:** `/home/galuhdwicandra/workspace/clone_prime/frontend`
 
 
@@ -2904,7 +2904,7 @@ export interface ApiError {
 
 ### src/types/customers.ts
 
-- SHA: `4678fce94e0a`  
+- SHA: `3d9e33e58ef8`  
 - Ukuran: 2 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
@@ -2984,6 +2984,15 @@ export interface CustomerTimelineEvent {
     meta?: Record<string, unknown> | null;
     happened_at: string;
     created_at: string;
+}
+
+export interface CustomerUpsertPayload {
+  branch_id?: number; // ✅ opsional, untuk Orders/Customers multi-cabang
+  nama: string;
+  phone: string;
+  email?: string | null;
+  alamat?: string | null;
+  catatan?: string | null;
 }
 
 ```
@@ -10128,8 +10137,8 @@ function Row(props: {
 
 ### src/components/pos/CheckoutDialog.tsx
 
-- SHA: `75bc309bdcc3`  
-- Ukuran: 20 KB
+- SHA: `e5c3d9af2587`  
+- Ukuran: 22 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -10141,6 +10150,9 @@ import { checkout } from "../../api/pos";
 
 import CustomerSelect from "../customers/CustomerSelect";
 import type { Customer } from "../../types/customers";
+
+import { createCustomer } from "../../api/customers";
+import { useAuth } from "../../store/auth";
 
 type Props = {
   open: boolean;
@@ -10203,6 +10215,50 @@ export default function CheckoutDialog({
   // State proses
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  const { hasRole } = useAuth();
+
+  const canCreateCustomer =
+    hasRole("superadmin") ||
+    hasRole("admin_cabang") ||
+    hasRole("kasir") ||
+    hasRole("sales");
+
+  const [creatingCustomer, setCreatingCustomer] = useState(false);
+
+  const handleCreateCustomer = useCallback(async () => {
+    if (!canCreateCustomer || creatingCustomer) return;
+
+    const namaBaru = window.prompt("Nama pelanggan?")?.trim();
+    if (!namaBaru) return;
+
+    const phoneBaru = window.prompt("No HP (contoh 08xxxxxxxxxx)?")?.trim();
+    if (!phoneBaru) return;
+
+    setCreatingCustomer(true);
+    setErr(null);
+
+    try {
+      const c = await createCustomer({
+        branch_id: branchId,     // penting: supaya customer masuk cabang yang sedang diproses
+        nama: namaBaru,
+        phone: phoneBaru,
+      });
+
+      setSelectedCustomer(c);
+
+      // opsional: prefilling juga langsung (biar terasa “langsung kepilih”)
+      setNama((v) => v || c.nama || "");
+      setPhone((v) => v || c.phone || "");
+      setAlamat((v) => v || c.alamat || "");
+    } catch (e) {
+      const msg = (e as Error)?.message || "Gagal membuat pelanggan.";
+      setErr(msg);
+    } finally {
+      setCreatingCustomer(false);
+    }
+  }, [canCreateCustomer, creatingCustomer, branchId]);
+
 
   // Sinkronisasi jumlah saat total berubah
   useEffect(() => {
@@ -10278,10 +10334,10 @@ export default function CheckoutDialog({
         customer_id: selectedCustomer?.id,
         customer: nama || phone || alamat || selectedCustomer
           ? {
-              nama: nama || selectedCustomer?.nama || "",
-              phone: phone || selectedCustomer?.phone || "",
-              alamat: alamat || selectedCustomer?.alamat || "",
-            }
+            nama: nama || selectedCustomer?.nama || "",
+            phone: phone || selectedCustomer?.phone || "",
+            alamat: alamat || selectedCustomer?.alamat || "",
+          }
           : undefined,
         cash_position: cashPosition,
       };
@@ -10503,7 +10559,27 @@ export default function CheckoutDialog({
               <div className="form-row">
                 <div className="form-field" style={{ width: "100%" }}>
                   <label className="label">Pelanggan Terdaftar</label>
-                  <CustomerSelect branchId={branchId} value={selectedCustomer} onChange={setSelectedCustomer} />
+
+                  <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                    <div style={{ flex: 1, minWidth: 240 }}>
+                      <CustomerSelect branchId={branchId} value={selectedCustomer} onChange={setSelectedCustomer} />
+                    </div>
+
+                    {canCreateCustomer && (
+                      <button
+                        type="button"
+                        className="button button-outline"
+                        onClick={() => void handleCreateCustomer()}
+                        disabled={creatingCustomer || loading}
+                        aria-disabled={creatingCustomer || loading}
+                        title="Buat pelanggan baru tanpa pindah halaman"
+                        style={{ whiteSpace: "nowrap" }}
+                      >
+                        {creatingCustomer ? "Membuat…" : "+ Pelanggan Baru"}
+                      </button>
+                    )}
+                  </div>
+
                   <div className="muted text-xs" style={{ marginTop: 6 }}>
                     Pilih pelanggan untuk mem-prefill nama/HP/alamat. Data ini akan di-snapshot ke order.
                   </div>
