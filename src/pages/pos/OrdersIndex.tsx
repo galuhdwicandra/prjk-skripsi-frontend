@@ -1087,20 +1087,13 @@ export default function OrdersIndex(): React.ReactElement {
         order={detail}
         onClose={() => {
           setDetailOpen(false);
-          setQ((s) => ({ ...s })); // reload daftar (tetap)
+          setQ((s) => ({ ...s }));
         }}
         onEdit={(o) => {
           setDetail(o);
           setEditOpen(true);
         }}
-        onReprint={async (id, format) => {
-          try {
-            await reprintReceipt(id, { format });
-            alert(`Berhasil reprint (${format}mm).`);
-          } catch (e) {
-            alert((e as Error).message || "Gagal reprint.");
-          }
-        }}
+        onReprint={onReprint}
         onResendWa={onResendWa}
       />
 

@@ -8,7 +8,7 @@ import type { LaravelPaginator, Setting, SettingQuery, SettingScope } from '../.
 import { useAuth } from '../../store/auth';
 
 export default function SettingsIndex() {
-  const { hasRole, user } = useAuth();
+  const { hasRole } = useAuth();
   const canAccess = hasRole('superadmin', 'admin_cabang', 'kasir');
 
   const [query, setQuery] = useState<SettingQuery>({ page: 1, per_page: 10 });
