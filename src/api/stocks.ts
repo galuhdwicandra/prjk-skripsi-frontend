@@ -1,7 +1,7 @@
 // src/api/stocks.ts
 import type {
   Stock, StockQuery, PaginatedResponse,
-  SetInitialStockPayload, UpdateMinStockPayload, AdjustStockPayload, ID
+  SetInitialStockPayload, UpdateMinStockPayload, UpdateRopConfigPayload, AdjustStockPayload, ID
 } from "../types/stock";
 import { getAuthToken } from "../api/client";
 
@@ -143,6 +143,39 @@ export type ReceiveStockLotPayload = {
   ref_id?: string | null;
 };
 
+/** GET /stock-lots — daftar layer FIFO per gudang/varian */
+export async function listStockLots(params?: {
+  cabang_id?: number | string;
+  gudang_id?: number | string;
+  product_variant_id?: number | string;
+  only_available?: boolean;
+}): Promise<StockLot[]> {
+  const url = `${BASE}/stock-lots${toQuery({
+    cabang_id: params?.cabang_id != null ? Number(params.cabang_id) : undefined,
+    gudang_id: params?.gudang_id != null ? Number(params.gudang_id) : undefined,
+    product_variant_id:
+      params?.product_variant_id != null
+        ? Number(params.product_variant_id)
+        : undefined,
+    only_available:
+      typeof params?.only_available === "boolean"
+        ? params.only_available
+        : undefined,
+  })}`;
+
+  const res = await fetch(url, {
+    method: "GET",
+    headers: { ...authHeaders(), Accept: "application/json" },
+  });
+
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(json?.message || "Gagal memuat daftar lot FIFO.");
+  }
+
+  return (json?.data ?? []) as StockLot[];
+}
+
 /** POST /stock-lots — penerimaan stok per-lot (IN) */
 export async function receiveStockLot(payload: ReceiveStockLotPayload): Promise<{ data: StockLot }> {
   const body = JSON.stringify({
@@ -209,15 +242,45 @@ export async function getRopList(params?: { gudang_id?: number | string; product
  */
 export async function updateRopConfig(
   id: ID,
-  payload: Partial<{ safety_stock: number | string; lead_time_days: number | string; reorder_point: number | string }>
+  payload: UpdateRopConfigPayload
 ): Promise<{ message: string; data: Stock }> {
-  const body: Record<string, number> = {};
-  if (payload.safety_stock != null) body.safety_stock = Number(payload.safety_stock);
-  if (payload.lead_time_days != null) body.lead_time_days = Number(payload.lead_time_days);
-  if (payload.reorder_point != null) body.reorder_point = Number(payload.reorder_point);
+  const body: Record<string, number | null> = {};
 
-  const res = await fetch(`${BASE}/stocks/${id}`, { method: "PATCH", headers: jsonHeaders(), body: JSON.stringify(body) });
+  if ("min_stok" in payload) {
+    body.min_stok = payload.min_stok != null && payload.min_stok !== ""
+      ? Number(payload.min_stok)
+      : null;
+  }
+
+  if ("safety_stock" in payload) {
+    body.safety_stock = payload.safety_stock != null && payload.safety_stock !== ""
+      ? Number(payload.safety_stock)
+      : null;
+  }
+
+  if ("lead_time_days" in payload) {
+    body.lead_time_days = payload.lead_time_days != null && payload.lead_time_days !== ""
+      ? Number(payload.lead_time_days)
+      : null;
+  }
+
+  if ("reorder_point" in payload) {
+    body.reorder_point = payload.reorder_point != null && payload.reorder_point !== ""
+      ? Number(payload.reorder_point)
+      : null;
+  }
+
+  const res = await fetch(`${BASE}/stocks/${id}`, {
+    method: "PATCH",
+    headers: jsonHeaders(),
+    body: JSON.stringify(body),
+  });
+
   const json = await res.json();
-  if (!res.ok) throw new Error(json?.message || "Gagal update konfigurasi ROP.");
+
+  if (!res.ok) {
+    throw new Error(json?.message || "Gagal update konfigurasi ROP.");
+  }
+
   return json;
 }

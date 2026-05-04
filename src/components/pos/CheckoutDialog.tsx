@@ -81,39 +81,84 @@ export default function CheckoutDialog({
     hasRole("sales");
 
   const [creatingCustomer, setCreatingCustomer] = useState(false);
+  const [createCustomerOpen, setCreateCustomerOpen] = useState(false);
+  const [newCustomer, setNewCustomer] = useState({
+    nama: "",
+    phone: "",
+    email: "",
+    alamat: "",
+    catatan: "",
+  });
+
+  const openCreateCustomerForm = useCallback(() => {
+    if (!canCreateCustomer || creatingCustomer) return;
+
+    setErr(null);
+    setNewCustomer({
+      nama: "",
+      phone: "",
+      email: "",
+      alamat: "",
+      catatan: "",
+    });
+    setCreateCustomerOpen(true);
+  }, [canCreateCustomer, creatingCustomer]);
 
   const handleCreateCustomer = useCallback(async () => {
     if (!canCreateCustomer || creatingCustomer) return;
 
-    const namaBaru = window.prompt("Nama pelanggan?")?.trim();
-    if (!namaBaru) return;
+    const namaBaru = newCustomer.nama.trim();
+    const phoneBaru = newCustomer.phone.trim();
+    const emailBaru = newCustomer.email.trim();
+    const alamatBaru = newCustomer.alamat.trim();
+    const catatanBaru = newCustomer.catatan.trim();
 
-    const phoneBaru = window.prompt("No HP (contoh 08xxxxxxxxxx)?")?.trim();
-    if (!phoneBaru) return;
+    if (!namaBaru) {
+      setErr("Nama pelanggan wajib diisi.");
+      return;
+    }
+
+    if (!phoneBaru) {
+      setErr("No HP pelanggan wajib diisi.");
+      return;
+    }
 
     setCreatingCustomer(true);
     setErr(null);
 
     try {
       const c = await createCustomer({
-        branch_id: branchId,     // penting: supaya customer masuk cabang yang sedang diproses
+        branch_id: branchId,
         nama: namaBaru,
         phone: phoneBaru,
+        email: emailBaru || null,
+        alamat: alamatBaru || null,
+        catatan: catatanBaru || null,
       });
 
       setSelectedCustomer(c);
+      setNama(c.nama ?? "");
+      setPhone(c.phone ?? "");
+      setAlamat(c.alamat ?? "");
 
-      // opsional: prefilling juga langsung (biar terasa “langsung kepilih”)
-      setNama((v) => v || c.nama || "");
-      setPhone((v) => v || c.phone || "");
-      setAlamat((v) => v || c.alamat || "");
+      setCreateCustomerOpen(false);
+      setNewCustomer({
+        nama: "",
+        phone: "",
+        email: "",
+        alamat: "",
+        catatan: "",
+      });
     } catch (e) {
-      const msg = (e as Error)?.message || "Gagal membuat pelanggan.";
+      const msg =
+        typeof e === "object" && e !== null && "message" in e
+          ? String((e as { message?: string }).message)
+          : "Gagal membuat pelanggan baru.";
       setErr(msg);
     } finally {
       setCreatingCustomer(false);
     }
-  }, [canCreateCustomer, creatingCustomer, branchId]);
+  }, [canCreateCustomer, creatingCustomer, newCustomer, branchId]);
 
 
   // Sinkronisasi jumlah saat total berubah
@@ -425,7 +470,7 @@ export default function CheckoutDialog({
                       <button
                         type="button"
                         className="button button-outline"
-                        onClick={() => void handleCreateCustomer()}
+                        onClick={openCreateCustomerForm}
                         disabled={creatingCustomer || loading}
                         aria-disabled={creatingCustomer || loading}
                         title="Buat pelanggan baru tanpa pindah halaman"
@@ -682,6 +727,132 @@ export default function CheckoutDialog({
           </div>
         </div>
       </div>
+      {createCustomerOpen && (
+        <div
+          className="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="create-customer-title"
+          style={{ zIndex: 2600 }}
+        >
+          <div className="modal card" style={{ width: "min(560px, 100%)" }}>
+            <div className="modal-header">
+              <h3 id="create-customer-title" className="modal-title">
+                Tambah Pelanggan Baru
+              </h3>
+
+              <button
+                type="button"
+                className="button button-ghost"
+                onClick={() => setCreateCustomerOpen(false)}
+                disabled={creatingCustomer}
+              >
+                Tutup
+              </button>
+            </div>
+
+            <div style={{ padding: 16 }}>
+              <div className="form-row form-row--2">
+                <div className="form-field">
+                  <label className="label">Nama</label>
+                  <input
+                    className="input"
+                    value={newCustomer.nama}
+                    onChange={(e) =>
+                      setNewCustomer((prev) => ({ ...prev, nama: e.target.value }))
+                    }
+                    placeholder="Nama pelanggan"
+                    disabled={creatingCustomer}
+                    autoFocus
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label className="label">No HP</label>
+                  <input
+                    className="input"
+                    value={newCustomer.phone}
+                    onChange={(e) =>
+                      setNewCustomer((prev) => ({ ...prev, phone: e.target.value }))
+                    }
+                    placeholder="08xx / 62xx"
+                    inputMode="tel"
+                    disabled={creatingCustomer}
+                  />
+                </div>
+              </div>
+
+              <div className="form-row" style={{ marginTop: 12 }}>
+                <div className="form-field">
+                  <label className="label">Email (opsional)</label>
+                  <input
+                    className="input"
+                    type="email"
+                    value={newCustomer.email}
+                    onChange={(e) =>
+                      setNewCustomer((prev) => ({ ...prev, email: e.target.value }))
+                    }
+                    placeholder="email@contoh.com"
+                    disabled={creatingCustomer}
+                  />
+                </div>
+              </div>
+
+              <div className="form-row" style={{ marginTop: 12 }}>
+                <div className="form-field">
+                  <label className="label">Alamat</label>
+                  <textarea
+                    className="textarea"
+                    rows={3}
+                    value={newCustomer.alamat}
+                    onChange={(e) =>
+                      setNewCustomer((prev) => ({ ...prev, alamat: e.target.value }))
+                    }
+                    placeholder="Contoh: Jl. Melati No. 10, RT/RW, Kecamatan, Kota"
+                    disabled={creatingCustomer}
+                  />
+                </div>
+              </div>
+
+              <div className="form-row" style={{ marginTop: 12 }}>
+                <div className="form-field">
+                  <label className="label">Catatan (opsional)</label>
+                  <textarea
+                    className="textarea"
+                    rows={2}
+                    value={newCustomer.catatan}
+                    onChange={(e) =>
+                      setNewCustomer((prev) => ({ ...prev, catatan: e.target.value }))
+                    }
+                    placeholder="Catatan khusus pelanggan"
+                    disabled={creatingCustomer}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="button button-outline"
+                onClick={() => setCreateCustomerOpen(false)}
+                disabled={creatingCustomer}
+              >
+                Batal
+              </button>
+
+              <button
+                type="button"
+                className="button button-primary"
+                onClick={() => void handleCreateCustomer()}
+                disabled={creatingCustomer}
+              >
+                {creatingCustomer ? "Menyimpan…" : "Simpan Pelanggan"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

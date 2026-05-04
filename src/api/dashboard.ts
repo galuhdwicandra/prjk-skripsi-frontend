@@ -5,6 +5,7 @@ import type {
     Chart7DayPoint,
     TopProduct,
     LowStockRow,
+    LatestOrder,
     QuickAction,
     DashboardQuery,
 } from '../types/dashboard';
@@ -48,6 +49,17 @@ export async function getTopProducts(q: DashboardQuery): Promise<TopProduct[]> {
         },
     });
     return unwrap<TopProduct[]>(data);
+}
+
+/** GET /dashboard/latest-orders?branch_id=&limit= */
+export async function getLatestOrders(q: DashboardQuery): Promise<LatestOrder[]> {
+    const { data } = await api.get('/dashboard/latest-orders', {
+        params: {
+            cabang_id: q.cabang_id ?? undefined,
+            limit: q.limit ?? 8,
+        },
+    });
+    return unwrap<LatestOrder[]>(data);
 }
 
 /** GET /dashboard/low-stock?branch_id=&threshold= */

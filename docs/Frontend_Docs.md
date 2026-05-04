@@ -1,6 +1,6 @@
 # Dokumentasi Frontend (FULL Source)
 
-_Dihasilkan otomatis: 2026-04-10 10:02:07_  
+_Dihasilkan otomatis: 2026-05-04 17:39:14_  
 **Root:** `/home/galuhdwicandra/workspace/clone_prime/frontend`
 
 
@@ -62,6 +62,7 @@ _Dihasilkan otomatis: 2026-04-10 10:02:07_
   - [src/components/customers/CustomerTable.tsx](#file-srccomponentscustomerscustomertabletsx)
   - [src/components/customers/CustomerTimeline.tsx](#file-srccomponentscustomerscustomertimelinetsx)
   - [src/components/dashboard/KPIStatCards.tsx](#file-srccomponentsdashboardkpistatcardstsx)
+  - [src/components/dashboard/LatestOrdersList.tsx](#file-srccomponentsdashboardlatestorderslisttsx)
   - [src/components/dashboard/LowStockList.tsx](#file-srccomponentsdashboardlowstocklisttsx)
   - [src/components/dashboard/QuickActions.tsx](#file-srccomponentsdashboardquickactionstsx)
   - [src/components/dashboard/ReorderPointList.tsx](#file-srccomponentsdashboardreorderpointlisttsx)
@@ -261,8 +262,8 @@ export function assertFilesBaseOrWarn(): void {
 
 ### src/api/accounting.ts
 
-- SHA: `3bb4f859a679`  
-- Ukuran: 6 KB
+- SHA: `afb0f5220e36`  
+- Ukuran: 7 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```ts
@@ -290,13 +291,49 @@ export async function listAccounts(params?: {
     q?: string;
     cabang_id?: ID;
     is_active?: boolean;
+    only_active?: boolean;
     page?: number;
     per_page?: number;
 }): Promise<Paginated<Account>> {
-    const { data } = await api.get<Paginated<Account>>("/accounting/accounts", {
+    const resp = await api.get("/accounting/accounts", {
         params,
     });
-    return data;
+
+    const payload = resp.data;
+
+    if (Array.isArray(payload?.data)) {
+        return {
+            data: payload.data as Account[],
+            meta: {
+                current_page: 1,
+                per_page: payload.data.length,
+                total: payload.data.length,
+                last_page: 1,
+            },
+        };
+    }
+
+    if (Array.isArray(payload)) {
+        return {
+            data: payload as Account[],
+            meta: {
+                current_page: 1,
+                per_page: payload.length,
+                total: payload.length,
+                last_page: 1,
+            },
+        };
+    }
+
+    return {
+        data: [],
+        meta: {
+            current_page: 1,
+            per_page: 0,
+            total: 0,
+            last_page: 1,
+        },
+    };
 }
 
 export async function createAccount(payload: AccountCreatePayload) {
@@ -435,16 +472,16 @@ export async function getProfitLoss(q: ReportQuery): Promise<ProfitLossAgg> {
 }
 
 export async function getBalanceSheet(q: ReportQuery): Promise<BalanceSheetAgg> {
-  const resp = await api.get("/accounting/reports/balance-sheet", { params: q });
+    const resp = await api.get("/accounting/reports/balance-sheet", { params: q });
 
-  // raw = objek hasil backend: { Asset: {debit, credit}, Liability: {...}, Equity: {...} }
-  const raw = (resp.data?.data ?? resp.data) as Record<string, { debit: unknown; credit: unknown }>;
+    // raw = objek hasil backend: { Asset: {debit, credit}, Liability: {...}, Equity: {...} }
+    const raw = (resp.data?.data ?? resp.data) as Record<string, { debit: unknown; credit: unknown }>;
 
-  const out: Record<string, { debit: number; credit: number }> = {};
-  for (const [k, v] of Object.entries(raw)) {
-    out[k] = { debit: toNum(v?.debit), credit: toNum(v?.credit) };
-  }
-  return out as unknown as BalanceSheetAgg;
+    const out: Record<string, { debit: number; credit: number }> = {};
+    for (const [k, v] of Object.entries(raw)) {
+        out[k] = { debit: toNum(v?.debit), credit: toNum(v?.credit) };
+    }
+    return out as unknown as BalanceSheetAgg;
 }
 
 ```
@@ -1073,7 +1110,7 @@ export async function setCustomerStage(
 
 ### src/api/dashboard.ts
 
-- SHA: `0f2f4965a39c`  
+- SHA: `b7783d235aa8`  
 - Ukuran: 2 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
@@ -1085,6 +1122,7 @@ import type {
     Chart7DayPoint,
     TopProduct,
     LowStockRow,
+    LatestOrder,
     QuickAction,
     DashboardQuery,
 } from '../types/dashboard';
@@ -1128,6 +1166,17 @@ export async function getTopProducts(q: DashboardQuery): Promise<TopProduct[]> {
         },
     });
     return unwrap<TopProduct[]>(data);
+}
+
+/** GET /dashboard/latest-orders?branch_id=&limit= */
+export async function getLatestOrders(q: DashboardQuery): Promise<LatestOrder[]> {
+    const { data } = await api.get('/dashboard/latest-orders', {
+        params: {
+            cabang_id: q.cabang_id ?? undefined,
+            limit: q.limit ?? 8,
+        },
+    });
+    return unwrap<LatestOrder[]>(data);
 }
 
 /** GET /dashboard/low-stock?branch_id=&threshold= */
@@ -1711,7 +1760,7 @@ export async function exportFeesCsv(q: FeeQuery = {}): Promise<Blob> {
 
 ### src/api/products.ts
 
-- SHA: `ce93f1e87ef7`  
+- SHA: `2648660cdd87`  
 - Ukuran: 10 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
@@ -1853,8 +1902,8 @@ export function listProducts(
     page: q.page,
     per_page: q.per_page,
     sort: q.sort,
-    // gudang_id: q.gudang_id,  // sengaja dimatikan
-    // cabang_id: q.cabang_id,
+    gudang_id: q.gudang_id,
+    cabang_id: q.cabang_id,
   };
 
   // 🔎 Log URL final  params (dev only)
@@ -2076,15 +2125,15 @@ export async function importSettings(payload: SettingImportPayload): Promise<Set
 
 ### src/api/stocks.ts
 
-- SHA: `d5bf9652ebe2`  
-- Ukuran: 8 KB
+- SHA: `9ca5382a28e3`  
+- Ukuran: 10 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```ts
 // src/api/stocks.ts
 import type {
   Stock, StockQuery, PaginatedResponse,
-  SetInitialStockPayload, UpdateMinStockPayload, AdjustStockPayload, ID
+  SetInitialStockPayload, UpdateMinStockPayload, UpdateRopConfigPayload, AdjustStockPayload, ID
 } from "../types/stock";
 import { getAuthToken } from "../api/client";
 
@@ -2226,6 +2275,39 @@ export type ReceiveStockLotPayload = {
   ref_id?: string | null;
 };
 
+/** GET /stock-lots — daftar layer FIFO per gudang/varian */
+export async function listStockLots(params?: {
+  cabang_id?: number | string;
+  gudang_id?: number | string;
+  product_variant_id?: number | string;
+  only_available?: boolean;
+}): Promise<StockLot[]> {
+  const url = `${BASE}/stock-lots${toQuery({
+    cabang_id: params?.cabang_id != null ? Number(params.cabang_id) : undefined,
+    gudang_id: params?.gudang_id != null ? Number(params.gudang_id) : undefined,
+    product_variant_id:
+      params?.product_variant_id != null
+        ? Number(params.product_variant_id)
+        : undefined,
+    only_available:
+      typeof params?.only_available === "boolean"
+        ? params.only_available
+        : undefined,
+  })}`;
+
+  const res = await fetch(url, {
+    method: "GET",
+    headers: { ...authHeaders(), Accept: "application/json" },
+  });
+
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(json?.message || "Gagal memuat daftar lot FIFO.");
+  }
+
+  return (json?.data ?? []) as StockLot[];
+}
+
 /** POST /stock-lots — penerimaan stok per-lot (IN) */
 export async function receiveStockLot(payload: ReceiveStockLotPayload): Promise<{ data: StockLot }> {
   const body = JSON.stringify({
@@ -2292,16 +2374,46 @@ export async function getRopList(params?: { gudang_id?: number | string; product
  */
 export async function updateRopConfig(
   id: ID,
-  payload: Partial<{ safety_stock: number | string; lead_time_days: number | string; reorder_point: number | string }>
+  payload: UpdateRopConfigPayload
 ): Promise<{ message: string; data: Stock }> {
-  const body: Record<string, number> = {};
-  if (payload.safety_stock != null) body.safety_stock = Number(payload.safety_stock);
-  if (payload.lead_time_days != null) body.lead_time_days = Number(payload.lead_time_days);
-  if (payload.reorder_point != null) body.reorder_point = Number(payload.reorder_point);
+  const body: Record<string, number | null> = {};
 
-  const res = await fetch(`${BASE}/stocks/${id}`, { method: "PATCH", headers: jsonHeaders(), body: JSON.stringify(body) });
+  if ("min_stok" in payload) {
+    body.min_stok = payload.min_stok != null && payload.min_stok !== ""
+      ? Number(payload.min_stok)
+      : null;
+  }
+
+  if ("safety_stock" in payload) {
+    body.safety_stock = payload.safety_stock != null && payload.safety_stock !== ""
+      ? Number(payload.safety_stock)
+      : null;
+  }
+
+  if ("lead_time_days" in payload) {
+    body.lead_time_days = payload.lead_time_days != null && payload.lead_time_days !== ""
+      ? Number(payload.lead_time_days)
+      : null;
+  }
+
+  if ("reorder_point" in payload) {
+    body.reorder_point = payload.reorder_point != null && payload.reorder_point !== ""
+      ? Number(payload.reorder_point)
+      : null;
+  }
+
+  const res = await fetch(`${BASE}/stocks/${id}`, {
+    method: "PATCH",
+    headers: jsonHeaders(),
+    body: JSON.stringify(body),
+  });
+
   const json = await res.json();
-  if (!res.ok) throw new Error(json?.message || "Gagal update konfigurasi ROP.");
+
+  if (!res.ok) {
+    throw new Error(json?.message || "Gagal update konfigurasi ROP.");
+  }
+
   return json;
 }
 
@@ -3000,7 +3112,7 @@ export interface CustomerUpsertPayload {
 
 ### src/types/dashboard.ts
 
-- SHA: `ae42b1713573`  
+- SHA: `1615900e5499`  
 - Ukuran: 1 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
@@ -3043,6 +3155,20 @@ export type LowStockRow = {
     name: string;
     qty_on_hand: number;
     min_stock: number;
+};
+
+export type LatestOrder = {
+    id: number;
+    kode: string;
+    cabang_id: number;
+    cabang_nama: string | null;
+    customer_name: string | null;
+    customer_phone: string | null;
+    status: string;
+    grand_total: number;
+    paid_total: number;
+    cash_position: string | null;
+    ordered_at: string;
 };
 
 export type QuickAction =
@@ -3293,7 +3419,7 @@ export interface ApiErrorPayload {
 
 ### src/types/pos.ts
 
-- SHA: `fe587afbfcc3`  
+- SHA: `670b4dbd5c4d`  
 - Ukuran: 5 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
@@ -3363,7 +3489,29 @@ export type CheckoutPayload = {
   cash_position?: CashPosition;
 };
 
-export type OrderItem = QuoteLine & { id: ID; order_id: ID };
+export type FifoLotAllocation = {
+  id: number;
+  order_item_id: number;
+  stock_lot_id: number;
+  qty_allocated: number;
+  unit_cost?: string | number | null;
+  lot?: {
+    id: number;
+    lot_no?: string | null;
+    received_at?: string | null;
+    expires_at?: string | null;
+    qty_received: number;
+    qty_remaining: number;
+    unit_cost?: string | number | null;
+  } | null;
+};
+
+export type OrderItem = QuoteLine & {
+  id: ID;
+  order_id: ID;
+  fifo_allocations?: FifoLotAllocation[];
+};
+
 export type Payment = {
   id: ID;
   order_id: ID;
@@ -3485,7 +3633,7 @@ export type FeePaged = {
 
 ### src/types/product.ts
 
-- SHA: `cf1b09cf221e`  
+- SHA: `d5e288e76b67`  
 - Ukuran: 3 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
@@ -3563,12 +3711,15 @@ export interface PaginatedResponse<T> {
 export interface ProductVariant {
     id: ID;
     product_id: ID;
-    size: string | null;     // ex: "Small", "Large"
-    type: string | null;     // ex: "Choco", "Matcha"
-    tester: string | null;   // ex: "Slice", "Full"
-    sku: string;             // unique
-    harga: number;           // decimal(14,2) -> number
+    size: string | null;
+    type: string | null;
+    tester: string | null;
+    sku: string;
+    harga: number;
     is_active: boolean;
+
+    stock_qty?: number | string | null;
+
     created_at?: string | null;
     updated_at?: string | null;
 }
@@ -3713,8 +3864,8 @@ export interface LaravelPaginator<T> {
 
 ### src/types/stock.ts
 
-- SHA: `4324ca645a9d`  
-- Ukuran: 2 KB
+- SHA: `0b398d6773cb`  
+- Ukuran: 3 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```ts
@@ -3739,14 +3890,24 @@ export interface PaginatedResponse<T> {
 }
 
 export interface CabangLite { id: ID; nama: string }
+
 export interface GudangLite { id: ID; nama: string }
+
 export interface VariantLite {
   id: ID;
+  product_id?: ID;
   sku: string;
-  nama_produk: string;
+  nama_produk?: string;
+  product?: {
+    id: ID;
+    nama: string;
+  } | null;
+
   size?: string | null;
   type?: string | null;
   tester?: string | null;
+  harga?: number | string | null;
+  is_active?: boolean;
 }
 
 export interface Stock {
@@ -3756,7 +3917,12 @@ export interface Stock {
   product_variant_id: ID;
   qty: number;
   min_stok: number;
+  safety_stock?: number | null;
+  lead_time_days?: number | null;
+  reorder_point?: number | null;
+  reorder_point_eff?: number | null;
   is_low_stock: boolean;
+  is_below_rop?: boolean;
   gudang?: GudangLite;
   cabang?: CabangLite;
   variant?: VariantLite;
@@ -3782,6 +3948,13 @@ export interface SetInitialStockPayload {
 
 export interface UpdateMinStockPayload {
   min_stok: number;
+}
+
+export interface UpdateRopConfigPayload {
+  min_stok?: number | string | null;
+  safety_stock?: number | string | null;
+  lead_time_days?: number | string | null;
+  reorder_point?: number | string | null;
 }
 
 export interface AdjustStockPayload {
@@ -3823,9 +3996,13 @@ export type StockLot = {
   expires_at?: string | null;
   qty_received: number;
   qty_remaining: number;
-  unit_cost?: number | null;
+  unit_cost?: number | string | null;
   created_at?: string;
   updated_at?: string;
+
+  variant?: VariantLite | null;
+  gudang?: GudangLite | null;
+  cabang?: CabangLite | null;
 };
 ```
 </details>
@@ -7531,6 +7708,217 @@ export default function KPIStatCards({ data, loading, error }: Props): React.Rea
 ```
 </details>
 
+### src/components/dashboard/LatestOrdersList.tsx
+
+- SHA: `d8c767304869`  
+- Ukuran: 5 KB
+<details><summary><strong>Lihat Kode Lengkap</strong></summary>
+
+```tsx
+// src/components/dashboard/LatestOrdersList.tsx
+import type { CSSProperties } from 'react';
+import type { LatestOrder } from '../../types/dashboard';
+
+type Props = {
+  data: LatestOrder[] | null;
+  loading: boolean;
+  error: string | null;
+  onViewOrder?: (orderId: number) => void;
+};
+
+function fmtMoney(n: number): string {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    maximumFractionDigits: 0,
+  }).format(Number.isFinite(n) ? n : 0);
+}
+
+function fmtDateTime(value: string | null | undefined): string {
+  if (!value) return '-';
+
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+
+  return new Intl.DateTimeFormat('id-ID', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(d);
+}
+
+function statusClass(status: string): string {
+  const s = status.toUpperCase();
+
+  if (s === 'PAID') return 'badge badge-success';
+  if (s === 'UNPAID' || s === 'DRAFT') return 'badge badge-warning';
+  if (s === 'VOID' || s === 'REFUND') return 'badge badge-danger';
+
+  return 'badge';
+}
+
+function cashPositionLabel(value: string | null): string {
+  if (!value) return '-';
+
+  const map: Record<string, string> = {
+    CUSTOMER: 'Customer',
+    CASHIER: 'Kasir',
+    SALES: 'Sales',
+    ADMIN: 'Admin',
+  };
+
+  return map[value] ?? value;
+}
+
+const tableWrap: CSSProperties = {
+  width: '100%',
+  overflowX: 'auto',
+  WebkitOverflowScrolling: 'touch',
+};
+
+const table: CSSProperties = {
+  width: '100%',
+  minWidth: 920,
+  borderCollapse: 'separate',
+  borderSpacing: 0,
+};
+
+const th: CSSProperties = {
+  textAlign: 'left',
+  fontSize: 12,
+  color: 'var(--color-text-soft)',
+  fontWeight: 750,
+  padding: '0.75rem 0.8rem',
+  borderBottom: '1px solid rgba(0,0,0,0.08)',
+  whiteSpace: 'nowrap',
+};
+
+const td: CSSProperties = {
+  padding: '0.75rem 0.8rem',
+  borderBottom: '1px solid rgba(0,0,0,0.05)',
+  verticalAlign: 'middle',
+  fontSize: 13,
+  whiteSpace: 'nowrap',
+};
+
+const muted: CSSProperties = {
+  fontSize: 12,
+  color: 'var(--color-text-soft)',
+  opacity: 0.85,
+};
+
+export default function LatestOrdersList({
+  data,
+  loading,
+  error,
+  onViewOrder,
+}: Props): React.ReactElement {
+  return (
+    <div style={{ minWidth: 0 }}>
+      {loading && (
+        <div
+          aria-hidden
+          style={{
+            height: 132,
+            borderRadius: 14,
+            background: 'rgba(0,0,0,.05)',
+          }}
+        />
+      )}
+
+      {error && (
+        <div style={{ color: 'var(--color-danger)', fontSize: 13 }}>
+          {error}
+        </div>
+      )}
+
+      {!loading && !error && (!data || data.length === 0) && (
+        <div style={{ fontSize: 13, color: 'var(--color-text-soft)' }}>
+          Belum ada order terbaru.
+        </div>
+      )}
+
+      {!loading && !error && data && data.length > 0 && (
+        <div style={tableWrap}>
+          <table style={table}>
+            <thead>
+              <tr>
+                <th style={th}>Kode</th>
+                <th style={th}>Pelanggan</th>
+                <th style={th}>Cabang</th>
+                <th style={th}>Status</th>
+                <th style={th}>Posisi Uang</th>
+                <th style={{ ...th, textAlign: 'right' }}>Grand Total</th>
+                <th style={th}>Waktu</th>
+                {onViewOrder && <th style={{ ...th, textAlign: 'right' }}>Aksi</th>}
+              </tr>
+            </thead>
+
+            <tbody>
+              {data.map((order) => (
+                <tr key={order.id}>
+                  <td style={td}>
+                    <div style={{ fontWeight: 800, color: 'var(--color-text)' }}>
+                      {order.kode}
+                    </div>
+                    <div style={muted}>#{order.id}</div>
+                  </td>
+
+                  <td style={td}>
+                    <div style={{ fontWeight: 700, color: 'var(--color-text)' }}>
+                      {order.customer_name || '-'}
+                    </div>
+                    <div style={muted}>{order.customer_phone || '-'}</div>
+                  </td>
+
+                  <td style={td}>
+                    {order.cabang_nama || `Cabang #${order.cabang_id}`}
+                  </td>
+
+                  <td style={td}>
+                    <span className={statusClass(order.status)}>
+                      {order.status}
+                    </span>
+                  </td>
+
+                  <td style={td}>
+                    {cashPositionLabel(order.cash_position)}
+                  </td>
+
+                  <td style={{ ...td, textAlign: 'right', fontWeight: 800 }}>
+                    {fmtMoney(order.grand_total)}
+                  </td>
+
+                  <td style={td}>
+                    {fmtDateTime(order.ordered_at)}
+                  </td>
+
+                  {onViewOrder && (
+                    <td style={{ ...td, textAlign: 'right' }}>
+                      <button
+                        type="button"
+                        className="button button-ghost"
+                        style={{ padding: '0.4rem 0.7rem', fontSize: 12 }}
+                        onClick={() => onViewOrder(order.id)}
+                      >
+                        Detail
+                      </button>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+```
+</details>
+
 ### src/components/dashboard/LowStockList.tsx
 
 - SHA: `633902c99297`  
@@ -10137,8 +10525,8 @@ function Row(props: {
 
 ### src/components/pos/CheckoutDialog.tsx
 
-- SHA: `e5c3d9af2587`  
-- Ukuran: 22 KB
+- SHA: `a85cfcc78d4f`  
+- Ukuran: 28 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -10225,39 +10613,84 @@ export default function CheckoutDialog({
     hasRole("sales");
 
   const [creatingCustomer, setCreatingCustomer] = useState(false);
+  const [createCustomerOpen, setCreateCustomerOpen] = useState(false);
+  const [newCustomer, setNewCustomer] = useState({
+    nama: "",
+    phone: "",
+    email: "",
+    alamat: "",
+    catatan: "",
+  });
+
+  const openCreateCustomerForm = useCallback(() => {
+    if (!canCreateCustomer || creatingCustomer) return;
+
+    setErr(null);
+    setNewCustomer({
+      nama: "",
+      phone: "",
+      email: "",
+      alamat: "",
+      catatan: "",
+    });
+    setCreateCustomerOpen(true);
+  }, [canCreateCustomer, creatingCustomer]);
 
   const handleCreateCustomer = useCallback(async () => {
     if (!canCreateCustomer || creatingCustomer) return;
 
-    const namaBaru = window.prompt("Nama pelanggan?")?.trim();
-    if (!namaBaru) return;
+    const namaBaru = newCustomer.nama.trim();
+    const phoneBaru = newCustomer.phone.trim();
+    const emailBaru = newCustomer.email.trim();
+    const alamatBaru = newCustomer.alamat.trim();
+    const catatanBaru = newCustomer.catatan.trim();
 
-    const phoneBaru = window.prompt("No HP (contoh 08xxxxxxxxxx)?")?.trim();
-    if (!phoneBaru) return;
+    if (!namaBaru) {
+      setErr("Nama pelanggan wajib diisi.");
+      return;
+    }
+
+    if (!phoneBaru) {
+      setErr("No HP pelanggan wajib diisi.");
+      return;
+    }
 
     setCreatingCustomer(true);
     setErr(null);
 
     try {
       const c = await createCustomer({
-        branch_id: branchId,     // penting: supaya customer masuk cabang yang sedang diproses
+        branch_id: branchId,
         nama: namaBaru,
         phone: phoneBaru,
+        email: emailBaru || null,
+        alamat: alamatBaru || null,
+        catatan: catatanBaru || null,
       });
 
       setSelectedCustomer(c);
+      setNama(c.nama ?? "");
+      setPhone(c.phone ?? "");
+      setAlamat(c.alamat ?? "");
 
-      // opsional: prefilling juga langsung (biar terasa “langsung kepilih”)
-      setNama((v) => v || c.nama || "");
-      setPhone((v) => v || c.phone || "");
-      setAlamat((v) => v || c.alamat || "");
+      setCreateCustomerOpen(false);
+      setNewCustomer({
+        nama: "",
+        phone: "",
+        email: "",
+        alamat: "",
+        catatan: "",
+      });
     } catch (e) {
-      const msg = (e as Error)?.message || "Gagal membuat pelanggan.";
+      const msg =
+        typeof e === "object" && e !== null && "message" in e
+          ? String((e as { message?: string }).message)
+          : "Gagal membuat pelanggan baru.";
       setErr(msg);
     } finally {
       setCreatingCustomer(false);
     }
-  }, [canCreateCustomer, creatingCustomer, branchId]);
+  }, [canCreateCustomer, creatingCustomer, newCustomer, branchId]);
 
 
   // Sinkronisasi jumlah saat total berubah
@@ -10569,7 +11002,7 @@ export default function CheckoutDialog({
                       <button
                         type="button"
                         className="button button-outline"
-                        onClick={() => void handleCreateCustomer()}
+                        onClick={openCreateCustomerForm}
                         disabled={creatingCustomer || loading}
                         aria-disabled={creatingCustomer || loading}
                         title="Buat pelanggan baru tanpa pindah halaman"
@@ -10826,6 +11259,132 @@ export default function CheckoutDialog({
           </div>
         </div>
       </div>
+      {createCustomerOpen && (
+        <div
+          className="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="create-customer-title"
+          style={{ zIndex: 2600 }}
+        >
+          <div className="modal card" style={{ width: "min(560px, 100%)" }}>
+            <div className="modal-header">
+              <h3 id="create-customer-title" className="modal-title">
+                Tambah Pelanggan Baru
+              </h3>
+
+              <button
+                type="button"
+                className="button button-ghost"
+                onClick={() => setCreateCustomerOpen(false)}
+                disabled={creatingCustomer}
+              >
+                Tutup
+              </button>
+            </div>
+
+            <div style={{ padding: 16 }}>
+              <div className="form-row form-row--2">
+                <div className="form-field">
+                  <label className="label">Nama</label>
+                  <input
+                    className="input"
+                    value={newCustomer.nama}
+                    onChange={(e) =>
+                      setNewCustomer((prev) => ({ ...prev, nama: e.target.value }))
+                    }
+                    placeholder="Nama pelanggan"
+                    disabled={creatingCustomer}
+                    autoFocus
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label className="label">No HP</label>
+                  <input
+                    className="input"
+                    value={newCustomer.phone}
+                    onChange={(e) =>
+                      setNewCustomer((prev) => ({ ...prev, phone: e.target.value }))
+                    }
+                    placeholder="08xx / 62xx"
+                    inputMode="tel"
+                    disabled={creatingCustomer}
+                  />
+                </div>
+              </div>
+
+              <div className="form-row" style={{ marginTop: 12 }}>
+                <div className="form-field">
+                  <label className="label">Email (opsional)</label>
+                  <input
+                    className="input"
+                    type="email"
+                    value={newCustomer.email}
+                    onChange={(e) =>
+                      setNewCustomer((prev) => ({ ...prev, email: e.target.value }))
+                    }
+                    placeholder="email@contoh.com"
+                    disabled={creatingCustomer}
+                  />
+                </div>
+              </div>
+
+              <div className="form-row" style={{ marginTop: 12 }}>
+                <div className="form-field">
+                  <label className="label">Alamat</label>
+                  <textarea
+                    className="textarea"
+                    rows={3}
+                    value={newCustomer.alamat}
+                    onChange={(e) =>
+                      setNewCustomer((prev) => ({ ...prev, alamat: e.target.value }))
+                    }
+                    placeholder="Contoh: Jl. Melati No. 10, RT/RW, Kecamatan, Kota"
+                    disabled={creatingCustomer}
+                  />
+                </div>
+              </div>
+
+              <div className="form-row" style={{ marginTop: 12 }}>
+                <div className="form-field">
+                  <label className="label">Catatan (opsional)</label>
+                  <textarea
+                    className="textarea"
+                    rows={2}
+                    value={newCustomer.catatan}
+                    onChange={(e) =>
+                      setNewCustomer((prev) => ({ ...prev, catatan: e.target.value }))
+                    }
+                    placeholder="Catatan khusus pelanggan"
+                    disabled={creatingCustomer}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="button button-outline"
+                onClick={() => setCreateCustomerOpen(false)}
+                disabled={creatingCustomer}
+              >
+                Batal
+              </button>
+
+              <button
+                type="button"
+                className="button button-primary"
+                onClick={() => void handleCreateCustomer()}
+                disabled={creatingCustomer}
+              >
+                {creatingCustomer ? "Menyimpan…" : "Simpan Pelanggan"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -10835,8 +11394,8 @@ export default function CheckoutDialog({
 
 ### src/components/pos/ProductGrid.tsx
 
-- SHA: `c438ce6d74d3`  
-- Ukuran: 18 KB
+- SHA: `ffc006ad1527`  
+- Ukuran: 20 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -10852,7 +11411,7 @@ type Props = {
   perPage?: number;
   initialQuery?: ProductQuery;
   warehouseId?: number;
-  /** Jika true, komponen tidak akan fetch sebelum warehouseId tersedia */
+  refreshKey?: number;
   requireWarehouse?: boolean;
 };
 
@@ -11030,6 +11589,23 @@ function getMinVariantPrice(p: Product): number | null {
   return Math.min(...nums);
 }
 
+function getVariantStockQty(v: { stock_qty?: number | string | null }): number {
+  const n = Number(v.stock_qty ?? 0);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function getTotalProductStock(p: Product): number {
+  if (!Array.isArray(p.variants) || p.variants.length === 0) return 0;
+
+  return p.variants.reduce((total, variant) => {
+    return total + getVariantStockQty(variant);
+  }, 0);
+}
+
+function getStockBadgeText(stock: number): string {
+  if (stock <= 0) return "Stok habis";
+  return `Stok: ${stock}`;
+}
 
 function ProductCardSkeleton({ keyId }: { keyId: string }): React.ReactElement {
   return (
@@ -11067,6 +11643,7 @@ export default function ProductGrid({
   perPage = 24,
   initialQuery,
   warehouseId,
+  refreshKey = 0,
   requireWarehouse = false,
 }: Props) {
   const [items, setItems] = useState<Product[]>([]);
@@ -11149,12 +11726,10 @@ export default function ProductGrid({
       });
 
     return () => ac.abort();
-  }, [query, requireWarehouse, warehouseId]);
+  }, [query, requireWarehouse, warehouseId, refreshKey]);
 
   const showBlockingError = Boolean(error) && items.length === 0;
 
-  // CSS lokal ProductGrid supaya konsisten dan tidak tergantung class global yang belum ada
-  // (Tidak mengubah logika sama sekali)
   const styles = (
     <style>{`
       @keyframes pg-shimmer {
@@ -11301,6 +11876,9 @@ export default function ProductGrid({
         background: rgba(255,255,255,.6);
         color: var(--color-text-soft);
       }
+
+      opacity: isOutOfStock ? 0.65 : 1,
+      cursor: isOutOfStock ? "not-allowed" : "pointer",
     `}</style>
   );
 
@@ -11364,13 +11942,20 @@ export default function ProductGrid({
                     : (Number.isFinite(minFromBackend) ? minFromBackend : 0);
                 const hasVariants = Array.isArray(p.variants) && p.variants.length > 0;
 
+                const totalStock = getTotalProductStock(p);
+                const isOutOfStock = totalStock <= 0;
+
                 return (
                   <button
                     key={p.id}
-                    onClick={() => onPick?.(p)}
-                    className="pg-card"
                     type="button"
-                    aria-label={`Tambah ${p.nama} ke keranjang`}
+                    className="pg-card"
+                    onClick={() => {
+                      if (isOutOfStock) return;
+                      onPick?.(p);
+                    }}
+                    disabled={isOutOfStock}
+                    aria-disabled={isOutOfStock}
                   >
                     <div className="pg-thumb">
                       {img ? (
@@ -11398,6 +11983,36 @@ export default function ProductGrid({
                         <div className="pg-variant">
                           {hasVariants ? `${p.variants!.length} varian` : "—"}
                         </div>
+                      </div>
+
+                      <div
+                        style={{
+                          marginTop: 8,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: 8,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        {(() => {
+                          const stock = getTotalProductStock(p);
+                          const isEmpty = stock <= 0;
+
+                          return (
+                            <span
+                              className={isEmpty ? "badge badge-danger" : "badge badge-success"}
+                              title="Stok real berdasarkan gudang yang dipilih"
+                              style={{
+                                height: 24,
+                                fontSize: 12,
+                                paddingInline: 10,
+                              }}
+                            >
+                              {getStockBadgeText(stock)}
+                            </span>
+                          );
+                        })()}
                       </div>
                     </div>
                   </button>
@@ -11451,8 +12066,8 @@ export default function ProductGrid({
 
 ### src/components/pos/ProductSearch.tsx
 
-- SHA: `a339b60f16fb`  
-- Ukuran: 16 KB
+- SHA: `76ac57ef51cf`  
+- Ukuran: 17 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -11498,6 +12113,7 @@ type VariantsEnvelope = {
     product_id?: number;
     image_url?: string | null;
     media_path?: string | null;
+    stock_qty?: number | string | null;
   }>;
   meta?: {
     current_page?: number;
@@ -11542,6 +12158,12 @@ function mapResponse(json: VariantsEnvelope): VariantSummary[] {
 /** ✅ Safe BASE resolver */
 const BASE = getBaseUrl();
 
+function canSearch(term: string): boolean {
+  const clean = term.trim();
+
+  return clean.length >= 2 || isLikelyBarcode(clean);
+}
+
 /* ====================== Component ====================== */
 
 export default function ProductSearch({ warehouseId }: Props) {
@@ -11553,15 +12175,14 @@ export default function ProductSearch({ warehouseId }: Props) {
   // pagination / infinite scroll
   const [page, setPage] = useState<number>(1);
   const [hasMore, setHasMore] = useState<boolean>(true);
-  const perPageDefault = 24; // tampilkan banyak item di awal
 
   const lastGoodItemsRef = useRef<VariantSummary[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const reqSeqRef = useRef<number>(0);
+  const latestTermRef = useRef<string>("");
   const debounceRef = useRef<number | null>(null);
   const mountedRef = useRef<boolean>(true);
-  const didInitRef = useRef<boolean>(false);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   const [activeIdx, setActiveIdx] = useState<number>(-1);
@@ -11570,27 +12191,31 @@ export default function ProductSearch({ warehouseId }: Props) {
 
   /* =========== Mount / Unmount =========== */
   useEffect(() => {
-    if (import.meta.env.DEV) {
-      if (didInitRef.current) return;
-      didInitRef.current = true;
-    }
     mountedRef.current = true;
+
     try {
       inputRef.current?.focus();
     } catch {
       /* ignore */
     }
+
     return () => {
       mountedRef.current = false;
       abortRef.current?.abort();
-      if (debounceRef.current) window.clearTimeout(debounceRef.current);
+
+      if (debounceRef.current) {
+        window.clearTimeout(debounceRef.current);
+        debounceRef.current = null;
+      }
     };
   }, []);
 
   /* =========== Core fetcher with pagination =========== */
   const fetchPage = useCallback(
     async (term: string, pageToLoad: number): Promise<{ list: VariantSummary[]; lastPage: number }> => {
-      if (!warehouseId) return { list: [], lastPage: 1 };
+      if (!warehouseId) {
+        throw new Error("Gudang belum dipilih. Pilih Cabang & Gudang terlebih dahulu.");
+      }
 
       const myReqId = ++reqSeqRef.current;
 
@@ -11613,9 +12238,11 @@ export default function ProductSearch({ warehouseId }: Props) {
           );
         }
 
-        url.searchParams.set("q", term ?? "");
-        url.searchParams.set("per_page", String(term.trim() === "" ? perPageDefault : 12));
-        url.searchParams.set("gudang_id", String(warehouseId));
+        const cleanTerm = term.trim();
+
+        url.searchParams.set("q", cleanTerm);
+        url.searchParams.set("per_page", "12");
+        url.searchParams.set("warehouse_id", String(warehouseId));
         url.searchParams.set("page", String(pageToLoad));
 
         const token = getAuthToken();
@@ -11666,22 +12293,40 @@ export default function ProductSearch({ warehouseId }: Props) {
         }
         throw err;
       } finally {
-        if (mountedRef.current && reqSeqRef.current) {
+        if (mountedRef.current) {
           setLoading(false);
         }
       }
     },
-    [warehouseId, perPageDefault]
+    [warehouseId]
   );
 
-  /* =========== Reset & initial load (show all) =========== */
+  /* =========== Reset & initial load =========== */
   const resetAndLoad = useCallback(
     async (term: string) => {
+      const cleanTerm = term.trim();
+      latestTermRef.current = cleanTerm;
+
       setPage(1);
-      setHasMore(true);
+      setHasMore(false);
+      setActiveIdx(-1);
+      setErrorText(null);
+
+      // Penting: bersihkan hasil lama setiap keyword berubah
+      setItems([]);
+      lastGoodItemsRef.current = [];
+
+      if (!canSearch(cleanTerm)) {
+        return;
+      }
+
       try {
-        const { list, lastPage } = await fetchPage(term, 1);
+        const { list, lastPage } = await fetchPage(cleanTerm, 1);
         if (!mountedRef.current) return;
+
+        // Penting: pastikan hasil yang tampil hanya hasil dari keyword aktif terakhir
+        if (latestTermRef.current !== cleanTerm) return;
+
         setItems(list);
         lastGoodItemsRef.current = list;
         setActiveIdx(list.length ? 0 : -1);
@@ -11690,34 +12335,50 @@ export default function ProductSearch({ warehouseId }: Props) {
       } catch (err: unknown) {
         if (isAbortLike(err)) return;
         if (!mountedRef.current) return;
+
         const msg =
-          (typeof err === "object" && err && "message" in err && typeof (err as { message?: unknown }).message === "string")
+          (typeof err === "object" &&
+            err &&
+            "message" in err &&
+            typeof (err as { message?: unknown }).message === "string")
             ? (err as { message: string }).message
             : "Gagal memuat data.";
+
         setErrorText(msg);
-        setItems(lastGoodItemsRef.current ?? []);
+        setItems([]);
+        lastGoodItemsRef.current = [];
+        setActiveIdx(-1);
+        setHasMore(false);
       }
     },
     [fetchPage]
   );
 
-  // initial: load semua item (term kosong)
   useEffect(() => {
-    void resetAndLoad("");
-  }, [resetAndLoad]);
+    setItems([]);
+    lastGoodItemsRef.current = [];
+    setActiveIdx(-1);
+    setHasMore(false);
+    setErrorText(null);
+  }, []);
 
-  /* =========== Debounced search (termasuk kosong) =========== */
+  /* =========== Debounced search =========== */
   useEffect(() => {
     if (debounceRef.current) window.clearTimeout(debounceRef.current);
 
     const term = q ?? "";
-    const shouldSearch =
-      term.trim().length === 0 ||
-      term.trim().length >= 2 ||
-      isLikelyBarcode(term);
+
+    if (!canSearch(term)) {
+      setItems([]);
+      lastGoodItemsRef.current = [];
+      setActiveIdx(-1);
+      setHasMore(false);
+      setErrorText(null);
+      return;
+    }
 
     debounceRef.current = window.setTimeout(() => {
-      if (shouldSearch) void resetAndLoad(term);
+      void resetAndLoad(term);
     }, 250);
 
     return () => {
@@ -11727,17 +12388,34 @@ export default function ProductSearch({ warehouseId }: Props) {
 
   /* =========== Warehouse change re-load =========== */
   useEffect(() => {
-    void resetAndLoad(q ?? "");
+    const term = q ?? "";
+
+    if (!canSearch(term)) {
+      setItems([]);
+      lastGoodItemsRef.current = [];
+      setActiveIdx(-1);
+      setHasMore(false);
+      setErrorText(null);
+      return;
+    }
+
+    void resetAndLoad(term);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [warehouseId]);
 
   /* =========== Load next page (infinite scroll) =========== */
   const loadNextPage = useCallback(async () => {
-    if (loading || !hasMore) return;
+    if (loading || !hasMore || !canSearch(q ?? "")) return;
+
     const next = page + 1;
+    const currentTerm = (q ?? "").trim();
+    latestTermRef.current = currentTerm;
+
     try {
-      const { list, lastPage } = await fetchPage(q ?? "", next);
+      const { list, lastPage } = await fetchPage(currentTerm, next);
       if (!mountedRef.current) return;
+      if (latestTermRef.current !== currentTerm) return;
+
       setItems((prev) => {
         const merged = [...prev, ...list];
         lastGoodItemsRef.current = merged;
@@ -11759,19 +12437,23 @@ export default function ProductSearch({ warehouseId }: Props) {
 
   // IntersectionObserver untuk sentinel (infinite scroll)
   useEffect(() => {
+    if (!hasMore) return;
+
     const node = sentinelRef.current;
     if (!node) return;
 
     const io = new IntersectionObserver((entries) => {
       const entry = entries[0];
+
       if (entry.isIntersecting) {
         void loadNextPage();
       }
     }, { root: listRef.current, rootMargin: "0px 0px 120px 0px" });
 
     io.observe(node);
+
     return () => io.disconnect();
-  }, [loadNextPage]);
+  }, [hasMore, loadNextPage]);
 
   /* =========== Add to cart =========== */
   function addToCart(v: VariantSummary): void {
@@ -11818,7 +12500,17 @@ export default function ProductSearch({ warehouseId }: Props) {
         id="pos-search"
         ref={inputRef}
         value={q}
-        onChange={(e) => setQ(e.target.value)}
+        onChange={(e) => {
+          const next = e.target.value;
+
+          setQ(next);
+
+          setItems([]);
+          lastGoodItemsRef.current = [];
+          setActiveIdx(-1);
+          setHasMore(false);
+          setErrorText(null);
+        }}
         onKeyDown={(e) => {
           if (!items.length) {
             if (e.key === "Enter" && isLikelyBarcode(q)) {
@@ -11847,7 +12539,7 @@ export default function ProductSearch({ warehouseId }: Props) {
             setQ("");
           }
         }}
-        placeholder="Cari produk / scan barcode"
+        placeholder="Cari produk / scan SKU"
         className="input"
         autoComplete="off"
         inputMode="search"
@@ -11961,7 +12653,7 @@ export default function ProductSearch({ warehouseId }: Props) {
           })}
 
           {/* Sentinel untuk infinite scroll */}
-          <div ref={sentinelRef} style={{ height: 6 }} />
+          {hasMore && <div ref={sentinelRef} style={{ height: 6 }} />}
         </div>
       )}
 
@@ -15294,8 +15986,8 @@ export default function SetInitialStockDialog({ open, onClose, onSuccess }: Prop
 
 ### src/components/stock/StockTable.tsx
 
-- SHA: `d3ca66500775`  
-- Ukuran: 7 KB
+- SHA: `9a28d861c85c`  
+- Ukuran: 9 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -15311,9 +16003,10 @@ type Props = {
   rows: Stock[];
   loading?: boolean;
   onEditMin?: (row: Stock) => void;
+  onViewLots?: (row: Stock) => void;
 };
 
-export default function StockTable({ rows, loading, onEditMin }: Props) {
+export default function StockTable({ rows, loading, onEditMin, onViewLots }: Props) {
   // Loading state yang lebih rapi (tanpa ubah logic)
   if (loading) {
     return (
@@ -15473,28 +16166,58 @@ export default function StockTable({ rows, loading, onEditMin }: Props) {
 
                   {/* AKSI */}
                   <td className="text-right" style={{ verticalAlign: "top" }}>
-                    {onEditMin ? (
-                      <button
-                        className="button button-outline"
-                        onClick={() => onEditMin(r)}
-                        title="Ubah Min Stok"
-                        aria-label={`Ubah Min Stok untuk ${
-                          r.variant?.sku ?? `Variant ${r.product_variant_id}`
-                        }`}
-                        style={{
-                          whiteSpace: "nowrap",
-                          borderRadius: 999,
-                          padding: "0.5rem 0.75rem",
-                          fontWeight: 700,
-                        }}
-                      >
-                        Ubah Min
-                      </button>
-                    ) : (
-                      <span className="text-dim" style={{ fontSize: ".9rem" }}>
-                        -
-                      </span>
-                    )}
+                    <div
+                      style={{
+                        display: "inline-flex",
+                        flexDirection: "column",
+                        gap: 8,
+                        alignItems: "flex-end",
+                      }}
+                    >
+                      {onEditMin && (
+                        <button
+                          type="button"
+                          className="button button-outline"
+                          onClick={() => onEditMin(r)}
+                          title="Ubah Min Stok"
+                          aria-label={`Ubah Min Stok untuk ${r.variant?.sku ?? `Variant ${r.product_variant_id}`
+                            }`}
+                          style={{
+                            whiteSpace: "nowrap",
+                            borderRadius: 999,
+                            padding: "0.5rem 0.75rem",
+                            fontWeight: 700,
+                          }}
+                        >
+                          Ubah Min
+                        </button>
+                      )}
+
+                      {onViewLots && (
+                        <button
+                          type="button"
+                          className="button"
+                          onClick={() => onViewLots(r)}
+                          title="Lihat layer stok berdasarkan urutan FIFO"
+                          aria-label={`Lihat Lot FIFO untuk ${r.variant?.sku ?? `Variant ${r.product_variant_id}`
+                            }`}
+                          style={{
+                            whiteSpace: "nowrap",
+                            borderRadius: 999,
+                            padding: "0.5rem 0.75rem",
+                            fontWeight: 700,
+                          }}
+                        >
+                          Lihat Lot FIFO
+                        </button>
+                      )}
+
+                      {!onEditMin && !onViewLots && (
+                        <span className="text-dim" style={{ fontSize: ".9rem" }}>
+                          -
+                        </span>
+                      )}
+                    </div>
                   </td>
                 </tr>
               );
@@ -16001,13 +16724,16 @@ export default function UserFilters(props: Props): React.ReactElement {
 
 ### src/components/users/UserFormDialog.tsx
 
-- SHA: `e164d3a8fdf9`  
-- Ukuran: 7 KB
+- SHA: `476b56c243c2`  
+- Ukuran: 10 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import type { Role, User } from "../../types/user";
+import type { Branch } from "../../types/branch";
+import { listBranches } from "../../api/branches";
+import { useAuth } from "../../store/auth";
 
 type Form = {
   name: string;
@@ -16042,7 +16768,13 @@ type SubmitPayload = {
 };
 
 export default function UserFormDialog({ open, onClose, onSubmit, editing }: Props): React.ReactElement | null {
+  const { user } = useAuth();
+
   const [submitting, setSubmitting] = useState(false);
+  const [loadingBranches, setLoadingBranches] = useState(false);
+  const [branchError, setBranchError] = useState<string | null>(null);
+  const [branches, setBranches] = useState<Branch[]>([]);
+
   const [form, setForm] = useState<Form>({
     name: "",
     email: "",
@@ -16053,6 +16785,64 @@ export default function UserFormDialog({ open, onClose, onSubmit, editing }: Pro
     is_active: true,
   });
 
+  const isSuperadmin = user?.role === "superadmin";
+  const isAdminCabang = user?.role === "admin_cabang";
+
+  const lockedCabangId = useMemo(() => {
+    if (isAdminCabang && user?.cabang_id) {
+      return user.cabang_id;
+    }
+
+    return undefined;
+  }, [isAdminCabang, user?.cabang_id]);
+
+  const availableBranches = useMemo(() => {
+    if (lockedCabangId) {
+      return branches.filter((branch) => Number(branch.id) === Number(lockedCabangId));
+    }
+
+    return branches;
+  }, [branches, lockedCabangId]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    let alive = true;
+
+    async function fetchBranches(): Promise<void> {
+      setLoadingBranches(true);
+      setBranchError(null);
+
+      try {
+        const res = await listBranches({
+          is_active: true,
+          per_page: 100,
+          sort: "nama",
+        });
+
+        if (!alive) return;
+
+        setBranches(Array.isArray(res.data) ? res.data : []);
+      } catch (err) {
+        if (!alive) return;
+
+        const message = err instanceof Error ? err.message : "Gagal memuat data cabang.";
+        setBranchError(message);
+        setBranches([]);
+      } finally {
+        if (alive) {
+          setLoadingBranches(false);
+        }
+      }
+    }
+
+    void fetchBranches();
+
+    return () => {
+      alive = false;
+    };
+  }, [open]);
+
   useEffect(() => {
     if (editing) {
       setForm({
@@ -16060,7 +16850,7 @@ export default function UserFormDialog({ open, onClose, onSubmit, editing }: Pro
         email: editing.email,
         phone: editing.phone ?? "",
         password: "",
-        cabang_id: editing.cabang_id ? String(editing.cabang_id) : "",
+        cabang_id: editing.cabang_id ? String(editing.cabang_id) : (lockedCabangId ? String(lockedCabangId) : ""),
         role: editing.role,
         is_active: editing.is_active,
       });
@@ -16070,12 +16860,12 @@ export default function UserFormDialog({ open, onClose, onSubmit, editing }: Pro
         email: "",
         phone: "",
         password: "",
-        cabang_id: "",
+        cabang_id: lockedCabangId ? String(lockedCabangId) : "",
         role: "kasir",
         is_active: true,
       });
     }
-  }, [editing, open]);
+  }, [editing, open, lockedCabangId]);
 
   if (!open) return null;
 
@@ -16084,6 +16874,10 @@ export default function UserFormDialog({ open, onClose, onSubmit, editing }: Pro
     setSubmitting(true);
     try {
       const cab = form.cabang_id === "" ? null : Number(form.cabang_id);
+
+      if (form.role !== "superadmin" && !cab) {
+        throw new Error("Pilih cabang terlebih dahulu untuk role ini.");
+      }
 
       const payload: SubmitPayload = {
         name: form.name.trim(),
@@ -16181,14 +16975,43 @@ export default function UserFormDialog({ open, onClose, onSubmit, editing }: Pro
             </div>
 
             <div className="form-field">
-              <label>Cabang ID (opsional)</label>
-              <input
-                className="input"
-                type="number"
-                min={1}
+              <label>Cabang</label>
+              <select
+                className="select"
                 value={form.cabang_id}
                 onChange={(e) => setForm((s) => ({ ...s, cabang_id: e.target.value }))}
-              />
+                disabled={loadingBranches || Boolean(lockedCabangId)}
+                required={form.role !== "superadmin"}
+              >
+                <option value="">
+                  {loadingBranches ? "Memuat cabang..." : "Pilih cabang"}
+                </option>
+
+                {availableBranches.map((branch) => (
+                  <option key={branch.id} value={String(branch.id)}>
+                    {branch.nama}
+                    {branch.kota ? ` - ${branch.kota}` : ""}
+                  </option>
+                ))}
+              </select>
+
+              {lockedCabangId && (
+                <p style={{ marginTop: 6, fontSize: 12, opacity: 0.75 }}>
+                  Cabang dikunci sesuai cabang akun admin cabang.
+                </p>
+              )}
+
+              {isSuperadmin && form.role === "superadmin" && (
+                <p style={{ marginTop: 6, fontSize: 12, opacity: 0.75 }}>
+                  Superadmin boleh tanpa cabang.
+                </p>
+              )}
+
+              {branchError && (
+                <p style={{ marginTop: 6, fontSize: 12, color: "var(--color-danger)" }}>
+                  {branchError}
+                </p>
+              )}
             </div>
 
             <div className="form-field">
@@ -17743,15 +18566,21 @@ export default function AccountingJournalsIndex() {
 
 ### src/pages/accounting/AccountingReports.tsx
 
-- SHA: `351c11145fca`  
-- Ukuran: 13 KB
+- SHA: `b210d1539ec1`  
+- Ukuran: 16 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
 // src/pages/accounting/AccountingReports.tsx
 import { useEffect, useState, useCallback } from "react";
-import { getTrialBalance, getGeneralLedger, getProfitLoss, getBalanceSheet } from "../../api/accounting";
-import type { TrialBalanceRow, GLRow, ID } from "../../types/accounting";
+import {
+  getTrialBalance,
+  getGeneralLedger,
+  getProfitLoss,
+  getBalanceSheet,
+  listAccounts,
+} from "../../api/accounting";
+import type { TrialBalanceRow, GLRow, ID, Account } from "../../types/accounting";
 import type { BalanceSheetAgg, ProfitLossAgg } from "../../types/accounting";
 import { useAuth } from "../../store/auth";
 
@@ -17762,6 +18591,8 @@ export default function AccountingReports() {
   const [year, setYear] = useState<number>(new Date().getFullYear());
   const [month, setMonth] = useState<number>(new Date().getMonth() + 1);
   const [accountId, setAccountId] = useState<ID | null>(null);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [accountsLoading, setAccountsLoading] = useState(false);
 
   const [tb, setTb] = useState<TrialBalanceRow[] | null>(null);
   const [gl, setGl] = useState<GLRow[] | null>(null);
@@ -17782,6 +18613,53 @@ export default function AccountingReports() {
     const maybe = user.branch_id ?? user.branchId ?? user.cabang_id ?? user.cabangId ?? (user)?.branch?.id;
     return typeof maybe === "number" && Number.isFinite(maybe) ? maybe : 0;
   }, [user]);
+
+  const loadAccounts = useCallback(async () => {
+    const cabang_id = getCabangId();
+
+    setAccountsLoading(true);
+
+    try {
+      let rows: Account[] = [];
+
+      if (cabang_id) {
+        const scoped = await listAccounts({
+          cabang_id,
+          only_active: true,
+        });
+
+        rows = Array.isArray(scoped.data) ? scoped.data : [];
+      }
+
+      if (rows.length === 0) {
+        const fallback = await listAccounts({
+          only_active: true,
+        });
+
+        rows = Array.isArray(fallback.data) ? fallback.data : [];
+      }
+
+      setAccounts(rows);
+
+      setAccountId((current) => {
+        if (current && rows.some((account) => account.id === current)) {
+          return current;
+        }
+
+        return rows.length > 0 ? rows[0].id : null;
+      });
+    } catch (err) {
+      console.error("[AccountingReports] Gagal memuat akun:", err);
+      setAccounts([]);
+      setAccountId(null);
+    } finally {
+      setAccountsLoading(false);
+    }
+  }, [getCabangId]);
+
+  useEffect(() => {
+    void loadAccounts();
+  }, [loadAccounts]);
 
   const refresh = useCallback(async () => {
     const cabang_id = getCabangId();
@@ -17944,16 +18822,36 @@ export default function AccountingReports() {
           <div className="card__body">
             <div className="form-row">
               <div className="form-field">
-                <label className="form-label">Account ID</label>
-                <input
-                  type="number"
-                  className="input"
-                  placeholder="Masukkan Account ID…"
+                <label className="form-label">Akun</label>
+
+                <select
+                  className="select"
                   value={accountId ?? ""}
                   onChange={(e) => setAccountId(e.target.value ? Number(e.target.value) : null)}
-                  min={1}
-                />
+                  disabled={accountsLoading || accounts.length === 0}
+                >
+                  <option value="">
+                    {accountsLoading ? "Memuat akun..." : "Pilih akun"}
+                  </option>
+
+                  {accounts.map((account) => (
+                    <option key={account.id} value={account.id}>
+                      {account.code} - {account.name}
+                    </option>
+                  ))}
+                </select>
+
+                {accounts.length === 0 && !accountsLoading && (
+                  <div className="help-text" style={{ marginTop: 6 }}>
+                    Akun belum termuat. Cek apakah endpoint /accounting/accounts berhasil, token masih valid,
+                    dan data accounts memiliki is_active = true.
+                  </div>
+                )}
               </div>
+            </div>
+
+            <div className="help-text" style={{ marginTop: 8 }}>
+              Data General Ledger difilter berdasarkan cabang login, akun, tahun, bulan, dan hanya jurnal berstatus POSTED.
             </div>
 
             <div className="table-responsive" style={{ marginTop: 8 }}>
@@ -19100,8 +19998,8 @@ export default function CategoryIndex(): React.ReactElement {
 
 ### src/pages/customers/CustomerDetail.tsx
 
-- SHA: `e397430ddce6`  
-- Ukuran: 13 KB
+- SHA: `3b0262aecab9`  
+- Ukuran: 21 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -19112,6 +20010,7 @@ import {
   changeCustomerStage,
   getCustomer,
   getCustomerHistory,
+  updateCustomer,
 } from "../../api/customers";
 import type {
   CustomerDetail as TDetail,
@@ -19121,6 +20020,14 @@ import type {
 import CustomerStageBadge from "../../components/customers/CustomerStageBadge";
 import CustomerTimeline from "../../components/customers/CustomerTimeline";
 import { useAuth } from "../../store/auth";
+
+type CustomerEditForm = {
+  nama: string;
+  phone: string;
+  email: string;
+  alamat: string;
+  catatan: string;
+};
 
 export default function CustomerDetail(): React.ReactElement {
   const { id } = useParams();
@@ -19134,8 +20041,20 @@ export default function CustomerDetail(): React.ReactElement {
   const [error, setError] = useState<string | null>(null);
   const [tlError, setTlError] = useState<string | null>(null);
 
+  const [editOpen, setEditOpen] = useState<boolean>(false);
+  const [savingEdit, setSavingEdit] = useState<boolean>(false);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<CustomerEditForm>({
+    nama: "",
+    phone: "",
+    email: "",
+    alamat: "",
+    catatan: "",
+  });
+
   const { hasRole } = useAuth();
   const canChangeStage = hasRole("superadmin") || hasRole("admin_cabang");
+  const canEditCustomer = hasRole("superadmin") || hasRole("admin_cabang");
 
   useEffect(() => {
     if (!Number.isFinite(cid)) {
@@ -19192,6 +20111,88 @@ export default function CustomerDetail(): React.ReactElement {
       setDetail((d) => (d ? { ...d, customer: updated } : d));
     } catch {
       // tempatkan toast global bila ada
+    }
+  }
+
+  function openEditCustomer(): void {
+    if (!detail) return;
+
+    setEditForm({
+      nama: detail.customer.nama ?? "",
+      phone: detail.customer.phone ?? "",
+      email: detail.customer.email ?? "",
+      alamat: detail.customer.alamat ?? "",
+      catatan: detail.customer.catatan ?? "",
+    });
+
+    setEditError(null);
+    setEditOpen(true);
+  }
+
+  async function submitEditCustomer(e: React.FormEvent<HTMLFormElement>): Promise<void> {
+    e.preventDefault();
+
+    if (!detail || savingEdit) return;
+
+    const nama = editForm.nama.trim();
+    const phone = editForm.phone.trim();
+
+    if (!nama) {
+      setEditError("Nama pelanggan wajib diisi.");
+      return;
+    }
+
+    if (!phone) {
+      setEditError("Nomor HP pelanggan wajib diisi.");
+      return;
+    }
+
+    setSavingEdit(true);
+    setEditError(null);
+
+    try {
+      const updated = await updateCustomer(detail.customer.id, {
+        nama,
+        phone,
+        email: editForm.email.trim() || null,
+        alamat: editForm.alamat.trim() || null,
+        catatan: editForm.catatan.trim() || null,
+      });
+
+      setDetail((current) =>
+        current
+          ? {
+            ...current,
+            customer: updated,
+          }
+          : current
+      );
+
+      setEditOpen(false);
+    } catch (err: unknown) {
+      let msg = "Gagal menyimpan perubahan customer.";
+
+      if (typeof err === "object" && err !== null) {
+        const e = err as {
+          response?: {
+            data?: {
+              message?: string;
+              errors?: Record<string, string[]>;
+            };
+          };
+          message?: string;
+        };
+
+        msg =
+          e.response?.data?.message ??
+          Object.values(e.response?.data?.errors ?? {})?.[0]?.[0] ??
+          e.message ??
+          msg;
+      }
+
+      setEditError(msg);
+    } finally {
+      setSavingEdit(false);
     }
   }
 
@@ -19277,6 +20278,16 @@ export default function CustomerDetail(): React.ReactElement {
             >
               ← Back
             </button>
+
+            {canEditCustomer ? (
+              <button
+                type="button"
+                className="button button-primary"
+                onClick={openEditCustomer}
+              >
+                Edit Customer
+              </button>
+            ) : null}
 
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", flexWrap: "wrap" }}>
@@ -19503,6 +20514,146 @@ export default function CustomerDetail(): React.ReactElement {
           </section>
         </div>
 
+        {editOpen ? (
+          <div className="modal-overlay" role="dialog" aria-modal="true">
+            <div className="modal card">
+              <div className="modal-header">
+                <h2 className="modal-title">Edit Customer</h2>
+
+                <button
+                  type="button"
+                  className="button button-outline"
+                  onClick={() => setEditOpen(false)}
+                  disabled={savingEdit}
+                >
+                  Tutup
+                </button>
+              </div>
+
+              <form onSubmit={submitEditCustomer}>
+                <div className="posx-modal-form">
+                  {editError ? (
+                    <div
+                      className="toast"
+                      style={{
+                        borderLeftColor: "var(--color-danger)",
+                        marginBottom: "1rem",
+                      }}
+                    >
+                      {editError}
+                    </div>
+                  ) : null}
+
+                  <div className="form-row form-row--2">
+                    <label>
+                      <span style={{ display: "block", fontWeight: 700, marginBottom: 6 }}>
+                        Nama
+                      </span>
+                      <input
+                        className="input"
+                        value={editForm.nama}
+                        onChange={(e) =>
+                          setEditForm((f) => ({ ...f, nama: e.target.value }))
+                        }
+                        disabled={savingEdit}
+                        required
+                      />
+                    </label>
+
+                    <label>
+                      <span style={{ display: "block", fontWeight: 700, marginBottom: 6 }}>
+                        No HP
+                      </span>
+                      <input
+                        className="input"
+                        value={editForm.phone}
+                        onChange={(e) =>
+                          setEditForm((f) => ({ ...f, phone: e.target.value }))
+                        }
+                        disabled={savingEdit}
+                        required
+                      />
+                    </label>
+                  </div>
+
+                  <div className="form-row" style={{ marginTop: "1rem" }}>
+                    <label>
+                      <span style={{ display: "block", fontWeight: 700, marginBottom: 6 }}>
+                        Email
+                      </span>
+                      <input
+                        className="input"
+                        type="email"
+                        value={editForm.email}
+                        onChange={(e) =>
+                          setEditForm((f) => ({ ...f, email: e.target.value }))
+                        }
+                        disabled={savingEdit}
+                        placeholder="Opsional"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="form-row" style={{ marginTop: "1rem" }}>
+                    <label>
+                      <span style={{ display: "block", fontWeight: 700, marginBottom: 6 }}>
+                        Alamat
+                      </span>
+                      <textarea
+                        className="textarea"
+                        rows={4}
+                        value={editForm.alamat}
+                        onChange={(e) =>
+                          setEditForm((f) => ({ ...f, alamat: e.target.value }))
+                        }
+                        disabled={savingEdit}
+                        placeholder="Contoh: Jl. Melati No. 10, RT/RW, Kecamatan, Kota"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="form-row" style={{ marginTop: "1rem" }}>
+                    <label>
+                      <span style={{ display: "block", fontWeight: 700, marginBottom: 6 }}>
+                        Catatan
+                      </span>
+                      <textarea
+                        className="textarea"
+                        rows={3}
+                        value={editForm.catatan}
+                        onChange={(e) =>
+                          setEditForm((f) => ({ ...f, catatan: e.target.value }))
+                        }
+                        disabled={savingEdit}
+                        placeholder="Opsional"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                <div className="modal-actions">
+                  <button
+                    type="button"
+                    className="button button-outline"
+                    onClick={() => setEditOpen(false)}
+                    disabled={savingEdit}
+                  >
+                    Batal
+                  </button>
+
+                  <button
+                    type="submit"
+                    className="button button-primary"
+                    disabled={savingEdit}
+                  >
+                    {savingEdit ? "Menyimpan..." : "Simpan Perubahan"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        ) : null}
+
         {/* Responsive tweaks */}
         <style>
           {`
@@ -19679,22 +20830,23 @@ export default function CustomersIndex(): React.ReactElement {
 
 ### src/pages/DashboardHome.tsx
 
-- SHA: `e6910118017b`  
-- Ukuran: 10 KB
+- SHA: `8194b424ac8e`  
+- Ukuran: 11 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
 // src/pages/DashboardHome.tsx
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../store/auth';
-import { getKPIs, getChart7d, getTopProducts, getLowStock, getQuickActions } from '../api/dashboard';
-import type { KPIs, Chart7DayPoint, TopProduct, LowStockRow, QuickAction } from '../types/dashboard';
+import { getKPIs, getChart7d, getTopProducts, getLowStock, getLatestOrders, getQuickActions } from '../api/dashboard';
+import type { KPIs, Chart7DayPoint, TopProduct, LowStockRow, LatestOrder, QuickAction } from '../types/dashboard';
 import KPIStatCards from '../components/dashboard/KPIStatCards';
 import Sales7DaysChart from '../components/dashboard/Sales7DaysChart';
 import TopProductsList from '../components/dashboard/TopProductsList';
 import LowStockList from '../components/dashboard/LowStockList';
 import QuickActions from '../components/dashboard/QuickActions';
 import ReorderPointList from '../components/dashboard/ReorderPointList';
+import LatestOrdersList from '../components/dashboard/LatestOrdersList';
 
 export default function DashboardHome(): React.ReactElement {
   const { user, hasRole } = useAuth();
@@ -19712,6 +20864,7 @@ export default function DashboardHome(): React.ReactElement {
   const [chart, setChart] = useState<Chart7DayPoint[] | null>(null);
   const [top, setTop] = useState<TopProduct[] | null>(null);
   const [low, setLow] = useState<LowStockRow[] | null>(null);
+  const [latestOrders, setLatestOrders] = useState<LatestOrder[] | null>(null);
   const [acts, setActs] = useState<QuickAction[] | null>(null);
 
   const [loading, setLoading] = useState<boolean>(true);
@@ -19730,16 +20883,22 @@ export default function DashboardHome(): React.ReactElement {
         const to = new Date(now); to.setHours(23, 59, 59, 999);
         const from = new Date(now); from.setDate(now.getDate() - 6); from.setHours(0, 0, 0, 0);
 
-        const [k, c, t, l, a] = await Promise.all([
+        const [k, c, t, l, recent, a] = await Promise.all([
           getKPIs({ cabang_id: effectiveCabangId, from: from.toISOString(), to: to.toISOString() }),
           getChart7d({ cabang_id: effectiveCabangId }),
           getTopProducts({ cabang_id: effectiveCabangId, limit: 5 }),
           getLowStock({ cabang_id: effectiveCabangId }),
+          getLatestOrders({ cabang_id: effectiveCabangId, limit: 8 }),
           getQuickActions({ cabang_id: effectiveCabangId }),
         ]);
 
         if (!cancelled) {
-          setKpi(k); setChart(c); setTop(t); setLow(l); setActs(a);
+          setKpi(k);
+          setChart(c);
+          setTop(t);
+          setLow(l);
+          setLatestOrders(recent);
+          setActs(a);
         }
       } catch (e) {
         if (!cancelled) {
@@ -19895,7 +21054,7 @@ export default function DashboardHome(): React.ReactElement {
           <div style={headerMeta}>Dashboard</div>
           <h1 style={headerTitle}>Ringkasan aktivitas & performa toko</h1>
           <p style={headerDesc}>
-            KPI, tren 7 hari, produk terlaris, indikator reorder (ROP), dan peringatan stok rendah.
+            KPI, order terbaru, tren 7 hari, produk terlaris, indikator reorder (ROP), dan peringatan stok rendah.
           </p>
         </div>
 
@@ -19912,6 +21071,35 @@ export default function DashboardHome(): React.ReactElement {
 
       {/* KPI */}
       <KPIStatCards data={kpi} loading={loading} error={err} />
+
+      {/* Alert bar */}
+      {Array.isArray(low) && low.length > 0 && (
+        <div
+          className="card"
+          style={{
+            padding: 14,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 10,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span className="badge badge-warning">Peringatan</span>
+            <div style={{ fontSize: 14, color: 'var(--color-text)' }}>
+              Ada <strong>{low.length}</strong> item stok rendah. Cek kartu <strong>Stok Rendah</strong>.
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="button button-outline"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          >
+            Lihat Ringkasan
+          </button>
+        </div>
+      )}
 
       {/* Chart: sekarang full width */}
       <section className="card" style={{ padding: 'var(--space-5)', minWidth: 0 }}>
@@ -19957,34 +21145,23 @@ export default function DashboardHome(): React.ReactElement {
         </section>
       </div>
 
-      {/* Alert bar */}
-      {Array.isArray(low) && low.length > 0 && (
-        <div
-          className="card"
-          style={{
-            padding: 14,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 10,
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span className="badge badge-warning">Peringatan</span>
-            <div style={{ fontSize: 14, color: 'var(--color-text)' }}>
-              Ada <strong>{low.length}</strong> item stok rendah. Cek kartu <strong>Stok Rendah</strong>.
-            </div>
-          </div>
-
-          <button
-            type="button"
-            className="button button-outline"
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          >
-            Lihat Ringkasan
-          </button>
+      {/* Ringkasan Order Terbaru Hari Ini */}
+      <section className="card" style={{ padding: 'var(--space-5)', minWidth: 0 }}>
+        <div style={cardHeadRow}>
+          <h2 style={cardTitle}>Order Terbaru Hari Ini</h2>
+          <p style={cardHint}>Menampilkan transaksi terbaru hari ini</p>
         </div>
-      )}
+        <div style={divider}>
+          <LatestOrdersList
+            data={latestOrders}
+            loading={loading}
+            error={err}
+            onViewOrder={(orderId) => {
+              window.location.href = `/pos/orders-list?open_order_id=${orderId}`;
+            }}
+          />
+        </div>
+      </section>
 
       {/* Quick actions */}
       <section className="card" style={{ padding: 'var(--space-5)' }}>
@@ -20549,8 +21726,8 @@ export default function DeliveryDetail(): React.ReactElement {
 
 ### src/pages/delivery/DeliveryIndex.tsx
 
-- SHA: `af50149baa09`  
-- Ukuran: 18 KB
+- SHA: `5a30202f1b32`  
+- Ukuran: 19 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -20626,18 +21803,50 @@ export default function DeliveryIndex(): React.ReactElement {
   }, [appliedQuery]);
 
   async function openWaybill(id: number) {
+    const w = window.open("", "_blank");
+
+    if (!w) {
+      alert("Popup diblokir. Izinkan pop-up untuk melihat surat jalan.");
+      return;
+    }
+
+    w.document.open();
+    w.document.write(`
+    <!doctype html>
+    <html>
+      <head>
+        <meta charset="utf-8" />
+        <title>Memuat Surat Jalan...</title>
+      </head>
+      <body style="font-family: Arial, sans-serif; padding: 24px;">
+        <p>Memuat surat jalan...</p>
+      </body>
+    </html>
+  `);
+    w.document.close();
+
     try {
       const html = await getWaybillHtml(id);
-      const w = window.open("", "_blank", "noopener,noreferrer");
-      if (w) {
-        w.document.open();
-        w.document.write(html);
-        w.document.close();
-      } else {
-        alert("Popup diblokir. Izinkan pop-up untuk melihat surat jalan.");
-      }
+
+      w.document.open();
+      w.document.write(html);
+      w.document.close();
     } catch (e) {
-      alert((e as Error).message || "Gagal memuat surat jalan.");
+      w.document.open();
+      w.document.write(`
+      <!doctype html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Gagal Memuat Surat Jalan</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; padding: 24px;">
+          <h3>Gagal memuat surat jalan.</h3>
+          <p>${(e as Error).message || "Terjadi kesalahan saat mengambil data surat jalan."}</p>
+        </body>
+      </html>
+    `);
+      w.document.close();
     }
   }
 
@@ -20929,9 +22138,8 @@ export default function DeliveryIndex(): React.ReactElement {
                     <td>
                       <div className="truncate-1" style={{ fontWeight: 600 }}>
                         {(d.pickup_address || d.delivery_address)
-                          ? `${d.pickup_address ?? ""}${
-                              d.delivery_address ? " → " + d.delivery_address : ""
-                            }`
+                          ? `${d.pickup_address ?? ""}${d.delivery_address ? " → " + d.delivery_address : ""
+                          }`
                           : "-"}
                       </div>
                     </td>
@@ -21260,8 +22468,8 @@ export default function FeeIndex(): React.ReactElement {
 
 ### src/pages/fees/FeeMaster.tsx
 
-- SHA: `2b8a384def32`  
-- Ukuran: 15 KB
+- SHA: `bec17935cb5b`  
+- Ukuran: 17 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
@@ -21271,8 +22479,14 @@ import type {
   Fee, FeeBase, FeeCalcType, FeeCreatePayload, FeeKind, FeeQuery, PaginatedResponse
 } from "../../types/fees";
 import { listFees, createFee, updateFee, deleteFee } from "../../api/fees";
+import { listBranches } from "../../api/branches";
+import type { Branch } from "../../types/branch";
 
-type CabangOption = { id: number; name: string };
+type CabangOption = {
+  id: number;
+  name: string;
+  kota?: string | null;
+};
 
 const KIND_OPTIONS: FeeKind[] = ["SALES", "CASHIER", "COURIER"];
 const CALC_OPTIONS: FeeCalcType[] = ["PERCENT", "FIXED"];
@@ -21324,7 +22538,7 @@ function FeeFormDialog(props: {
       };
     }
     return {
-      cabang_id: cabangOptions[0]?.id ?? 1,
+      cabang_id: cabangOptions[0]?.id ?? 0,
       name: "",
       kind: "CASHIER",
       calc_type: "PERCENT",
@@ -21349,6 +22563,10 @@ function FeeFormDialog(props: {
     setSubmitting(true);
     setError(null);
     try {
+      if (!values.cabang_id || values.cabang_id <= 0) {
+        throw new Error("Pilih cabang terlebih dahulu.");
+      }
+
       if (values.calc_type === "PERCENT" && values.rate > 100) {
         throw new Error("Rate persentase tidak boleh lebih dari 100.");
       }
@@ -21392,11 +22610,19 @@ function FeeFormDialog(props: {
               <label>Cabang</label>
               <select
                 className="select"
-                value={values.cabang_id}
+                value={values.cabang_id || ""}
                 onChange={(e) => onChange("cabang_id", Number(e.target.value))}
+                required
               >
+                <option value="" disabled>
+                  Pilih cabang
+                </option>
+
                 {cabangOptions.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                    {c.kota ? ` · ${c.kota}` : ""}
+                  </option>
                 ))}
               </select>
             </div>
@@ -21482,10 +22708,11 @@ function FeeFormDialog(props: {
             >
               Batal
             </button>
+
             <button
               type="submit"
               className="button button-primary"
-              disabled={submitting}
+              disabled={submitting || cabangOptions.length === 0}
             >
               {submitting ? "Menyimpan..." : "Simpan"}
             </button>
@@ -21513,15 +22740,30 @@ function RowActions(props: {
 
 /* ---------- Main Page ---------- */
 export default function FeeMaster(): React.ReactElement {
-  const cabangOptions: CabangOption[] = useMemo(() => [
-    { id: 1, name: "Cabang 1" },
-    { id: 2, name: "Cabang 2" },
-  ], []);
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [branchesLoading, setBranchesLoading] = useState<boolean>(false);
+  const [branchesError, setBranchesError] = useState<string | null>(null);
+
+  const cabangOptions: CabangOption[] = useMemo(() => {
+    return branches
+      .filter((branch) => branch.is_active)
+      .sort((a, b) => a.nama.localeCompare(b.nama, "id"))
+      .map((branch) => ({
+        id: branch.id,
+        name: branch.nama,
+        kota: branch.kota,
+      }));
+  }, [branches]);
 
   const [q, setQ] = useState<FeeQuery>({
-    page: 1, per_page: 10, sort: "-created_at",
-    cabang_id: cabangOptions[0]?.id ?? 1,
-    is_active: undefined, kind: undefined, base: undefined, q: "",
+    page: 1,
+    per_page: 10,
+    sort: "-created_at",
+    cabang_id: undefined,
+    is_active: undefined,
+    kind: undefined,
+    base: undefined,
+    q: "",
   });
 
   const { data, loading, err, setData } = useAsync<PaginatedResponse<Fee>>(
@@ -21531,6 +22773,51 @@ export default function FeeMaster(): React.ReactElement {
 
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<FormMode>({ type: "create" });
+
+  useEffect(() => {
+    let alive = true;
+
+    setBranchesLoading(true);
+    setBranchesError(null);
+
+    listBranches({
+      is_active: true,
+      per_page: 100,
+      sort: "nama",
+    })
+      .then((res) => {
+        if (!alive) return;
+        setBranches(res.data ?? []);
+      })
+      .catch((e: unknown) => {
+        if (!alive) return;
+        setBranches([]);
+        setBranchesError(
+          e instanceof Error ? e.message : "Gagal memuat data cabang."
+        );
+      })
+      .finally(() => {
+        if (!alive) return;
+        setBranchesLoading(false);
+      });
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const cabangNameById = useMemo(() => {
+    const map = new Map<number, string>();
+
+    cabangOptions.forEach((cabang) => {
+      map.set(
+        cabang.id,
+        `${cabang.name}${cabang.kota ? ` · ${cabang.kota}` : ""}`
+      );
+    });
+
+    return map;
+  }, [cabangOptions]);
 
   function refresh() {
     setQ((s) => ({ ...s }));
@@ -21582,11 +22869,33 @@ export default function FeeMaster(): React.ReactElement {
             <label>Cabang</label>
             <select
               className="select"
-              value={q.cabang_id}
-              onChange={(e) => setQ((s) => ({ ...s, page: 1, cabang_id: Number(e.target.value) }))}
+              value={q.cabang_id ?? ""}
+              disabled={branchesLoading}
+              onChange={(e) =>
+                setQ((s) => ({
+                  ...s,
+                  page: 1,
+                  cabang_id: e.target.value ? Number(e.target.value) : undefined,
+                }))
+              }
             >
-              {cabangOptions.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              <option value="">
+                {branchesLoading ? "Memuat cabang..." : "Semua Cabang"}
+              </option>
+
+              {cabangOptions.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                  {c.kota ? ` · ${c.kota}` : ""}
+                </option>
+              ))}
             </select>
+
+            {branchesError && (
+              <div style={{ marginTop: 6, color: "var(--color-danger, #b91c1c)", fontSize: 13 }}>
+                {branchesError}
+              </div>
+            )}
           </div>
 
           <div>
@@ -21676,7 +22985,9 @@ export default function FeeMaster(): React.ReactElement {
 
               {data?.data.map((r) => (
                 <tr key={r.id}>
-                  <td>#{r.cabang_id}</td>
+                  <td>
+                    {cabangNameById.get(r.cabang_id) ?? `Cabang #${r.cabang_id}`}
+                  </td>
                   <td>{r.name}</td>
                   <td>{r.kind}</td>
                   <td>{r.calc_type}</td>
@@ -22389,7 +23700,7 @@ export default function WarehousesPage(): React.ReactElement {
 
 ### src/pages/pos/Orders.tsx
 
-- SHA: `cc85f244470d`  
+- SHA: `04f05ba8b32e`  
 - Ukuran: 16 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
@@ -22473,8 +23784,8 @@ export default function OrdersPage(): React.ReactElement {
   const { branch, warehouse } = useActiveScope();
   const [openPay, setOpenPay] = useState<boolean>(false);
   const [lastOrder, setLastOrder] = useState<Order | null>(null);
+  const [catalogRefreshKey, setCatalogRefreshKey] = useState(0);
 
-  // ✅ Ambil state/aksi via selector (tanpa any/unknown)
   const items = useCart((s) => s.items);
   const quote = useCart((s) => s.quote);
   const add = useCart((s) => s.add);
@@ -22649,7 +23960,13 @@ export default function OrdersPage(): React.ReactElement {
           {!scoped && <ScopePickerBanner />}
 
           <div className="card">
-            <ProductSearch warehouseId={warehouse?.id ?? 0} />
+            {warehouse?.id ? (
+              <ProductSearch warehouseId={warehouse.id} />
+            ) : (
+              <div className="empty-state">
+                Pilih Cabang &amp; Gudang terlebih dahulu sebelum mencari produk atau scan SKU.
+              </div>
+            )}
           </div>
 
           {warehouse?.id ? (
@@ -22658,6 +23975,7 @@ export default function OrdersPage(): React.ReactElement {
                 onPick={onPickProduct}
                 perPage={24}
                 warehouseId={warehouse.id}
+                refreshKey={catalogRefreshKey}
                 requireWarehouse
               />
             </div>
@@ -22706,6 +24024,7 @@ export default function OrdersPage(): React.ReactElement {
           onSuccess={(o: Order): void => {
             setLastOrder(o);
             setOpenPay(false);
+            setCatalogRefreshKey((v) => v + 1);
           }}
         />
       )}
@@ -22896,13 +24215,13 @@ function ScopePickerBanner(): React.ReactElement {
 
 ### src/pages/pos/OrdersIndex.tsx
 
-- SHA: `52036220c349`  
-- Ukuran: 36 KB
+- SHA: `e7827ad23b79`  
+- Ukuran: 46 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
 // src/pages/pos/OrdersIndex.tsx
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import {
   listOrders,
@@ -22939,12 +24258,21 @@ const formatIDR = (n: number) =>
 /* ---------- FilterBar ---------- */
 type FilterState = OrdersQuery & { local_q?: string; cash_position?: CashPosition };
 
+type PaymentMethodOption = CheckoutPayment["method"];
+
+type SettlementFormState = {
+  method: PaymentMethodOption;
+  amount: string;
+  holder_id: string;
+  ref_no: string;
+};
+
 function FilterBar(props: {
   value: FilterState;
   onChange: (next: FilterState) => void;
-  onApply: () => void;
+  onApply?: () => void;
 }) {
-  const { value, onChange, onApply } = props;
+  const { value, onChange } = props;
   const [search, setSearch] = useState(value.local_q ?? value.q ?? "");
   useEffect(() => setSearch(value.local_q ?? value.q ?? ""), [value.local_q, value.q]);
 
@@ -22961,8 +24289,14 @@ function FilterBar(props: {
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
-                  onChange({ ...value, q: search || undefined, page: 1 });
-                  onApply();
+                  e.preventDefault();
+
+                  onChange({
+                    ...value,
+                    q: search.trim() || undefined,
+                    local_q: search.trim() || undefined,
+                    page: 1,
+                  });
                 }
               }}
             />
@@ -23051,8 +24385,15 @@ function FilterBar(props: {
             <button
               className="button button-outline"
               onClick={() => {
-                onChange({ page: 1, per_page: value.per_page ?? 10, sort: "-ordered_at" });
-                onApply();
+                setSearch("");
+
+                onChange({
+                  page: 1,
+                  per_page: value.per_page ?? 10,
+                  sort: "-ordered_at",
+                  q: undefined,
+                  local_q: undefined,
+                });
               }}
             >
               Reset
@@ -23060,8 +24401,12 @@ function FilterBar(props: {
             <button
               className="button button-primary"
               onClick={() => {
-                onChange({ ...value, q: search || undefined, page: 1 });
-                onApply();
+                onChange({
+                  ...value,
+                  q: search.trim() || undefined,
+                  local_q: search.trim() || undefined,
+                  page: 1,
+                });
               }}
             >
               Terapkan
@@ -23163,6 +24508,7 @@ function OrdersTable(props: {
         <div className="muted text-sm">
           Halaman {page} dari {last} • Total {total} data
         </div>
+
         <div className="btn-group">
           <button className="button button-outline" disabled={page <= 1} onClick={() => onPage(page - 1)}>
             Prev
@@ -23173,82 +24519,146 @@ function OrdersTable(props: {
         </div>
       </div>
 
-      <div className="table-responsive posx-table-wrap">
-        <table className="table posx-table">
-          <thead>
-            <tr>
-              <th>Tanggal</th>
-              <th>Kode</th>
-              <th>Pelanggan</th>
-              <th className="posx-col-phone">No HP</th>
-              <th className="posx-col-address">Alamat</th>
-              <th>Status</th>
-              <th className="text-right">Subtotal</th>
-              <th className="text-right posx-col-discount">Diskon</th>
-              <th className="text-right">Grand Total</th>
-              <th className="text-right posx-col-paid">Dibayar</th>
-              <th>Posisi Uang</th>
-              <th className="w-1">Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
+      {rows.length === 0 ? (
+        <div className="posx-empty">
+          <div className="posx-empty-title">Belum ada pesanan</div>
+          <div className="muted text-sm">Data pesanan tidak ditemukan dari filter yang dipilih.</div>
+        </div>
+      ) : (
+        <>
+          {/* Desktop / tablet besar */}
+          <div className="table-responsive posx-table-wrap posx-orders-desktop">
+            <table className="table posx-table">
+              <thead>
+                <tr>
+                  <th>Tanggal</th>
+                  <th>Kode</th>
+                  <th>Pelanggan</th>
+                  <th className="posx-col-phone">No HP</th>
+                  <th className="posx-col-address">Alamat</th>
+                  <th>Status</th>
+                  <th className="text-right">Subtotal</th>
+                  <th className="text-right posx-col-discount">Diskon</th>
+                  <th className="text-right">Grand Total</th>
+                  <th className="text-right posx-col-paid">Dibayar</th>
+                  <th>Posisi Uang</th>
+                  <th className="w-1">Aksi</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {rows.map((o) => (
+                  <tr key={o.id}>
+                    <td>{new Date(o.ordered_at).toLocaleString("id-ID")}</td>
+
+                    <td>
+                      <span className="mono">{o.kode}</span>
+                    </td>
+
+                    <td>{o.customer_name ?? "-"}</td>
+
+                    <td className="posx-col-phone">{o.customer_phone ?? "-"}</td>
+
+                    <td className="posx-col-address">
+                      <span className="posx-clip" title={o.customer_address ?? ""}>
+                        {o.customer_address ?? "-"}
+                      </span>
+                    </td>
+
+                    <td>
+                      <span className={`badge ${o.status === "PAID" ? "badge-success" : o.status === "VOID" ? "badge-danger" : "badge-warning"}`}>
+                        {o.status}
+                      </span>
+                    </td>
+
+                    <td className="text-right">{formatIDR(Number(o.subtotal ?? 0))}</td>
+                    <td className="text-right posx-col-discount">{formatIDR(Number(o.discount ?? 0))}</td>
+                    <td className="text-right font-semibold">{formatIDR(Number(o.grand_total ?? 0))}</td>
+                    <td className="text-right posx-col-paid">{formatIDR(Number(o.paid_total ?? 0))}</td>
+
+                    <td>
+                      <CashPositionCell
+                        order={o}
+                        onChanged={onCashPositionChanged}
+                      />
+                    </td>
+
+                    <td>
+                      <button className="button button-outline" onClick={() => onOpenDetail(o.id)}>
+                        Detail
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile */}
+          <div className="posx-orders-mobile">
             {rows.map((o) => (
-              <tr key={o.id}>
-                <td>{new Date(o.ordered_at).toLocaleString("id-ID")}</td>
-                <td>
-                  <span className="mono">{o.kode}</span>
-                </td>
-                <td>{o.customer_name ?? "-"}</td>
-                <td className="posx-col-phone">{o.customer_phone ?? "-"}</td>
-                <td className="posx-col-address">
-                  <span className="posx-truncate">{o.customer_address ?? "-"}</span>
-                </td>
-                <td>
-                  <span className={statusBadgeClass(o.status)}>{o.status}</span>
-                </td>
-                <td className="text-right">{formatIDR(o.subtotal)}</td>
-                <td className="text-right posx-col-discount">{formatIDR(o.discount)}</td>
-                <td className="text-right">
-                  <strong>{formatIDR(o.grand_total)}</strong>
-                </td>
-                <td className="text-right posx-col-paid">{formatIDR(o.paid_total)}</td>
-                <td>
-                  <CashPositionCell order={o} onChanged={onCashPositionChanged} />
-                </td>
-                <td>
-                  <div className="table-actions">
-                    <button className="button button-outline" onClick={() => onOpenDetail(o.id)}>
-                      Detail
-                    </button>
+              <div className="posx-order-card" key={o.id}>
+                <div className="posx-order-card-head">
+                  <div className="min-w-0">
+                    <div className="posx-order-code mono">{o.kode}</div>
+                    <div className="muted text-xs">
+                      {new Date(o.ordered_at).toLocaleString("id-ID")}
+                    </div>
                   </div>
-                </td>
-              </tr>
+
+                  <span className={`badge ${o.status === "PAID" ? "badge-success" : o.status === "VOID" ? "badge-danger" : "badge-warning"}`}>
+                    {o.status}
+                  </span>
+                </div>
+
+                <div className="posx-order-customer">
+                  <div className="posx-order-customer-name">{o.customer_name ?? "Tanpa nama pelanggan"}</div>
+                  <div className="muted text-sm">{o.customer_phone ?? "No HP tidak tersedia"}</div>
+                  {o.customer_address ? (
+                    <div className="muted text-xs posx-order-address">{o.customer_address}</div>
+                  ) : null}
+                </div>
+
+                <div className="posx-order-grid">
+                  <div>
+                    <span className="muted text-xs">Subtotal</span>
+                    <strong>{formatIDR(Number(o.subtotal ?? 0))}</strong>
+                  </div>
+
+                  <div>
+                    <span className="muted text-xs">Diskon</span>
+                    <strong>{formatIDR(Number(o.discount ?? 0))}</strong>
+                  </div>
+
+                  <div>
+                    <span className="muted text-xs">Grand Total</span>
+                    <strong>{formatIDR(Number(o.grand_total ?? 0))}</strong>
+                  </div>
+
+                  <div>
+                    <span className="muted text-xs">Dibayar</span>
+                    <strong>{formatIDR(Number(o.paid_total ?? 0))}</strong>
+                  </div>
+                </div>
+
+                <div className="posx-order-card-footer">
+                  <div className="posx-order-cash">
+                    <label className="muted text-xs">Posisi Uang</label>
+                    <CashPositionCell
+                      order={o}
+                      onChanged={onCashPositionChanged}
+                    />
+                  </div>
+
+                  <button className="button button-outline posx-order-detail-btn" onClick={() => onOpenDetail(o.id)}>
+                    Detail
+                  </button>
+                </div>
+              </div>
             ))}
-
-            {rows.length === 0 && (
-              <tr>
-                <td colSpan={12}>
-                  <div className="empty-state">Tidak ada data untuk filter ini.</div>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="table-footer posx-table-footer">
-        <div className="muted text-sm">
-          Halaman {page} dari {last} • Total {total} data
-        </div>
-        <div className="btn-group">
-          <button className="button button-outline" disabled={page <= 1} onClick={() => onPage(page - 1)}>
-            Prev
-          </button>
-          <button className="button button-outline" disabled={page >= last} onClick={() => onPage(page + 1)}>
-            Next
-          </button>
-        </div>
-      </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -23281,14 +24691,16 @@ function OrderDetailDialog(props: {
   onEdit: (o: Order) => void;
   onReprint: (id: ID, format: "58" | "80") => void;
   onResendWa: (id: ID) => void;
+  onPaymentSaved: (updated: Order) => void;
 }) {
-  const { open, order, onClose, onEdit, onReprint, onResendWa } = props;
+  const { open, order, onClose, onEdit, onReprint, onResendWa, onPaymentSaved } = props;
 
   const [dlOpen, setDlOpen] = useState(false);
   const [dlType, setDlType] = useState<DeliveryType>("DELIVERY");
   const [dlAuto, setDlAuto] = useState<boolean>(true);
   const [dlSubmitting, setDlSubmitting] = useState<boolean>(false);
   const [dlError, setDlError] = useState<string | null>(null);
+  const [settlementOpen, setSettlementOpen] = useState(false);
 
   const sisa = Math.max(0, (order?.grand_total ?? 0) - (order?.paid_total ?? 0));
   if (!open || !order) return null;
@@ -23379,15 +24791,90 @@ function OrderDetailDialog(props: {
                 </tr>
               </thead>
               <tbody>
-                {o.items.map((it) => (
-                  <tr key={it.id}>
-                    <td>{it.name_snapshot}</td>
-                    <td className="text-right">{formatIDR(it.price)}</td>
-                    <td className="text-right">{formatIDR(it.discount)}</td>
-                    <td className="text-right">{it.qty}</td>
-                    <td className="text-right">{formatIDR(it.line_total)}</td>
-                  </tr>
-                ))}
+                {o.items.map((it) => {
+                  const fifoAllocations = it.fifo_allocations ?? [];
+
+                  return (
+                    <React.Fragment key={it.id}>
+                      <tr>
+                        <td>{it.name_snapshot}</td>
+                        <td className="text-right">{formatIDR(it.price)}</td>
+                        <td className="text-right">{formatIDR(it.discount)}</td>
+                        <td className="text-right">{it.qty}</td>
+                        <td className="text-right">{formatIDR(it.line_total)}</td>
+                      </tr>
+
+                      <tr>
+                        <td colSpan={5}>
+                          <div
+                            style={{
+                              border: "1px solid rgba(37,99,235,.18)",
+                              background: "rgba(37,99,235,.06)",
+                              borderRadius: 12,
+                              padding: 10,
+                            }}
+                          >
+                            <div style={{ fontWeight: 800, marginBottom: 6 }}>
+                              Lot FIFO Terpakai
+                            </div>
+
+                            {fifoAllocations.length === 0 ? (
+                              <div className="muted" style={{ fontSize: 12 }}>
+                                Belum ada alokasi lot. Biasanya muncul setelah pesanan berstatus PAID
+                                dan stok dipotong melalui FIFO.
+                              </div>
+                            ) : (
+                              <div style={{ display: "grid", gap: 6 }}>
+                                {fifoAllocations.map((a) => {
+                                  const lot = a.lot;
+                                  const received = lot?.received_at
+                                    ? new Date(lot.received_at).toLocaleDateString("id-ID")
+                                    : "-";
+
+                                  return (
+                                    <div
+                                      key={a.id}
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "space-between",
+                                        gap: 10,
+                                        flexWrap: "wrap",
+                                        fontSize: 13,
+                                      }}
+                                    >
+                                      <div>
+                                        <strong>{lot?.lot_no ?? `LOT-${a.stock_lot_id}`}</strong>
+                                        <span className="muted"> • Tanggal masuk: {received}</span>
+                                      </div>
+
+                                      <div>
+                                        <span className="badge">
+                                          Keluar: {a.qty_allocated}
+                                        </span>
+
+                                        <span
+                                          className="badge"
+                                          style={{
+                                            marginLeft: 6,
+                                            background: "rgba(0,0,0,.05)",
+                                            color: "var(--color-text)",
+                                          }}
+                                        >
+                                          Sisa lot: {lot?.qty_remaining ?? "-"}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    </React.Fragment>
+                  );
+                })}
                 {o.items.length === 0 && (
                   <tr>
                     <td colSpan={5}>
@@ -23404,55 +24891,7 @@ function OrderDetailDialog(props: {
           {o.status === "UNPAID" && sisa > 0 && (
             <button
               className="button button-primary"
-              onClick={async () => {
-                const nominalStr = prompt(
-                  `Nominal pelunasan (sisa ${formatIDR(sisa)}):`,
-                  String(Math.round(sisa))
-                );
-                if (!nominalStr) return;
-                const nominal = Number(nominalStr);
-                if (!Number.isFinite(nominal) || nominal <= 0) {
-                  alert("Nominal tidak valid.");
-                  return;
-                }
-
-                const methodInputRaw = (prompt("Metode (CASH/TRANSFER/QRIS):", "CASH") || "CASH");
-                const methodInput = methodInputRaw.trim().toUpperCase();
-                const payment: CheckoutPayment = {
-                  method: methodInput as CheckoutPayment["method"],
-                  amount: nominal,
-                };
-
-                try {
-                  if (methodInput === "CASH" && payment.amount > 0) {
-                    const resp = await listCashHolders({ per_page: 100 });
-                    const list: CashHolder[] = resp.data;
-                    if (!Array.isArray(list) || list.length === 0) {
-                      alert("Tidak ada CashHolder. Buat holder lebih dulu di modul Cash.");
-                      return;
-                    }
-                    const choices = list.map((h) => `${h.id} — ${h.name}`).join("\n");
-                    const picked = prompt(`Pilih Holder penerima CASH (masukkan ID):\n${choices}`);
-                    const holderId = picked ? Number(picked.trim()) : NaN;
-                    const holder = list.find((h) => h.id === holderId);
-                    if (!holder) {
-                      alert("Holder tidak valid.");
-                      return;
-                    }
-
-                    payment.payload_json = {
-                      holder_id: holder.id,
-                      collected_at: new Date().toISOString(),
-                    };
-                  }
-
-                  await addPayment(o.id, payment);
-                  alert("Pelunasan berhasil.");
-                  onClose();
-                } catch (e) {
-                  alert((e as Error).message || "Gagal menambahkan pembayaran.");
-                }
-              }}
+              onClick={() => setSettlementOpen(true)}
             >
               Pelunasan
             </button>
@@ -23520,6 +24959,16 @@ function OrderDetailDialog(props: {
             </div>,
             document.body
           )}
+        <SettlementDialog
+          open={settlementOpen}
+          order={o}
+          remaining={sisa}
+          onClose={() => setSettlementOpen(false)}
+          onSaved={(updated) => {
+            setSettlementOpen(false);
+            onPaymentSaved(updated);
+          }}
+        />
       </div>
     </div>,
     document.body
@@ -23697,6 +25146,7 @@ export default function OrdersIndex(): React.ReactElement {
   const [detailOpen, setDetailOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [detail, setDetail] = useState<Order | null>(null);
+  const autoOpenedOrderId = useRef<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -23746,6 +25196,21 @@ export default function OrdersIndex(): React.ReactElement {
       alert((e as Error).message || "Gagal memuat detail.");
     }
   };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const openOrderId = params.get("open_order_id");
+
+    if (!openOrderId) return;
+    if (autoOpenedOrderId.current === openOrderId) return;
+
+    const parsedOrderId = Number(openOrderId);
+
+    if (!Number.isFinite(parsedOrderId) || parsedOrderId <= 0) return;
+
+    autoOpenedOrderId.current = openOrderId;
+    void openDetail(parsedOrderId);
+  }, []);
 
   const onReprint = async (id: ID, format: "58" | "80") => {
     try {
@@ -23801,145 +25266,6 @@ export default function OrdersIndex(): React.ReactElement {
 
   return (
     <div className="page">
-      {/* CSS lokal khusus halaman OrdersIndex */}
-      <style>{`
-        .posx-top{
-          display:flex;
-          align-items:flex-end;
-          justify-content:space-between;
-          gap: 12px;
-          flex-wrap: wrap;
-          margin-bottom: 12px;
-        }
-        .posx-title{
-          margin:0;
-          font-size: 18px;
-          font-weight: 800;
-          letter-spacing: -0.02em;
-        }
-        .posx-sub{
-          margin-top: 4px;
-          font-size: 12px;
-          opacity: .75;
-        }
-        .posx-stats{
-          display:flex;
-          gap: 8px;
-          flex-wrap: wrap;
-          justify-content:flex-end;
-        }
-        .posx-stat{
-          padding: 8px 10px;
-          border-radius: 12px;
-          border: 1px solid rgba(0,0,0,.06);
-          background: rgba(0,0,0,.02);
-          min-width: 120px;
-        }
-        .posx-stat .k{ font-size: 11px; opacity:.72; }
-        .posx-stat .v{ font-size: 14px; font-weight: 800; margin-top: 2px; }
-
-        .posx-filter-actions{
-          margin-left:auto;
-          display:flex;
-          gap: 8px;
-          align-items:end;
-          justify-content:flex-end;
-          width: 100%;
-        }
-        @media (min-width: 860px){
-          .posx-filter-actions{ width: auto; }
-        }
-        .posx-filter-hint{
-          margin-top: 10px;
-          font-size: 12px;
-          opacity: .70;
-        }
-
-        .posx-table-head{
-          display:flex;
-          align-items:center;
-          justify-content:space-between;
-          gap: 10px;
-          flex-wrap: wrap;
-          margin-bottom: 10px;
-        }
-        .posx-table-wrap{
-          border-radius: 12px;
-          overflow: hidden;
-          border: 1px solid rgba(0,0,0,.06);
-        }
-        .posx-table thead th{
-          position: sticky;
-          top: 0;
-          z-index: 1;
-          background: #fff;
-        }
-        .posx-table tbody tr:nth-child(even){
-          background: rgba(0,0,0,.015);
-        }
-        .posx-truncate{
-          display:inline-block;
-          max-width: 240px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          vertical-align: bottom;
-        }
-
-        /* Responsif: sembunyikan kolom berat di layar kecil */
-        @media (max-width: 980px){
-          .posx-col-address{ display:none; }
-        }
-        @media (max-width: 860px){
-          .posx-col-phone{ display:none; }
-          .posx-col-discount{ display:none; }
-        }
-        @media (max-width: 720px){
-          .posx-col-paid{ display:none; }
-        }
-
-        .posx-table-footer{
-          margin-top: 12px;
-        }
-
-        .posx-modal-head{
-          padding: 14px 16px;
-          display:flex;
-          align-items:center;
-          justify-content:space-between;
-          gap: 12px;
-        }
-        .posx-modal-title{
-          font-weight: 900;
-          letter-spacing: -0.02em;
-        }
-        .posx-kv-pad{
-          padding: 12px 16px;
-        }
-        .posx-modal-section{
-          margin: 0 16px 14px;
-        }
-        .posx-modal-actions{
-          padding: 0 16px 16px;
-          display:flex;
-          gap: 8px;
-          flex-wrap: wrap;
-          justify-content:flex-end;
-        }
-        .posx-modal-form{
-          padding: 12px 16px 16px;
-        }
-        .posx-modal-actions-row{
-          margin-left:auto;
-        }
-        .posx-totals{
-          margin-left:auto;
-          text-align:right;
-        }
-        @media (max-width: 860px){
-          .posx-totals{ margin-left:0; text-align:left; }
-        }
-      `}</style>
 
       <div className="posx-top">
         <div>
@@ -23988,23 +25314,19 @@ export default function OrdersIndex(): React.ReactElement {
       <OrderDetailDialog
         open={detailOpen}
         order={detail}
-        onClose={() => {
-          setDetailOpen(false);
-          setQ((s) => ({ ...s })); // reload daftar (tetap)
-        }}
+        onClose={() => setDetailOpen(false)}
         onEdit={(o) => {
           setDetail(o);
           setEditOpen(true);
         }}
-        onReprint={async (id, format) => {
-          try {
-            await reprintReceipt(id, { format });
-            alert(`Berhasil reprint (${format}mm).`);
-          } catch (e) {
-            alert((e as Error).message || "Gagal reprint.");
-          }
-        }}
+        onReprint={onReprint}
         onResendWa={onResendWa}
+        onPaymentSaved={(updated) => {
+          setDetail(updated);
+          setRows((prev) => prev.map((row) => (row.id === updated.id ? updated : row)));
+          load();
+          alert("Pelunasan berhasil disimpan.");
+        }}
       />
 
       <EditOrderDialog
@@ -24019,6 +25341,261 @@ export default function OrdersIndex(): React.ReactElement {
         }}
       />
     </div>
+  );
+}
+
+function SettlementDialog(props: {
+  open: boolean;
+  order: Order;
+  remaining: number;
+  onClose: () => void;
+  onSaved: (updated: Order) => void;
+}) {
+  const { open, order, remaining, onClose, onSaved } = props;
+
+  const [form, setForm] = useState<SettlementFormState>({
+    method: "CASH",
+    amount: String(Math.round(remaining)),
+    holder_id: "",
+    ref_no: "",
+  });
+
+  const [holders, setHolders] = useState<CashHolder[]>([]);
+  const [loadingHolders, setLoadingHolders] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const amountNumber = Number(form.amount || 0);
+  const isCash = form.method === "CASH";
+  const isAmountValid =
+    Number.isFinite(amountNumber) && amountNumber > 0 && amountNumber <= remaining;
+
+  useEffect(() => {
+    if (!open) return;
+
+    setForm({
+      method: "CASH",
+      amount: String(Math.round(remaining)),
+      holder_id: "",
+      ref_no: "",
+    });
+    setError(null);
+  }, [open, remaining]);
+
+  useEffect(() => {
+    if (!open || form.method !== "CASH") return;
+
+    let alive = true;
+
+    async function loadHolders() {
+      setLoadingHolders(true);
+      try {
+        const resp = await listCashHolders({ per_page: 100 });
+        if (!alive) return;
+
+        const list = Array.isArray(resp.data) ? resp.data : [];
+        setHolders(list);
+
+        if (list.length === 1) {
+          setForm((prev) => ({ ...prev, holder_id: String(list[0].id) }));
+        }
+      } catch (e) {
+        if (!alive) return;
+        setError((e as Error)?.message ?? "Gagal memuat cash holder.");
+      } finally {
+        if (alive) setLoadingHolders(false);
+      }
+    }
+
+    loadHolders();
+
+    return () => {
+      alive = false;
+    };
+  }, [open, form.method]);
+
+  if (!open) return null;
+
+  async function submitSettlement(): Promise<void> {
+    setError(null);
+
+    if (!isAmountValid) {
+      setError(`Nominal harus lebih dari 0 dan tidak boleh melebihi sisa ${formatIDR(remaining)}.`);
+      return;
+    }
+
+    if (isCash && !form.holder_id) {
+      setError("Pilih cash holder penerima untuk pembayaran tunai.");
+      return;
+    }
+
+    const payment: CheckoutPayment = {
+      method: form.method,
+      amount: amountNumber,
+      ref_no: form.ref_no.trim() || null,
+    };
+
+    if (isCash) {
+      payment.payload_json = {
+        holder_id: Number(form.holder_id),
+        collected_by: "CASHIER",
+        collected_at: new Date().toISOString(),
+      };
+    }
+
+    setSubmitting(true);
+    try {
+      const updated = await addPayment(order.id, payment);
+      onSaved(updated);
+    } catch (e) {
+      setError((e as Error)?.message ?? "Gagal menambahkan pembayaran.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return createPortal(
+    <div className="settle-overlay" role="presentation">
+      <div className="settle-dialog" role="dialog" aria-modal="true" aria-labelledby="settle-title">
+        <div className="settle-head">
+          <div>
+            <div className="settle-eyebrow">Pelunasan Pesanan</div>
+            <h3 id="settle-title" className="settle-title">
+              {order.kode}
+            </h3>
+            <div className="settle-sub">
+              {order.customer_name ?? "Tanpa nama pelanggan"} · {order.customer_phone ?? "No HP tidak tersedia"}
+            </div>
+          </div>
+
+          <button className="button button-ghost" onClick={onClose} disabled={submitting}>
+            Tutup
+          </button>
+        </div>
+
+        <div className="settle-body">
+          <div className="settle-summary">
+            <div>
+              <span>Total Tagihan</span>
+              <strong>{formatIDR(Number(order.grand_total ?? 0))}</strong>
+            </div>
+            <div>
+              <span>Sudah Dibayar</span>
+              <strong>{formatIDR(Number(order.paid_total ?? 0))}</strong>
+            </div>
+            <div className="settle-summary-due">
+              <span>Sisa Bayar</span>
+              <strong>{formatIDR(remaining)}</strong>
+            </div>
+          </div>
+
+          <div className="settle-form">
+            <div className="form-field">
+              <label className="label">Metode Pembayaran</label>
+              <div className="settle-methods">
+                {(["CASH", "QRIS", "TRANSFER"] as PaymentMethodOption[]).map((method) => (
+                  <button
+                    key={method}
+                    type="button"
+                    className={`settle-method ${form.method === method ? "is-active" : ""}`}
+                    onClick={() =>
+                      setForm((prev) => ({
+                        ...prev,
+                        method,
+                        holder_id: method === "CASH" ? prev.holder_id : "",
+                      }))
+                    }
+                    disabled={submitting}
+                  >
+                    {method}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="form-row form-row--2">
+              <div className="form-field">
+                <label className="label">Nominal Bayar</label>
+                <input
+                  className="input"
+                  type="number"
+                  min={1}
+                  max={Math.round(remaining)}
+                  value={form.amount}
+                  onChange={(e) => setForm((prev) => ({ ...prev, amount: e.target.value }))}
+                  disabled={submitting}
+                />
+                <button
+                  type="button"
+                  className="settle-pay-full"
+                  onClick={() => setForm((prev) => ({ ...prev, amount: String(Math.round(remaining)) }))}
+                  disabled={submitting}
+                >
+                  Isi sesuai sisa bayar
+                </button>
+              </div>
+
+              <div className="form-field">
+                <label className="label">Nomor Referensi</label>
+                <input
+                  className="input"
+                  placeholder={form.method === "CASH" ? "Opsional" : "Contoh: TRX/QRIS/VA"}
+                  value={form.ref_no}
+                  onChange={(e) => setForm((prev) => ({ ...prev, ref_no: e.target.value }))}
+                  disabled={submitting}
+                />
+              </div>
+            </div>
+
+            {isCash && (
+              <div className="form-field">
+                <label className="label">Cash Holder Penerima</label>
+                <select
+                  className="select"
+                  value={form.holder_id}
+                  onChange={(e) => setForm((prev) => ({ ...prev, holder_id: e.target.value }))}
+                  disabled={submitting || loadingHolders}
+                >
+                  <option value="">
+                    {loadingHolders ? "Memuat cash holder…" : "Pilih cash holder"}
+                  </option>
+                  {holders.map((holder) => (
+                    <option key={holder.id} value={holder.id}>
+                      {holder.name} — {formatIDR(Number(holder.balance ?? 0))}
+                    </option>
+                  ))}
+                </select>
+                <div className="settle-note">
+                  Pembayaran tunai akan dicatat ke cash session kasir melalui holder yang dipilih.
+                </div>
+              </div>
+            )}
+
+            {form.method === "TRANSFER" && (
+              <div className="settle-alert">
+                Catatan: di backend project ini, pembayaran TRANSFER dibuat dengan status awal PENDING. Jika ingin langsung lunas, gunakan CASH atau QRIS.
+              </div>
+            )}
+
+            {error && <div className="settle-error">{error}</div>}
+          </div>
+        </div>
+
+        <div className="settle-actions">
+          <button className="button button-outline" onClick={onClose} disabled={submitting}>
+            Batal
+          </button>
+          <button
+            className="button button-primary"
+            onClick={submitSettlement}
+            disabled={submitting || !isAmountValid || (isCash && !form.holder_id)}
+          >
+            {submitting ? "Memproses…" : `Simpan Pembayaran ${formatIDR(amountNumber || 0)}`}
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
   );
 }
 
@@ -24848,7 +26425,7 @@ export default function ProductsPage() {
 
 ### src/pages/settings/SettingsIndex.tsx
 
-- SHA: `45a79e41c204`  
+- SHA: `867eea6e6587`  
 - Ukuran: 7 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
@@ -24863,7 +26440,7 @@ import type { LaravelPaginator, Setting, SettingQuery, SettingScope } from '../.
 import { useAuth } from '../../store/auth';
 
 export default function SettingsIndex() {
-  const { hasRole, user } = useAuth();
+  const { hasRole } = useAuth();
   const canAccess = hasRole('superadmin', 'admin_cabang', 'kasir');
 
   const [query, setQuery] = useState<SettingQuery>({ page: 1, per_page: 10 });
@@ -25070,15 +26647,16 @@ export default function SettingsIndex() {
 
 ### src/pages/stock/StockIndex.tsx
 
-- SHA: `48aa95af5558`  
-- Ukuran: 12 KB
+- SHA: `0f196c2da795`  
+- Ukuran: 16 KB
 <details><summary><strong>Lihat Kode Lengkap</strong></summary>
 
 ```tsx
 // src/pages/stock/StockIndex.tsx
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import type { Stock, StockQuery, UpdateMinStockPayload } from "../../types/stock";
-import { listStocks, updateMinStock } from "../../api/stocks";
+import { listStocks, updateMinStock, listStockLots } from "../../api/stocks";
+import type { StockLot } from "../../api/stocks";
 import StockTable from "../../components/stock/StockTable";
 import SetInitialStockDialog from "../../components/stock/SetInitialStockDialog";
 import CabangSelect from "../../components/stock/CabangSelect";
@@ -25140,6 +26718,11 @@ export default function StockIndex() {
   const [loading, setLoading] = useState(false);
   const [openSet, setOpenSet] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [lotOpen, setLotOpen] = useState(false);
+  const [lotLoading, setLotLoading] = useState(false);
+  const [lotRows, setLotRows] = useState<StockLot[]>([]);
+  const [lotStock, setLotStock] = useState<Stock | null>(null);
 
   const onCabangChange = useCallback(
     (id: number | undefined) => update({ cabang_id: id, gudang_id: undefined }),
@@ -25249,6 +26832,28 @@ export default function StockIndex() {
     },
     [reload]
   );
+
+  const openLots = useCallback(async (row: Stock) => {
+    setLotStock(row);
+    setLotOpen(true);
+    setLotLoading(true);
+    setLotRows([]);
+
+    try {
+      const rows = await listStockLots({
+        cabang_id: row.cabang_id,
+        gudang_id: row.gudang_id,
+        product_variant_id: row.product_variant_id,
+        only_available: false,
+      });
+
+      setLotRows(rows);
+    } catch (err: unknown) {
+      window.alert(getErrorMessage(err, "Gagal memuat lot FIFO."));
+    } finally {
+      setLotLoading(false);
+    }
+  }, []);
 
   // --- UI helpers (tanpa ubah logika) ---
   const totalText = useMemo(() => {
@@ -25437,12 +27042,117 @@ export default function StockIndex() {
           </div>
         </div>
 
-        <StockTable rows={rows} loading={loading} onEditMin={onEditMin} />
+        <StockTable
+          rows={rows}
+          loading={loading}
+          onEditMin={onEditMin}
+          onViewLots={openLots}
+        />
       </div>
 
       {/* Dialog */}
       {openSet && (
         <SetInitialStockDialog open={openSet} onClose={() => setOpenSet(false)} onSuccess={reload} />
+      )}
+
+      {/* Dialog Lot FIFO */}
+      {lotOpen && (
+        <div className="modal-overlay">
+          <div className="modal card" role="dialog" aria-modal="true">
+            <div className="modal-header">
+              <div>
+                <h2 className="modal-title">Layer Stok FIFO</h2>
+                <div className="text-dim" style={{ fontSize: 12 }}>
+                  {lotStock?.variant?.product?.nama ?? lotStock?.variant?.sku ?? "Varian"}
+                  {lotStock?.gudang?.nama ?? `Gudang #${lotStock?.gudang_id ?? "-"}`}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="button button-ghost"
+                onClick={() => setLotOpen(false)}
+              >
+                Tutup
+              </button>
+            </div>
+
+            <div style={{ padding: 16 }}>
+              <div
+                className="badge"
+                style={{
+                  marginBottom: 12,
+                  background: "rgba(37,99,235,.10)",
+                  color: "var(--color-info)",
+                }}
+              >
+                Urutan paling atas adalah lot yang akan keluar lebih dulu
+              </div>
+
+              {lotLoading ? (
+                <div className="text-dim">Memuat data lot FIFO…</div>
+              ) : lotRows.length === 0 ? (
+                <div className="text-dim">
+                  Belum ada layer lot untuk stok ini. Jika stok berasal dari Set Stok Awal,
+                  maka belum ada jejak lot FIFO.
+                </div>
+              ) : (
+                <div style={{ overflowX: "auto" }}>
+                  <table className="table" style={{ minWidth: 920 }}>
+                    <thead>
+                      <tr>
+                        <th>Urutan FIFO</th>
+                        <th>Lot / Batch</th>
+                        <th>Tanggal Masuk</th>
+                        <th>Expired</th>
+                        <th className="text-right">Qty Masuk</th>
+                        <th className="text-right">Qty Sisa</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {lotRows.map((lot, index) => {
+                        const remaining = Number(lot.qty_remaining ?? 0);
+                        const received = lot.received_at
+                          ? new Date(lot.received_at).toLocaleDateString("id-ID")
+                          : "-";
+                        const expired = lot.expires_at
+                          ? new Date(lot.expires_at).toLocaleDateString("id-ID")
+                          : "-";
+
+                        return (
+                          <tr key={lot.id}>
+                            <td>
+                              <strong>#{index + 1}</strong>
+                              {remaining > 0 && index === 0 && (
+                                <span className="badge" style={{ marginLeft: 8 }}>
+                                  Keluar dulu
+                                </span>
+                              )}
+                            </td>
+                            <td>{lot.lot_no ?? `LOT-${lot.id}`}</td>
+                            <td>{received}</td>
+                            <td>{expired}</td>
+                            <td className="text-right">{lot.qty_received}</td>
+                            <td className="text-right">{lot.qty_remaining}</td>
+                            <td>
+                              {remaining > 0 ? (
+                                <span className="badge badge-success">Tersedia</span>
+                              ) : (
+                                <span className="badge badge-danger">Habis</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

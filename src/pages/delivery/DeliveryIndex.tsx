@@ -70,18 +70,50 @@ export default function DeliveryIndex(): React.ReactElement {
   }, [appliedQuery]);
 
   async function openWaybill(id: number) {
+    const w = window.open("", "_blank");
+
+    if (!w) {
+      alert("Popup diblokir. Izinkan pop-up untuk melihat surat jalan.");
+      return;
+    }
+
+    w.document.open();
+    w.document.write(`
+    <!doctype html>
+    <html>
+      <head>
+        <meta charset="utf-8" />
+        <title>Memuat Surat Jalan...</title>
+      </head>
+      <body style="font-family: Arial, sans-serif; padding: 24px;">
+        <p>Memuat surat jalan...</p>
+      </body>
+    </html>
+  `);
+    w.document.close();
+
     try {
       const html = await getWaybillHtml(id);
-      const w = window.open("", "_blank", "noopener,noreferrer");
-      if (w) {
-        w.document.open();
-        w.document.write(html);
-        w.document.close();
-      } else {
-        alert("Popup diblokir. Izinkan pop-up untuk melihat surat jalan.");
-      }
+
+      w.document.open();
+      w.document.write(html);
+      w.document.close();
     } catch (e) {
-      alert((e as Error).message || "Gagal memuat surat jalan.");
+      w.document.open();
+      w.document.write(`
+      <!doctype html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Gagal Memuat Surat Jalan</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; padding: 24px;">
+          <h3>Gagal memuat surat jalan.</h3>
+          <p>${(e as Error).message || "Terjadi kesalahan saat mengambil data surat jalan."}</p>
+        </body>
+      </html>
+    `);
+      w.document.close();
     }
   }
 
@@ -373,9 +405,8 @@ export default function DeliveryIndex(): React.ReactElement {
                     <td>
                       <div className="truncate-1" style={{ fontWeight: 600 }}>
                         {(d.pickup_address || d.delivery_address)
-                          ? `${d.pickup_address ?? ""}${
-                              d.delivery_address ? " → " + d.delivery_address : ""
-                            }`
+                          ? `${d.pickup_address ?? ""}${d.delivery_address ? " → " + d.delivery_address : ""
+                          }`
                           : "-"}
                       </div>
                     </td>

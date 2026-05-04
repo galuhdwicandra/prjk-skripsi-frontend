@@ -1,7 +1,13 @@
 // src/pages/accounting/AccountingReports.tsx
 import { useEffect, useState, useCallback } from "react";
-import { getTrialBalance, getGeneralLedger, getProfitLoss, getBalanceSheet } from "../../api/accounting";
-import type { TrialBalanceRow, GLRow, ID } from "../../types/accounting";
+import {
+  getTrialBalance,
+  getGeneralLedger,
+  getProfitLoss,
+  getBalanceSheet,
+  listAccounts,
+} from "../../api/accounting";
+import type { TrialBalanceRow, GLRow, ID, Account } from "../../types/accounting";
 import type { BalanceSheetAgg, ProfitLossAgg } from "../../types/accounting";
 import { useAuth } from "../../store/auth";
 
@@ -12,6 +18,8 @@ export default function AccountingReports() {
   const [year, setYear] = useState<number>(new Date().getFullYear());
   const [month, setMonth] = useState<number>(new Date().getMonth() + 1);
   const [accountId, setAccountId] = useState<ID | null>(null);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [accountsLoading, setAccountsLoading] = useState(false);
 
   const [tb, setTb] = useState<TrialBalanceRow[] | null>(null);
   const [gl, setGl] = useState<GLRow[] | null>(null);
@@ -32,6 +40,53 @@ export default function AccountingReports() {
     const maybe = user.branch_id ?? user.branchId ?? user.cabang_id ?? user.cabangId ?? (user)?.branch?.id;
     return typeof maybe === "number" && Number.isFinite(maybe) ? maybe : 0;
   }, [user]);
+
+  const loadAccounts = useCallback(async () => {
+    const cabang_id = getCabangId();
+
+    setAccountsLoading(true);
+
+    try {
+      let rows: Account[] = [];
+
+      if (cabang_id) {
+        const scoped = await listAccounts({
+          cabang_id,
+          only_active: true,
+        });
+
+        rows = Array.isArray(scoped.data) ? scoped.data : [];
+      }
+
+      if (rows.length === 0) {
+        const fallback = await listAccounts({
+          only_active: true,
+        });
+
+        rows = Array.isArray(fallback.data) ? fallback.data : [];
+      }
+
+      setAccounts(rows);
+
+      setAccountId((current) => {
+        if (current && rows.some((account) => account.id === current)) {
+          return current;
+        }
+
+        return rows.length > 0 ? rows[0].id : null;
+      });
+    } catch (err) {
+      console.error("[AccountingReports] Gagal memuat akun:", err);
+      setAccounts([]);
+      setAccountId(null);
+    } finally {
+      setAccountsLoading(false);
+    }
+  }, [getCabangId]);
+
+  useEffect(() => {
+    void loadAccounts();
+  }, [loadAccounts]);
 
   const refresh = useCallback(async () => {
     const cabang_id = getCabangId();
@@ -194,16 +249,36 @@ export default function AccountingReports() {
           <div className="card__body">
             <div className="form-row">
               <div className="form-field">
-                <label className="form-label">Account ID</label>
-                <input
-                  type="number"
-                  className="input"
-                  placeholder="Masukkan Account ID…"
+                <label className="form-label">Akun</label>
+
+                <select
+                  className="select"
                   value={accountId ?? ""}
                   onChange={(e) => setAccountId(e.target.value ? Number(e.target.value) : null)}
-                  min={1}
-                />
+                  disabled={accountsLoading || accounts.length === 0}
+                >
+                  <option value="">
+                    {accountsLoading ? "Memuat akun..." : "Pilih akun"}
+                  </option>
+
+                  {accounts.map((account) => (
+                    <option key={account.id} value={account.id}>
+                      {account.code} - {account.name}
+                    </option>
+                  ))}
+                </select>
+
+                {accounts.length === 0 && !accountsLoading && (
+                  <div className="help-text" style={{ marginTop: 6 }}>
+                    Akun belum termuat. Cek apakah endpoint /accounting/accounts berhasil, token masih valid,
+                    dan data accounts memiliki is_active = true.
+                  </div>
+                )}
               </div>
+            </div>
+
+            <div className="help-text" style={{ marginTop: 8 }}>
+              Data General Ledger difilter berdasarkan cabang login, akun, tahun, bulan, dan hanya jurnal berstatus POSTED.
             </div>
 
             <div className="table-responsive" style={{ marginTop: 8 }}>

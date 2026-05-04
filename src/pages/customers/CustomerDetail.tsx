@@ -5,6 +5,7 @@ import {
   changeCustomerStage,
   getCustomer,
   getCustomerHistory,
+  updateCustomer,
 } from "../../api/customers";
 import type {
   CustomerDetail as TDetail,
@@ -14,6 +15,14 @@ import type {
 import CustomerStageBadge from "../../components/customers/CustomerStageBadge";
 import CustomerTimeline from "../../components/customers/CustomerTimeline";
 import { useAuth } from "../../store/auth";
+
+type CustomerEditForm = {
+  nama: string;
+  phone: string;
+  email: string;
+  alamat: string;
+  catatan: string;
+};
 
 export default function CustomerDetail(): React.ReactElement {
   const { id } = useParams();
@@ -27,8 +36,20 @@ export default function CustomerDetail(): React.ReactElement {
   const [error, setError] = useState<string | null>(null);
   const [tlError, setTlError] = useState<string | null>(null);
 
+  const [editOpen, setEditOpen] = useState<boolean>(false);
+  const [savingEdit, setSavingEdit] = useState<boolean>(false);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<CustomerEditForm>({
+    nama: "",
+    phone: "",
+    email: "",
+    alamat: "",
+    catatan: "",
+  });
+
   const { hasRole } = useAuth();
   const canChangeStage = hasRole("superadmin") || hasRole("admin_cabang");
+  const canEditCustomer = hasRole("superadmin") || hasRole("admin_cabang");
 
   useEffect(() => {
     if (!Number.isFinite(cid)) {
@@ -85,6 +106,88 @@ export default function CustomerDetail(): React.ReactElement {
       setDetail((d) => (d ? { ...d, customer: updated } : d));
     } catch {
       // tempatkan toast global bila ada
+    }
+  }
+
+  function openEditCustomer(): void {
+    if (!detail) return;
+
+    setEditForm({
+      nama: detail.customer.nama ?? "",
+      phone: detail.customer.phone ?? "",
+      email: detail.customer.email ?? "",
+      alamat: detail.customer.alamat ?? "",
+      catatan: detail.customer.catatan ?? "",
+    });
+
+    setEditError(null);
+    setEditOpen(true);
+  }
+
+  async function submitEditCustomer(e: React.FormEvent<HTMLFormElement>): Promise<void> {
+    e.preventDefault();
+
+    if (!detail || savingEdit) return;
+
+    const nama = editForm.nama.trim();
+    const phone = editForm.phone.trim();
+
+    if (!nama) {
+      setEditError("Nama pelanggan wajib diisi.");
+      return;
+    }
+
+    if (!phone) {
+      setEditError("Nomor HP pelanggan wajib diisi.");
+      return;
+    }
+
+    setSavingEdit(true);
+    setEditError(null);
+
+    try {
+      const updated = await updateCustomer(detail.customer.id, {
+        nama,
+        phone,
+        email: editForm.email.trim() || null,
+        alamat: editForm.alamat.trim() || null,
+        catatan: editForm.catatan.trim() || null,
+      });
+
+      setDetail((current) =>
+        current
+          ? {
+            ...current,
+            customer: updated,
+          }
+          : current
+      );
+
+      setEditOpen(false);
+    } catch (err: unknown) {
+      let msg = "Gagal menyimpan perubahan customer.";
+
+      if (typeof err === "object" && err !== null) {
+        const e = err as {
+          response?: {
+            data?: {
+              message?: string;
+              errors?: Record<string, string[]>;
+            };
+          };
+          message?: string;
+        };
+
+        msg =
+          e.response?.data?.message ??
+          Object.values(e.response?.data?.errors ?? {})?.[0]?.[0] ??
+          e.message ??
+          msg;
+      }
+
+      setEditError(msg);
+    } finally {
+      setSavingEdit(false);
     }
   }
 
@@ -170,6 +273,16 @@ export default function CustomerDetail(): React.ReactElement {
             >
               ← Back
             </button>
+
+            {canEditCustomer ? (
+              <button
+                type="button"
+                className="button button-primary"
+                onClick={openEditCustomer}
+              >
+                Edit Customer
+              </button>
+            ) : null}
 
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", flexWrap: "wrap" }}>
@@ -395,6 +508,146 @@ export default function CustomerDetail(): React.ReactElement {
             <CustomerTimeline items={timeline} loading={tlLoading} error={tlError} />
           </section>
         </div>
+
+        {editOpen ? (
+          <div className="modal-overlay" role="dialog" aria-modal="true">
+            <div className="modal card">
+              <div className="modal-header">
+                <h2 className="modal-title">Edit Customer</h2>
+
+                <button
+                  type="button"
+                  className="button button-outline"
+                  onClick={() => setEditOpen(false)}
+                  disabled={savingEdit}
+                >
+                  Tutup
+                </button>
+              </div>
+
+              <form onSubmit={submitEditCustomer}>
+                <div className="posx-modal-form">
+                  {editError ? (
+                    <div
+                      className="toast"
+                      style={{
+                        borderLeftColor: "var(--color-danger)",
+                        marginBottom: "1rem",
+                      }}
+                    >
+                      {editError}
+                    </div>
+                  ) : null}
+
+                  <div className="form-row form-row--2">
+                    <label>
+                      <span style={{ display: "block", fontWeight: 700, marginBottom: 6 }}>
+                        Nama
+                      </span>
+                      <input
+                        className="input"
+                        value={editForm.nama}
+                        onChange={(e) =>
+                          setEditForm((f) => ({ ...f, nama: e.target.value }))
+                        }
+                        disabled={savingEdit}
+                        required
+                      />
+                    </label>
+
+                    <label>
+                      <span style={{ display: "block", fontWeight: 700, marginBottom: 6 }}>
+                        No HP
+                      </span>
+                      <input
+                        className="input"
+                        value={editForm.phone}
+                        onChange={(e) =>
+                          setEditForm((f) => ({ ...f, phone: e.target.value }))
+                        }
+                        disabled={savingEdit}
+                        required
+                      />
+                    </label>
+                  </div>
+
+                  <div className="form-row" style={{ marginTop: "1rem" }}>
+                    <label>
+                      <span style={{ display: "block", fontWeight: 700, marginBottom: 6 }}>
+                        Email
+                      </span>
+                      <input
+                        className="input"
+                        type="email"
+                        value={editForm.email}
+                        onChange={(e) =>
+                          setEditForm((f) => ({ ...f, email: e.target.value }))
+                        }
+                        disabled={savingEdit}
+                        placeholder="Opsional"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="form-row" style={{ marginTop: "1rem" }}>
+                    <label>
+                      <span style={{ display: "block", fontWeight: 700, marginBottom: 6 }}>
+                        Alamat
+                      </span>
+                      <textarea
+                        className="textarea"
+                        rows={4}
+                        value={editForm.alamat}
+                        onChange={(e) =>
+                          setEditForm((f) => ({ ...f, alamat: e.target.value }))
+                        }
+                        disabled={savingEdit}
+                        placeholder="Contoh: Jl. Melati No. 10, RT/RW, Kecamatan, Kota"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="form-row" style={{ marginTop: "1rem" }}>
+                    <label>
+                      <span style={{ display: "block", fontWeight: 700, marginBottom: 6 }}>
+                        Catatan
+                      </span>
+                      <textarea
+                        className="textarea"
+                        rows={3}
+                        value={editForm.catatan}
+                        onChange={(e) =>
+                          setEditForm((f) => ({ ...f, catatan: e.target.value }))
+                        }
+                        disabled={savingEdit}
+                        placeholder="Opsional"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                <div className="modal-actions">
+                  <button
+                    type="button"
+                    className="button button-outline"
+                    onClick={() => setEditOpen(false)}
+                    disabled={savingEdit}
+                  >
+                    Batal
+                  </button>
+
+                  <button
+                    type="submit"
+                    className="button button-primary"
+                    disabled={savingEdit}
+                  >
+                    {savingEdit ? "Menyimpan..." : "Simpan Perubahan"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        ) : null}
 
         {/* Responsive tweaks */}
         <style>

@@ -135,8 +135,8 @@ export function listProducts(
     page: q.page,
     per_page: q.per_page,
     sort: q.sort,
-    // gudang_id: q.gudang_id,  // sengaja dimatikan
-    // cabang_id: q.cabang_id,
+    gudang_id: q.gudang_id,
+    cabang_id: q.cabang_id,
   };
 
   // 🔎 Log URL final  params (dev only)

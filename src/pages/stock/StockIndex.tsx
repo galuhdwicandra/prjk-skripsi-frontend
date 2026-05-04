@@ -1,7 +1,8 @@
 // src/pages/stock/StockIndex.tsx
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import type { Stock, StockQuery, UpdateMinStockPayload } from "../../types/stock";
-import { listStocks, updateMinStock } from "../../api/stocks";
+import { listStocks, updateMinStock, listStockLots } from "../../api/stocks";
+import type { StockLot } from "../../api/stocks";
 import StockTable from "../../components/stock/StockTable";
 import SetInitialStockDialog from "../../components/stock/SetInitialStockDialog";
 import CabangSelect from "../../components/stock/CabangSelect";
@@ -63,6 +64,11 @@ export default function StockIndex() {
   const [loading, setLoading] = useState(false);
   const [openSet, setOpenSet] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [lotOpen, setLotOpen] = useState(false);
+  const [lotLoading, setLotLoading] = useState(false);
+  const [lotRows, setLotRows] = useState<StockLot[]>([]);
+  const [lotStock, setLotStock] = useState<Stock | null>(null);
 
   const onCabangChange = useCallback(
     (id: number | undefined) => update({ cabang_id: id, gudang_id: undefined }),
@@ -172,6 +178,28 @@ export default function StockIndex() {
     },
     [reload]
   );
+
+  const openLots = useCallback(async (row: Stock) => {
+    setLotStock(row);
+    setLotOpen(true);
+    setLotLoading(true);
+    setLotRows([]);
+
+    try {
+      const rows = await listStockLots({
+        cabang_id: row.cabang_id,
+        gudang_id: row.gudang_id,
+        product_variant_id: row.product_variant_id,
+        only_available: false,
+      });
+
+      setLotRows(rows);
+    } catch (err: unknown) {
+      window.alert(getErrorMessage(err, "Gagal memuat lot FIFO."));
+    } finally {
+      setLotLoading(false);
+    }
+  }, []);
 
   // --- UI helpers (tanpa ubah logika) ---
   const totalText = useMemo(() => {
@@ -360,12 +388,117 @@ export default function StockIndex() {
           </div>
         </div>
 
-        <StockTable rows={rows} loading={loading} onEditMin={onEditMin} />
+        <StockTable
+          rows={rows}
+          loading={loading}
+          onEditMin={onEditMin}
+          onViewLots={openLots}
+        />
       </div>
 
       {/* Dialog */}
       {openSet && (
         <SetInitialStockDialog open={openSet} onClose={() => setOpenSet(false)} onSuccess={reload} />
+      )}
+
+      {/* Dialog Lot FIFO */}
+      {lotOpen && (
+        <div className="modal-overlay">
+          <div className="modal card" role="dialog" aria-modal="true">
+            <div className="modal-header">
+              <div>
+                <h2 className="modal-title">Layer Stok FIFO</h2>
+                <div className="text-dim" style={{ fontSize: 12 }}>
+                  {lotStock?.variant?.product?.nama ?? lotStock?.variant?.sku ?? "Varian"}
+                  {lotStock?.gudang?.nama ?? `Gudang #${lotStock?.gudang_id ?? "-"}`}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="button button-ghost"
+                onClick={() => setLotOpen(false)}
+              >
+                Tutup
+              </button>
+            </div>
+
+            <div style={{ padding: 16 }}>
+              <div
+                className="badge"
+                style={{
+                  marginBottom: 12,
+                  background: "rgba(37,99,235,.10)",
+                  color: "var(--color-info)",
+                }}
+              >
+                Urutan paling atas adalah lot yang akan keluar lebih dulu
+              </div>
+
+              {lotLoading ? (
+                <div className="text-dim">Memuat data lot FIFO…</div>
+              ) : lotRows.length === 0 ? (
+                <div className="text-dim">
+                  Belum ada layer lot untuk stok ini. Jika stok berasal dari Set Stok Awal,
+                  maka belum ada jejak lot FIFO.
+                </div>
+              ) : (
+                <div style={{ overflowX: "auto" }}>
+                  <table className="table" style={{ minWidth: 920 }}>
+                    <thead>
+                      <tr>
+                        <th>Urutan FIFO</th>
+                        <th>Lot / Batch</th>
+                        <th>Tanggal Masuk</th>
+                        <th>Expired</th>
+                        <th className="text-right">Qty Masuk</th>
+                        <th className="text-right">Qty Sisa</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {lotRows.map((lot, index) => {
+                        const remaining = Number(lot.qty_remaining ?? 0);
+                        const received = lot.received_at
+                          ? new Date(lot.received_at).toLocaleDateString("id-ID")
+                          : "-";
+                        const expired = lot.expires_at
+                          ? new Date(lot.expires_at).toLocaleDateString("id-ID")
+                          : "-";
+
+                        return (
+                          <tr key={lot.id}>
+                            <td>
+                              <strong>#{index + 1}</strong>
+                              {remaining > 0 && index === 0 && (
+                                <span className="badge" style={{ marginLeft: 8 }}>
+                                  Keluar dulu
+                                </span>
+                              )}
+                            </td>
+                            <td>{lot.lot_no ?? `LOT-${lot.id}`}</td>
+                            <td>{received}</td>
+                            <td>{expired}</td>
+                            <td className="text-right">{lot.qty_received}</td>
+                            <td className="text-right">{lot.qty_remaining}</td>
+                            <td>
+                              {remaining > 0 ? (
+                                <span className="badge badge-success">Tersedia</span>
+                              ) : (
+                                <span className="badge badge-danger">Habis</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

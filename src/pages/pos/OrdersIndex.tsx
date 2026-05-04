@@ -1,5 +1,5 @@
 // src/pages/pos/OrdersIndex.tsx
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import {
   listOrders,
@@ -36,12 +36,21 @@ const formatIDR = (n: number) =>
 /* ---------- FilterBar ---------- */
 type FilterState = OrdersQuery & { local_q?: string; cash_position?: CashPosition };
 
+type PaymentMethodOption = CheckoutPayment["method"];
+
+type SettlementFormState = {
+  method: PaymentMethodOption;
+  amount: string;
+  holder_id: string;
+  ref_no: string;
+};
+
 function FilterBar(props: {
   value: FilterState;
   onChange: (next: FilterState) => void;
-  onApply: () => void;
+  onApply?: () => void;
 }) {
-  const { value, onChange, onApply } = props;
+  const { value, onChange } = props;
   const [search, setSearch] = useState(value.local_q ?? value.q ?? "");
   useEffect(() => setSearch(value.local_q ?? value.q ?? ""), [value.local_q, value.q]);
 
@@ -58,8 +67,14 @@ function FilterBar(props: {
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
-                  onChange({ ...value, q: search || undefined, page: 1 });
-                  onApply();
+                  e.preventDefault();
+
+                  onChange({
+                    ...value,
+                    q: search.trim() || undefined,
+                    local_q: search.trim() || undefined,
+                    page: 1,
+                  });
                 }
               }}
             />
@@ -148,8 +163,15 @@ function FilterBar(props: {
             <button
               className="button button-outline"
               onClick={() => {
-                onChange({ page: 1, per_page: value.per_page ?? 10, sort: "-ordered_at" });
-                onApply();
+                setSearch("");
+
+                onChange({
+                  page: 1,
+                  per_page: value.per_page ?? 10,
+                  sort: "-ordered_at",
+                  q: undefined,
+                  local_q: undefined,
+                });
               }}
             >
               Reset
@@ -157,8 +179,12 @@ function FilterBar(props: {
             <button
               className="button button-primary"
               onClick={() => {
-                onChange({ ...value, q: search || undefined, page: 1 });
-                onApply();
+                onChange({
+                  ...value,
+                  q: search.trim() || undefined,
+                  local_q: search.trim() || undefined,
+                  page: 1,
+                });
               }}
             >
               Terapkan
@@ -260,6 +286,7 @@ function OrdersTable(props: {
         <div className="muted text-sm">
           Halaman {page} dari {last} • Total {total} data
         </div>
+
         <div className="btn-group">
           <button className="button button-outline" disabled={page <= 1} onClick={() => onPage(page - 1)}>
             Prev
@@ -270,82 +297,146 @@ function OrdersTable(props: {
         </div>
       </div>
 
-      <div className="table-responsive posx-table-wrap">
-        <table className="table posx-table">
-          <thead>
-            <tr>
-              <th>Tanggal</th>
-              <th>Kode</th>
-              <th>Pelanggan</th>
-              <th className="posx-col-phone">No HP</th>
-              <th className="posx-col-address">Alamat</th>
-              <th>Status</th>
-              <th className="text-right">Subtotal</th>
-              <th className="text-right posx-col-discount">Diskon</th>
-              <th className="text-right">Grand Total</th>
-              <th className="text-right posx-col-paid">Dibayar</th>
-              <th>Posisi Uang</th>
-              <th className="w-1">Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
+      {rows.length === 0 ? (
+        <div className="posx-empty">
+          <div className="posx-empty-title">Belum ada pesanan</div>
+          <div className="muted text-sm">Data pesanan tidak ditemukan dari filter yang dipilih.</div>
+        </div>
+      ) : (
+        <>
+          {/* Desktop / tablet besar */}
+          <div className="table-responsive posx-table-wrap posx-orders-desktop">
+            <table className="table posx-table">
+              <thead>
+                <tr>
+                  <th>Tanggal</th>
+                  <th>Kode</th>
+                  <th>Pelanggan</th>
+                  <th className="posx-col-phone">No HP</th>
+                  <th className="posx-col-address">Alamat</th>
+                  <th>Status</th>
+                  <th className="text-right">Subtotal</th>
+                  <th className="text-right posx-col-discount">Diskon</th>
+                  <th className="text-right">Grand Total</th>
+                  <th className="text-right posx-col-paid">Dibayar</th>
+                  <th>Posisi Uang</th>
+                  <th className="w-1">Aksi</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {rows.map((o) => (
+                  <tr key={o.id}>
+                    <td>{new Date(o.ordered_at).toLocaleString("id-ID")}</td>
+
+                    <td>
+                      <span className="mono">{o.kode}</span>
+                    </td>
+
+                    <td>{o.customer_name ?? "-"}</td>
+
+                    <td className="posx-col-phone">{o.customer_phone ?? "-"}</td>
+
+                    <td className="posx-col-address">
+                      <span className="posx-clip" title={o.customer_address ?? ""}>
+                        {o.customer_address ?? "-"}
+                      </span>
+                    </td>
+
+                    <td>
+                      <span className={`badge ${o.status === "PAID" ? "badge-success" : o.status === "VOID" ? "badge-danger" : "badge-warning"}`}>
+                        {o.status}
+                      </span>
+                    </td>
+
+                    <td className="text-right">{formatIDR(Number(o.subtotal ?? 0))}</td>
+                    <td className="text-right posx-col-discount">{formatIDR(Number(o.discount ?? 0))}</td>
+                    <td className="text-right font-semibold">{formatIDR(Number(o.grand_total ?? 0))}</td>
+                    <td className="text-right posx-col-paid">{formatIDR(Number(o.paid_total ?? 0))}</td>
+
+                    <td>
+                      <CashPositionCell
+                        order={o}
+                        onChanged={onCashPositionChanged}
+                      />
+                    </td>
+
+                    <td>
+                      <button className="button button-outline" onClick={() => onOpenDetail(o.id)}>
+                        Detail
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile */}
+          <div className="posx-orders-mobile">
             {rows.map((o) => (
-              <tr key={o.id}>
-                <td>{new Date(o.ordered_at).toLocaleString("id-ID")}</td>
-                <td>
-                  <span className="mono">{o.kode}</span>
-                </td>
-                <td>{o.customer_name ?? "-"}</td>
-                <td className="posx-col-phone">{o.customer_phone ?? "-"}</td>
-                <td className="posx-col-address">
-                  <span className="posx-truncate">{o.customer_address ?? "-"}</span>
-                </td>
-                <td>
-                  <span className={statusBadgeClass(o.status)}>{o.status}</span>
-                </td>
-                <td className="text-right">{formatIDR(o.subtotal)}</td>
-                <td className="text-right posx-col-discount">{formatIDR(o.discount)}</td>
-                <td className="text-right">
-                  <strong>{formatIDR(o.grand_total)}</strong>
-                </td>
-                <td className="text-right posx-col-paid">{formatIDR(o.paid_total)}</td>
-                <td>
-                  <CashPositionCell order={o} onChanged={onCashPositionChanged} />
-                </td>
-                <td>
-                  <div className="table-actions">
-                    <button className="button button-outline" onClick={() => onOpenDetail(o.id)}>
-                      Detail
-                    </button>
+              <div className="posx-order-card" key={o.id}>
+                <div className="posx-order-card-head">
+                  <div className="min-w-0">
+                    <div className="posx-order-code mono">{o.kode}</div>
+                    <div className="muted text-xs">
+                      {new Date(o.ordered_at).toLocaleString("id-ID")}
+                    </div>
                   </div>
-                </td>
-              </tr>
+
+                  <span className={`badge ${o.status === "PAID" ? "badge-success" : o.status === "VOID" ? "badge-danger" : "badge-warning"}`}>
+                    {o.status}
+                  </span>
+                </div>
+
+                <div className="posx-order-customer">
+                  <div className="posx-order-customer-name">{o.customer_name ?? "Tanpa nama pelanggan"}</div>
+                  <div className="muted text-sm">{o.customer_phone ?? "No HP tidak tersedia"}</div>
+                  {o.customer_address ? (
+                    <div className="muted text-xs posx-order-address">{o.customer_address}</div>
+                  ) : null}
+                </div>
+
+                <div className="posx-order-grid">
+                  <div>
+                    <span className="muted text-xs">Subtotal</span>
+                    <strong>{formatIDR(Number(o.subtotal ?? 0))}</strong>
+                  </div>
+
+                  <div>
+                    <span className="muted text-xs">Diskon</span>
+                    <strong>{formatIDR(Number(o.discount ?? 0))}</strong>
+                  </div>
+
+                  <div>
+                    <span className="muted text-xs">Grand Total</span>
+                    <strong>{formatIDR(Number(o.grand_total ?? 0))}</strong>
+                  </div>
+
+                  <div>
+                    <span className="muted text-xs">Dibayar</span>
+                    <strong>{formatIDR(Number(o.paid_total ?? 0))}</strong>
+                  </div>
+                </div>
+
+                <div className="posx-order-card-footer">
+                  <div className="posx-order-cash">
+                    <label className="muted text-xs">Posisi Uang</label>
+                    <CashPositionCell
+                      order={o}
+                      onChanged={onCashPositionChanged}
+                    />
+                  </div>
+
+                  <button className="button button-outline posx-order-detail-btn" onClick={() => onOpenDetail(o.id)}>
+                    Detail
+                  </button>
+                </div>
+              </div>
             ))}
-
-            {rows.length === 0 && (
-              <tr>
-                <td colSpan={12}>
-                  <div className="empty-state">Tidak ada data untuk filter ini.</div>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="table-footer posx-table-footer">
-        <div className="muted text-sm">
-          Halaman {page} dari {last} • Total {total} data
-        </div>
-        <div className="btn-group">
-          <button className="button button-outline" disabled={page <= 1} onClick={() => onPage(page - 1)}>
-            Prev
-          </button>
-          <button className="button button-outline" disabled={page >= last} onClick={() => onPage(page + 1)}>
-            Next
-          </button>
-        </div>
-      </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -378,14 +469,16 @@ function OrderDetailDialog(props: {
   onEdit: (o: Order) => void;
   onReprint: (id: ID, format: "58" | "80") => void;
   onResendWa: (id: ID) => void;
+  onPaymentSaved: (updated: Order) => void;
 }) {
-  const { open, order, onClose, onEdit, onReprint, onResendWa } = props;
+  const { open, order, onClose, onEdit, onReprint, onResendWa, onPaymentSaved } = props;
 
   const [dlOpen, setDlOpen] = useState(false);
   const [dlType, setDlType] = useState<DeliveryType>("DELIVERY");
   const [dlAuto, setDlAuto] = useState<boolean>(true);
   const [dlSubmitting, setDlSubmitting] = useState<boolean>(false);
   const [dlError, setDlError] = useState<string | null>(null);
+  const [settlementOpen, setSettlementOpen] = useState(false);
 
   const sisa = Math.max(0, (order?.grand_total ?? 0) - (order?.paid_total ?? 0));
   if (!open || !order) return null;
@@ -476,15 +569,90 @@ function OrderDetailDialog(props: {
                 </tr>
               </thead>
               <tbody>
-                {o.items.map((it) => (
-                  <tr key={it.id}>
-                    <td>{it.name_snapshot}</td>
-                    <td className="text-right">{formatIDR(it.price)}</td>
-                    <td className="text-right">{formatIDR(it.discount)}</td>
-                    <td className="text-right">{it.qty}</td>
-                    <td className="text-right">{formatIDR(it.line_total)}</td>
-                  </tr>
-                ))}
+                {o.items.map((it) => {
+                  const fifoAllocations = it.fifo_allocations ?? [];
+
+                  return (
+                    <React.Fragment key={it.id}>
+                      <tr>
+                        <td>{it.name_snapshot}</td>
+                        <td className="text-right">{formatIDR(it.price)}</td>
+                        <td className="text-right">{formatIDR(it.discount)}</td>
+                        <td className="text-right">{it.qty}</td>
+                        <td className="text-right">{formatIDR(it.line_total)}</td>
+                      </tr>
+
+                      <tr>
+                        <td colSpan={5}>
+                          <div
+                            style={{
+                              border: "1px solid rgba(37,99,235,.18)",
+                              background: "rgba(37,99,235,.06)",
+                              borderRadius: 12,
+                              padding: 10,
+                            }}
+                          >
+                            <div style={{ fontWeight: 800, marginBottom: 6 }}>
+                              Lot FIFO Terpakai
+                            </div>
+
+                            {fifoAllocations.length === 0 ? (
+                              <div className="muted" style={{ fontSize: 12 }}>
+                                Belum ada alokasi lot. Biasanya muncul setelah pesanan berstatus PAID
+                                dan stok dipotong melalui FIFO.
+                              </div>
+                            ) : (
+                              <div style={{ display: "grid", gap: 6 }}>
+                                {fifoAllocations.map((a) => {
+                                  const lot = a.lot;
+                                  const received = lot?.received_at
+                                    ? new Date(lot.received_at).toLocaleDateString("id-ID")
+                                    : "-";
+
+                                  return (
+                                    <div
+                                      key={a.id}
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "space-between",
+                                        gap: 10,
+                                        flexWrap: "wrap",
+                                        fontSize: 13,
+                                      }}
+                                    >
+                                      <div>
+                                        <strong>{lot?.lot_no ?? `LOT-${a.stock_lot_id}`}</strong>
+                                        <span className="muted"> • Tanggal masuk: {received}</span>
+                                      </div>
+
+                                      <div>
+                                        <span className="badge">
+                                          Keluar: {a.qty_allocated}
+                                        </span>
+
+                                        <span
+                                          className="badge"
+                                          style={{
+                                            marginLeft: 6,
+                                            background: "rgba(0,0,0,.05)",
+                                            color: "var(--color-text)",
+                                          }}
+                                        >
+                                          Sisa lot: {lot?.qty_remaining ?? "-"}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    </React.Fragment>
+                  );
+                })}
                 {o.items.length === 0 && (
                   <tr>
                     <td colSpan={5}>
@@ -501,55 +669,7 @@ function OrderDetailDialog(props: {
           {o.status === "UNPAID" && sisa > 0 && (
             <button
               className="button button-primary"
-              onClick={async () => {
-                const nominalStr = prompt(
-                  `Nominal pelunasan (sisa ${formatIDR(sisa)}):`,
-                  String(Math.round(sisa))
-                );
-                if (!nominalStr) return;
-                const nominal = Number(nominalStr);
-                if (!Number.isFinite(nominal) || nominal <= 0) {
-                  alert("Nominal tidak valid.");
-                  return;
-                }
-
-                const methodInputRaw = (prompt("Metode (CASH/TRANSFER/QRIS):", "CASH") || "CASH");
-                const methodInput = methodInputRaw.trim().toUpperCase();
-                const payment: CheckoutPayment = {
-                  method: methodInput as CheckoutPayment["method"],
-                  amount: nominal,
-                };
-
-                try {
-                  if (methodInput === "CASH" && payment.amount > 0) {
-                    const resp = await listCashHolders({ per_page: 100 });
-                    const list: CashHolder[] = resp.data;
-                    if (!Array.isArray(list) || list.length === 0) {
-                      alert("Tidak ada CashHolder. Buat holder lebih dulu di modul Cash.");
-                      return;
-                    }
-                    const choices = list.map((h) => `${h.id} — ${h.name}`).join("\n");
-                    const picked = prompt(`Pilih Holder penerima CASH (masukkan ID):\n${choices}`);
-                    const holderId = picked ? Number(picked.trim()) : NaN;
-                    const holder = list.find((h) => h.id === holderId);
-                    if (!holder) {
-                      alert("Holder tidak valid.");
-                      return;
-                    }
-
-                    payment.payload_json = {
-                      holder_id: holder.id,
-                      collected_at: new Date().toISOString(),
-                    };
-                  }
-
-                  await addPayment(o.id, payment);
-                  alert("Pelunasan berhasil.");
-                  onClose();
-                } catch (e) {
-                  alert((e as Error).message || "Gagal menambahkan pembayaran.");
-                }
-              }}
+              onClick={() => setSettlementOpen(true)}
             >
               Pelunasan
             </button>
@@ -617,6 +737,16 @@ function OrderDetailDialog(props: {
             </div>,
             document.body
           )}
+        <SettlementDialog
+          open={settlementOpen}
+          order={o}
+          remaining={sisa}
+          onClose={() => setSettlementOpen(false)}
+          onSaved={(updated) => {
+            setSettlementOpen(false);
+            onPaymentSaved(updated);
+          }}
+        />
       </div>
     </div>,
     document.body
@@ -794,6 +924,7 @@ export default function OrdersIndex(): React.ReactElement {
   const [detailOpen, setDetailOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [detail, setDetail] = useState<Order | null>(null);
+  const autoOpenedOrderId = useRef<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -843,6 +974,21 @@ export default function OrdersIndex(): React.ReactElement {
       alert((e as Error).message || "Gagal memuat detail.");
     }
   };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const openOrderId = params.get("open_order_id");
+
+    if (!openOrderId) return;
+    if (autoOpenedOrderId.current === openOrderId) return;
+
+    const parsedOrderId = Number(openOrderId);
+
+    if (!Number.isFinite(parsedOrderId) || parsedOrderId <= 0) return;
+
+    autoOpenedOrderId.current = openOrderId;
+    void openDetail(parsedOrderId);
+  }, []);
 
   const onReprint = async (id: ID, format: "58" | "80") => {
     try {
@@ -898,145 +1044,6 @@ export default function OrdersIndex(): React.ReactElement {
 
   return (
     <div className="page">
-      {/* CSS lokal khusus halaman OrdersIndex */}
-      <style>{`
-        .posx-top{
-          display:flex;
-          align-items:flex-end;
-          justify-content:space-between;
-          gap: 12px;
-          flex-wrap: wrap;
-          margin-bottom: 12px;
-        }
-        .posx-title{
-          margin:0;
-          font-size: 18px;
-          font-weight: 800;
-          letter-spacing: -0.02em;
-        }
-        .posx-sub{
-          margin-top: 4px;
-          font-size: 12px;
-          opacity: .75;
-        }
-        .posx-stats{
-          display:flex;
-          gap: 8px;
-          flex-wrap: wrap;
-          justify-content:flex-end;
-        }
-        .posx-stat{
-          padding: 8px 10px;
-          border-radius: 12px;
-          border: 1px solid rgba(0,0,0,.06);
-          background: rgba(0,0,0,.02);
-          min-width: 120px;
-        }
-        .posx-stat .k{ font-size: 11px; opacity:.72; }
-        .posx-stat .v{ font-size: 14px; font-weight: 800; margin-top: 2px; }
-
-        .posx-filter-actions{
-          margin-left:auto;
-          display:flex;
-          gap: 8px;
-          align-items:end;
-          justify-content:flex-end;
-          width: 100%;
-        }
-        @media (min-width: 860px){
-          .posx-filter-actions{ width: auto; }
-        }
-        .posx-filter-hint{
-          margin-top: 10px;
-          font-size: 12px;
-          opacity: .70;
-        }
-
-        .posx-table-head{
-          display:flex;
-          align-items:center;
-          justify-content:space-between;
-          gap: 10px;
-          flex-wrap: wrap;
-          margin-bottom: 10px;
-        }
-        .posx-table-wrap{
-          border-radius: 12px;
-          overflow: hidden;
-          border: 1px solid rgba(0,0,0,.06);
-        }
-        .posx-table thead th{
-          position: sticky;
-          top: 0;
-          z-index: 1;
-          background: #fff;
-        }
-        .posx-table tbody tr:nth-child(even){
-          background: rgba(0,0,0,.015);
-        }
-        .posx-truncate{
-          display:inline-block;
-          max-width: 240px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          vertical-align: bottom;
-        }
-
-        /* Responsif: sembunyikan kolom berat di layar kecil */
-        @media (max-width: 980px){
-          .posx-col-address{ display:none; }
-        }
-        @media (max-width: 860px){
-          .posx-col-phone{ display:none; }
-          .posx-col-discount{ display:none; }
-        }
-        @media (max-width: 720px){
-          .posx-col-paid{ display:none; }
-        }
-
-        .posx-table-footer{
-          margin-top: 12px;
-        }
-
-        .posx-modal-head{
-          padding: 14px 16px;
-          display:flex;
-          align-items:center;
-          justify-content:space-between;
-          gap: 12px;
-        }
-        .posx-modal-title{
-          font-weight: 900;
-          letter-spacing: -0.02em;
-        }
-        .posx-kv-pad{
-          padding: 12px 16px;
-        }
-        .posx-modal-section{
-          margin: 0 16px 14px;
-        }
-        .posx-modal-actions{
-          padding: 0 16px 16px;
-          display:flex;
-          gap: 8px;
-          flex-wrap: wrap;
-          justify-content:flex-end;
-        }
-        .posx-modal-form{
-          padding: 12px 16px 16px;
-        }
-        .posx-modal-actions-row{
-          margin-left:auto;
-        }
-        .posx-totals{
-          margin-left:auto;
-          text-align:right;
-        }
-        @media (max-width: 860px){
-          .posx-totals{ margin-left:0; text-align:left; }
-        }
-      `}</style>
 
       <div className="posx-top">
         <div>
@@ -1085,16 +1092,19 @@ export default function OrdersIndex(): React.ReactElement {
       <OrderDetailDialog
         open={detailOpen}
         order={detail}
-        onClose={() => {
-          setDetailOpen(false);
-          setQ((s) => ({ ...s }));
-        }}
+        onClose={() => setDetailOpen(false)}
         onEdit={(o) => {
           setDetail(o);
           setEditOpen(true);
         }}
         onReprint={onReprint}
         onResendWa={onResendWa}
+        onPaymentSaved={(updated) => {
+          setDetail(updated);
+          setRows((prev) => prev.map((row) => (row.id === updated.id ? updated : row)));
+          load();
+          alert("Pelunasan berhasil disimpan.");
+        }}
       />
 
       <EditOrderDialog
@@ -1109,5 +1119,260 @@ export default function OrdersIndex(): React.ReactElement {
         }}
       />
     </div>
+  );
+}
+
+function SettlementDialog(props: {
+  open: boolean;
+  order: Order;
+  remaining: number;
+  onClose: () => void;
+  onSaved: (updated: Order) => void;
+}) {
+  const { open, order, remaining, onClose, onSaved } = props;
+
+  const [form, setForm] = useState<SettlementFormState>({
+    method: "CASH",
+    amount: String(Math.round(remaining)),
+    holder_id: "",
+    ref_no: "",
+  });
+
+  const [holders, setHolders] = useState<CashHolder[]>([]);
+  const [loadingHolders, setLoadingHolders] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const amountNumber = Number(form.amount || 0);
+  const isCash = form.method === "CASH";
+  const isAmountValid =
+    Number.isFinite(amountNumber) && amountNumber > 0 && amountNumber <= remaining;
+
+  useEffect(() => {
+    if (!open) return;
+
+    setForm({
+      method: "CASH",
+      amount: String(Math.round(remaining)),
+      holder_id: "",
+      ref_no: "",
+    });
+    setError(null);
+  }, [open, remaining]);
+
+  useEffect(() => {
+    if (!open || form.method !== "CASH") return;
+
+    let alive = true;
+
+    async function loadHolders() {
+      setLoadingHolders(true);
+      try {
+        const resp = await listCashHolders({ per_page: 100 });
+        if (!alive) return;
+
+        const list = Array.isArray(resp.data) ? resp.data : [];
+        setHolders(list);
+
+        if (list.length === 1) {
+          setForm((prev) => ({ ...prev, holder_id: String(list[0].id) }));
+        }
+      } catch (e) {
+        if (!alive) return;
+        setError((e as Error)?.message ?? "Gagal memuat cash holder.");
+      } finally {
+        if (alive) setLoadingHolders(false);
+      }
+    }
+
+    loadHolders();
+
+    return () => {
+      alive = false;
+    };
+  }, [open, form.method]);
+
+  if (!open) return null;
+
+  async function submitSettlement(): Promise<void> {
+    setError(null);
+
+    if (!isAmountValid) {
+      setError(`Nominal harus lebih dari 0 dan tidak boleh melebihi sisa ${formatIDR(remaining)}.`);
+      return;
+    }
+
+    if (isCash && !form.holder_id) {
+      setError("Pilih cash holder penerima untuk pembayaran tunai.");
+      return;
+    }
+
+    const payment: CheckoutPayment = {
+      method: form.method,
+      amount: amountNumber,
+      ref_no: form.ref_no.trim() || null,
+    };
+
+    if (isCash) {
+      payment.payload_json = {
+        holder_id: Number(form.holder_id),
+        collected_by: "CASHIER",
+        collected_at: new Date().toISOString(),
+      };
+    }
+
+    setSubmitting(true);
+    try {
+      const updated = await addPayment(order.id, payment);
+      onSaved(updated);
+    } catch (e) {
+      setError((e as Error)?.message ?? "Gagal menambahkan pembayaran.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return createPortal(
+    <div className="settle-overlay" role="presentation">
+      <div className="settle-dialog" role="dialog" aria-modal="true" aria-labelledby="settle-title">
+        <div className="settle-head">
+          <div>
+            <div className="settle-eyebrow">Pelunasan Pesanan</div>
+            <h3 id="settle-title" className="settle-title">
+              {order.kode}
+            </h3>
+            <div className="settle-sub">
+              {order.customer_name ?? "Tanpa nama pelanggan"} · {order.customer_phone ?? "No HP tidak tersedia"}
+            </div>
+          </div>
+
+          <button className="button button-ghost" onClick={onClose} disabled={submitting}>
+            Tutup
+          </button>
+        </div>
+
+        <div className="settle-body">
+          <div className="settle-summary">
+            <div>
+              <span>Total Tagihan</span>
+              <strong>{formatIDR(Number(order.grand_total ?? 0))}</strong>
+            </div>
+            <div>
+              <span>Sudah Dibayar</span>
+              <strong>{formatIDR(Number(order.paid_total ?? 0))}</strong>
+            </div>
+            <div className="settle-summary-due">
+              <span>Sisa Bayar</span>
+              <strong>{formatIDR(remaining)}</strong>
+            </div>
+          </div>
+
+          <div className="settle-form">
+            <div className="form-field">
+              <label className="label">Metode Pembayaran</label>
+              <div className="settle-methods">
+                {(["CASH", "QRIS", "TRANSFER"] as PaymentMethodOption[]).map((method) => (
+                  <button
+                    key={method}
+                    type="button"
+                    className={`settle-method ${form.method === method ? "is-active" : ""}`}
+                    onClick={() =>
+                      setForm((prev) => ({
+                        ...prev,
+                        method,
+                        holder_id: method === "CASH" ? prev.holder_id : "",
+                      }))
+                    }
+                    disabled={submitting}
+                  >
+                    {method}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="form-row form-row--2">
+              <div className="form-field">
+                <label className="label">Nominal Bayar</label>
+                <input
+                  className="input"
+                  type="number"
+                  min={1}
+                  max={Math.round(remaining)}
+                  value={form.amount}
+                  onChange={(e) => setForm((prev) => ({ ...prev, amount: e.target.value }))}
+                  disabled={submitting}
+                />
+                <button
+                  type="button"
+                  className="settle-pay-full"
+                  onClick={() => setForm((prev) => ({ ...prev, amount: String(Math.round(remaining)) }))}
+                  disabled={submitting}
+                >
+                  Isi sesuai sisa bayar
+                </button>
+              </div>
+
+              <div className="form-field">
+                <label className="label">Nomor Referensi</label>
+                <input
+                  className="input"
+                  placeholder={form.method === "CASH" ? "Opsional" : "Contoh: TRX/QRIS/VA"}
+                  value={form.ref_no}
+                  onChange={(e) => setForm((prev) => ({ ...prev, ref_no: e.target.value }))}
+                  disabled={submitting}
+                />
+              </div>
+            </div>
+
+            {isCash && (
+              <div className="form-field">
+                <label className="label">Cash Holder Penerima</label>
+                <select
+                  className="select"
+                  value={form.holder_id}
+                  onChange={(e) => setForm((prev) => ({ ...prev, holder_id: e.target.value }))}
+                  disabled={submitting || loadingHolders}
+                >
+                  <option value="">
+                    {loadingHolders ? "Memuat cash holder…" : "Pilih cash holder"}
+                  </option>
+                  {holders.map((holder) => (
+                    <option key={holder.id} value={holder.id}>
+                      {holder.name} — {formatIDR(Number(holder.balance ?? 0))}
+                    </option>
+                  ))}
+                </select>
+                <div className="settle-note">
+                  Pembayaran tunai akan dicatat ke cash session kasir melalui holder yang dipilih.
+                </div>
+              </div>
+            )}
+
+            {form.method === "TRANSFER" && (
+              <div className="settle-alert">
+                Catatan: di backend project ini, pembayaran TRANSFER dibuat dengan status awal PENDING. Jika ingin langsung lunas, gunakan CASH atau QRIS.
+              </div>
+            )}
+
+            {error && <div className="settle-error">{error}</div>}
+          </div>
+        </div>
+
+        <div className="settle-actions">
+          <button className="button button-outline" onClick={onClose} disabled={submitting}>
+            Batal
+          </button>
+          <button
+            className="button button-primary"
+            onClick={submitSettlement}
+            disabled={submitting || !isAmountValid || (isCash && !form.holder_id)}
+          >
+            {submitting ? "Memproses…" : `Simpan Pembayaran ${formatIDR(amountNumber || 0)}`}
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
   );
 }

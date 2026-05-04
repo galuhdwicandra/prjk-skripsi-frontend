@@ -63,7 +63,29 @@ export type CheckoutPayload = {
   cash_position?: CashPosition;
 };
 
-export type OrderItem = QuoteLine & { id: ID; order_id: ID };
+export type FifoLotAllocation = {
+  id: number;
+  order_item_id: number;
+  stock_lot_id: number;
+  qty_allocated: number;
+  unit_cost?: string | number | null;
+  lot?: {
+    id: number;
+    lot_no?: string | null;
+    received_at?: string | null;
+    expires_at?: string | null;
+    qty_received: number;
+    qty_remaining: number;
+    unit_cost?: string | number | null;
+  } | null;
+};
+
+export type OrderItem = QuoteLine & {
+  id: ID;
+  order_id: ID;
+  fifo_allocations?: FifoLotAllocation[];
+};
+
 export type Payment = {
   id: ID;
   order_id: ID;

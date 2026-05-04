@@ -1,14 +1,15 @@
 // src/pages/DashboardHome.tsx
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../store/auth';
-import { getKPIs, getChart7d, getTopProducts, getLowStock, getQuickActions } from '../api/dashboard';
-import type { KPIs, Chart7DayPoint, TopProduct, LowStockRow, QuickAction } from '../types/dashboard';
+import { getKPIs, getChart7d, getTopProducts, getLowStock, getLatestOrders, getQuickActions } from '../api/dashboard';
+import type { KPIs, Chart7DayPoint, TopProduct, LowStockRow, LatestOrder, QuickAction } from '../types/dashboard';
 import KPIStatCards from '../components/dashboard/KPIStatCards';
 import Sales7DaysChart from '../components/dashboard/Sales7DaysChart';
 import TopProductsList from '../components/dashboard/TopProductsList';
 import LowStockList from '../components/dashboard/LowStockList';
 import QuickActions from '../components/dashboard/QuickActions';
 import ReorderPointList from '../components/dashboard/ReorderPointList';
+import LatestOrdersList from '../components/dashboard/LatestOrdersList';
 
 export default function DashboardHome(): React.ReactElement {
   const { user, hasRole } = useAuth();
@@ -26,6 +27,7 @@ export default function DashboardHome(): React.ReactElement {
   const [chart, setChart] = useState<Chart7DayPoint[] | null>(null);
   const [top, setTop] = useState<TopProduct[] | null>(null);
   const [low, setLow] = useState<LowStockRow[] | null>(null);
+  const [latestOrders, setLatestOrders] = useState<LatestOrder[] | null>(null);
   const [acts, setActs] = useState<QuickAction[] | null>(null);
 
   const [loading, setLoading] = useState<boolean>(true);
@@ -44,16 +46,22 @@ export default function DashboardHome(): React.ReactElement {
         const to = new Date(now); to.setHours(23, 59, 59, 999);
         const from = new Date(now); from.setDate(now.getDate() - 6); from.setHours(0, 0, 0, 0);
 
-        const [k, c, t, l, a] = await Promise.all([
+        const [k, c, t, l, recent, a] = await Promise.all([
           getKPIs({ cabang_id: effectiveCabangId, from: from.toISOString(), to: to.toISOString() }),
           getChart7d({ cabang_id: effectiveCabangId }),
           getTopProducts({ cabang_id: effectiveCabangId, limit: 5 }),
           getLowStock({ cabang_id: effectiveCabangId }),
+          getLatestOrders({ cabang_id: effectiveCabangId, limit: 8 }),
           getQuickActions({ cabang_id: effectiveCabangId }),
         ]);
 
         if (!cancelled) {
-          setKpi(k); setChart(c); setTop(t); setLow(l); setActs(a);
+          setKpi(k);
+          setChart(c);
+          setTop(t);
+          setLow(l);
+          setLatestOrders(recent);
+          setActs(a);
         }
       } catch (e) {
         if (!cancelled) {
@@ -209,7 +217,7 @@ export default function DashboardHome(): React.ReactElement {
           <div style={headerMeta}>Dashboard</div>
           <h1 style={headerTitle}>Ringkasan aktivitas & performa toko</h1>
           <p style={headerDesc}>
-            KPI, tren 7 hari, produk terlaris, indikator reorder (ROP), dan peringatan stok rendah.
+            KPI, order terbaru, tren 7 hari, produk terlaris, indikator reorder (ROP), dan peringatan stok rendah.
           </p>
         </div>
 
@@ -226,6 +234,35 @@ export default function DashboardHome(): React.ReactElement {
 
       {/* KPI */}
       <KPIStatCards data={kpi} loading={loading} error={err} />
+
+      {/* Alert bar */}
+      {Array.isArray(low) && low.length > 0 && (
+        <div
+          className="card"
+          style={{
+            padding: 14,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 10,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span className="badge badge-warning">Peringatan</span>
+            <div style={{ fontSize: 14, color: 'var(--color-text)' }}>
+              Ada <strong>{low.length}</strong> item stok rendah. Cek kartu <strong>Stok Rendah</strong>.
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="button button-outline"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          >
+            Lihat Ringkasan
+          </button>
+        </div>
+      )}
 
       {/* Chart: sekarang full width */}
       <section className="card" style={{ padding: 'var(--space-5)', minWidth: 0 }}>
@@ -271,34 +308,23 @@ export default function DashboardHome(): React.ReactElement {
         </section>
       </div>
 
-      {/* Alert bar */}
-      {Array.isArray(low) && low.length > 0 && (
-        <div
-          className="card"
-          style={{
-            padding: 14,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 10,
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span className="badge badge-warning">Peringatan</span>
-            <div style={{ fontSize: 14, color: 'var(--color-text)' }}>
-              Ada <strong>{low.length}</strong> item stok rendah. Cek kartu <strong>Stok Rendah</strong>.
-            </div>
-          </div>
-
-          <button
-            type="button"
-            className="button button-outline"
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          >
-            Lihat Ringkasan
-          </button>
+      {/* Ringkasan Order Terbaru Hari Ini */}
+      <section className="card" style={{ padding: 'var(--space-5)', minWidth: 0 }}>
+        <div style={cardHeadRow}>
+          <h2 style={cardTitle}>Order Terbaru Hari Ini</h2>
+          <p style={cardHint}>Menampilkan transaksi terbaru hari ini</p>
         </div>
-      )}
+        <div style={divider}>
+          <LatestOrdersList
+            data={latestOrders}
+            loading={loading}
+            error={err}
+            onViewOrder={(orderId) => {
+              window.location.href = `/pos/orders-list?open_order_id=${orderId}`;
+            }}
+          />
+        </div>
+      </section>
 
       {/* Quick actions */}
       <section className="card" style={{ padding: 'var(--space-5)' }}>

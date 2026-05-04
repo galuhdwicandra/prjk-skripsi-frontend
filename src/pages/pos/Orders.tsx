@@ -77,8 +77,8 @@ export default function OrdersPage(): React.ReactElement {
   const { branch, warehouse } = useActiveScope();
   const [openPay, setOpenPay] = useState<boolean>(false);
   const [lastOrder, setLastOrder] = useState<Order | null>(null);
+  const [catalogRefreshKey, setCatalogRefreshKey] = useState(0);
 
-  // ✅ Ambil state/aksi via selector (tanpa any/unknown)
   const items = useCart((s) => s.items);
   const quote = useCart((s) => s.quote);
   const add = useCart((s) => s.add);
@@ -253,7 +253,13 @@ export default function OrdersPage(): React.ReactElement {
           {!scoped && <ScopePickerBanner />}
 
           <div className="card">
-            <ProductSearch warehouseId={warehouse?.id ?? 0} />
+            {warehouse?.id ? (
+              <ProductSearch warehouseId={warehouse.id} />
+            ) : (
+              <div className="empty-state">
+                Pilih Cabang &amp; Gudang terlebih dahulu sebelum mencari produk atau scan SKU.
+              </div>
+            )}
           </div>
 
           {warehouse?.id ? (
@@ -262,6 +268,7 @@ export default function OrdersPage(): React.ReactElement {
                 onPick={onPickProduct}
                 perPage={24}
                 warehouseId={warehouse.id}
+                refreshKey={catalogRefreshKey}
                 requireWarehouse
               />
             </div>
@@ -310,6 +317,7 @@ export default function OrdersPage(): React.ReactElement {
           onSuccess={(o: Order): void => {
             setLastOrder(o);
             setOpenPay(false);
+            setCatalogRefreshKey((v) => v + 1);
           }}
         />
       )}

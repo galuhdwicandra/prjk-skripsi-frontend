@@ -71,12 +71,15 @@ export interface PaginatedResponse<T> {
 export interface ProductVariant {
     id: ID;
     product_id: ID;
-    size: string | null;     // ex: "Small", "Large"
-    type: string | null;     // ex: "Choco", "Matcha"
-    tester: string | null;   // ex: "Slice", "Full"
-    sku: string;             // unique
-    harga: number;           // decimal(14,2) -> number
+    size: string | null;
+    type: string | null;
+    tester: string | null;
+    sku: string;
+    harga: number;
     is_active: boolean;
+
+    stock_qty?: number | string | null;
+
     created_at?: string | null;
     updated_at?: string | null;
 }

@@ -10,7 +10,7 @@ type Props = {
   perPage?: number;
   initialQuery?: ProductQuery;
   warehouseId?: number;
-  /** Jika true, komponen tidak akan fetch sebelum warehouseId tersedia */
+  refreshKey?: number;
   requireWarehouse?: boolean;
 };
 
@@ -188,6 +188,23 @@ function getMinVariantPrice(p: Product): number | null {
   return Math.min(...nums);
 }
 
+function getVariantStockQty(v: { stock_qty?: number | string | null }): number {
+  const n = Number(v.stock_qty ?? 0);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function getTotalProductStock(p: Product): number {
+  if (!Array.isArray(p.variants) || p.variants.length === 0) return 0;
+
+  return p.variants.reduce((total, variant) => {
+    return total + getVariantStockQty(variant);
+  }, 0);
+}
+
+function getStockBadgeText(stock: number): string {
+  if (stock <= 0) return "Stok habis";
+  return `Stok: ${stock}`;
+}
 
 function ProductCardSkeleton({ keyId }: { keyId: string }): React.ReactElement {
   return (
@@ -225,6 +242,7 @@ export default function ProductGrid({
   perPage = 24,
   initialQuery,
   warehouseId,
+  refreshKey = 0,
   requireWarehouse = false,
 }: Props) {
   const [items, setItems] = useState<Product[]>([]);
@@ -307,12 +325,10 @@ export default function ProductGrid({
       });
 
     return () => ac.abort();
-  }, [query, requireWarehouse, warehouseId]);
+  }, [query, requireWarehouse, warehouseId, refreshKey]);
 
   const showBlockingError = Boolean(error) && items.length === 0;
 
-  // CSS lokal ProductGrid supaya konsisten dan tidak tergantung class global yang belum ada
-  // (Tidak mengubah logika sama sekali)
   const styles = (
     <style>{`
       @keyframes pg-shimmer {
@@ -459,6 +475,9 @@ export default function ProductGrid({
         background: rgba(255,255,255,.6);
         color: var(--color-text-soft);
       }
+
+      opacity: isOutOfStock ? 0.65 : 1,
+      cursor: isOutOfStock ? "not-allowed" : "pointer",
     `}</style>
   );
 
@@ -522,13 +541,20 @@ export default function ProductGrid({
                     : (Number.isFinite(minFromBackend) ? minFromBackend : 0);
                 const hasVariants = Array.isArray(p.variants) && p.variants.length > 0;
 
+                const totalStock = getTotalProductStock(p);
+                const isOutOfStock = totalStock <= 0;
+
                 return (
                   <button
                     key={p.id}
-                    onClick={() => onPick?.(p)}
-                    className="pg-card"
                     type="button"
-                    aria-label={`Tambah ${p.nama} ke keranjang`}
+                    className="pg-card"
+                    onClick={() => {
+                      if (isOutOfStock) return;
+                      onPick?.(p);
+                    }}
+                    disabled={isOutOfStock}
+                    aria-disabled={isOutOfStock}
                   >
                     <div className="pg-thumb">
                       {img ? (
@@ -556,6 +582,36 @@ export default function ProductGrid({
                         <div className="pg-variant">
                           {hasVariants ? `${p.variants!.length} varian` : "—"}
                         </div>
+                      </div>
+
+                      <div
+                        style={{
+                          marginTop: 8,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: 8,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        {(() => {
+                          const stock = getTotalProductStock(p);
+                          const isEmpty = stock <= 0;
+
+                          return (
+                            <span
+                              className={isEmpty ? "badge badge-danger" : "badge badge-success"}
+                              title="Stok real berdasarkan gudang yang dipilih"
+                              style={{
+                                height: 24,
+                                fontSize: 12,
+                                paddingInline: 10,
+                              }}
+                            >
+                              {getStockBadgeText(stock)}
+                            </span>
+                          );
+                        })()}
                       </div>
                     </div>
                   </button>

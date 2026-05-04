@@ -22,13 +22,49 @@ export async function listAccounts(params?: {
     q?: string;
     cabang_id?: ID;
     is_active?: boolean;
+    only_active?: boolean;
     page?: number;
     per_page?: number;
 }): Promise<Paginated<Account>> {
-    const { data } = await api.get<Paginated<Account>>("/accounting/accounts", {
+    const resp = await api.get("/accounting/accounts", {
         params,
     });
-    return data;
+
+    const payload = resp.data;
+
+    if (Array.isArray(payload?.data)) {
+        return {
+            data: payload.data as Account[],
+            meta: {
+                current_page: 1,
+                per_page: payload.data.length,
+                total: payload.data.length,
+                last_page: 1,
+            },
+        };
+    }
+
+    if (Array.isArray(payload)) {
+        return {
+            data: payload as Account[],
+            meta: {
+                current_page: 1,
+                per_page: payload.length,
+                total: payload.length,
+                last_page: 1,
+            },
+        };
+    }
+
+    return {
+        data: [],
+        meta: {
+            current_page: 1,
+            per_page: 0,
+            total: 0,
+            last_page: 1,
+        },
+    };
 }
 
 export async function createAccount(payload: AccountCreatePayload) {
@@ -167,14 +203,14 @@ export async function getProfitLoss(q: ReportQuery): Promise<ProfitLossAgg> {
 }
 
 export async function getBalanceSheet(q: ReportQuery): Promise<BalanceSheetAgg> {
-  const resp = await api.get("/accounting/reports/balance-sheet", { params: q });
+    const resp = await api.get("/accounting/reports/balance-sheet", { params: q });
 
-  // raw = objek hasil backend: { Asset: {debit, credit}, Liability: {...}, Equity: {...} }
-  const raw = (resp.data?.data ?? resp.data) as Record<string, { debit: unknown; credit: unknown }>;
+    // raw = objek hasil backend: { Asset: {debit, credit}, Liability: {...}, Equity: {...} }
+    const raw = (resp.data?.data ?? resp.data) as Record<string, { debit: unknown; credit: unknown }>;
 
-  const out: Record<string, { debit: number; credit: number }> = {};
-  for (const [k, v] of Object.entries(raw)) {
-    out[k] = { debit: toNum(v?.debit), credit: toNum(v?.credit) };
-  }
-  return out as unknown as BalanceSheetAgg;
+    const out: Record<string, { debit: number; credit: number }> = {};
+    for (const [k, v] of Object.entries(raw)) {
+        out[k] = { debit: toNum(v?.debit), credit: toNum(v?.credit) };
+    }
+    return out as unknown as BalanceSheetAgg;
 }

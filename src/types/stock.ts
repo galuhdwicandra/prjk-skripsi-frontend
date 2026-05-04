@@ -19,14 +19,24 @@ export interface PaginatedResponse<T> {
 }
 
 export interface CabangLite { id: ID; nama: string }
+
 export interface GudangLite { id: ID; nama: string }
+
 export interface VariantLite {
   id: ID;
+  product_id?: ID;
   sku: string;
-  nama_produk: string;
+  nama_produk?: string;
+  product?: {
+    id: ID;
+    nama: string;
+  } | null;
+
   size?: string | null;
   type?: string | null;
   tester?: string | null;
+  harga?: number | string | null;
+  is_active?: boolean;
 }
 
 export interface Stock {
@@ -36,7 +46,12 @@ export interface Stock {
   product_variant_id: ID;
   qty: number;
   min_stok: number;
+  safety_stock?: number | null;
+  lead_time_days?: number | null;
+  reorder_point?: number | null;
+  reorder_point_eff?: number | null;
   is_low_stock: boolean;
+  is_below_rop?: boolean;
   gudang?: GudangLite;
   cabang?: CabangLite;
   variant?: VariantLite;
@@ -62,6 +77,13 @@ export interface SetInitialStockPayload {
 
 export interface UpdateMinStockPayload {
   min_stok: number;
+}
+
+export interface UpdateRopConfigPayload {
+  min_stok?: number | string | null;
+  safety_stock?: number | string | null;
+  lead_time_days?: number | string | null;
+  reorder_point?: number | string | null;
 }
 
 export interface AdjustStockPayload {
@@ -103,7 +125,11 @@ export type StockLot = {
   expires_at?: string | null;
   qty_received: number;
   qty_remaining: number;
-  unit_cost?: number | null;
+  unit_cost?: number | string | null;
   created_at?: string;
   updated_at?: string;
+
+  variant?: VariantLite | null;
+  gudang?: GudangLite | null;
+  cabang?: CabangLite | null;
 };

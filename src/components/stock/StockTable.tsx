@@ -10,9 +10,10 @@ type Props = {
   rows: Stock[];
   loading?: boolean;
   onEditMin?: (row: Stock) => void;
+  onViewLots?: (row: Stock) => void;
 };
 
-export default function StockTable({ rows, loading, onEditMin }: Props) {
+export default function StockTable({ rows, loading, onEditMin, onViewLots }: Props) {
   // Loading state yang lebih rapi (tanpa ubah logic)
   if (loading) {
     return (
@@ -172,28 +173,58 @@ export default function StockTable({ rows, loading, onEditMin }: Props) {
 
                   {/* AKSI */}
                   <td className="text-right" style={{ verticalAlign: "top" }}>
-                    {onEditMin ? (
-                      <button
-                        className="button button-outline"
-                        onClick={() => onEditMin(r)}
-                        title="Ubah Min Stok"
-                        aria-label={`Ubah Min Stok untuk ${
-                          r.variant?.sku ?? `Variant ${r.product_variant_id}`
-                        }`}
-                        style={{
-                          whiteSpace: "nowrap",
-                          borderRadius: 999,
-                          padding: "0.5rem 0.75rem",
-                          fontWeight: 700,
-                        }}
-                      >
-                        Ubah Min
-                      </button>
-                    ) : (
-                      <span className="text-dim" style={{ fontSize: ".9rem" }}>
-                        -
-                      </span>
-                    )}
+                    <div
+                      style={{
+                        display: "inline-flex",
+                        flexDirection: "column",
+                        gap: 8,
+                        alignItems: "flex-end",
+                      }}
+                    >
+                      {onEditMin && (
+                        <button
+                          type="button"
+                          className="button button-outline"
+                          onClick={() => onEditMin(r)}
+                          title="Ubah Min Stok"
+                          aria-label={`Ubah Min Stok untuk ${r.variant?.sku ?? `Variant ${r.product_variant_id}`
+                            }`}
+                          style={{
+                            whiteSpace: "nowrap",
+                            borderRadius: 999,
+                            padding: "0.5rem 0.75rem",
+                            fontWeight: 700,
+                          }}
+                        >
+                          Ubah Min
+                        </button>
+                      )}
+
+                      {onViewLots && (
+                        <button
+                          type="button"
+                          className="button"
+                          onClick={() => onViewLots(r)}
+                          title="Lihat layer stok berdasarkan urutan FIFO"
+                          aria-label={`Lihat Lot FIFO untuk ${r.variant?.sku ?? `Variant ${r.product_variant_id}`
+                            }`}
+                          style={{
+                            whiteSpace: "nowrap",
+                            borderRadius: 999,
+                            padding: "0.5rem 0.75rem",
+                            fontWeight: 700,
+                          }}
+                        >
+                          Lihat Lot FIFO
+                        </button>
+                      )}
+
+                      {!onEditMin && !onViewLots && (
+                        <span className="text-dim" style={{ fontSize: ".9rem" }}>
+                          -
+                        </span>
+                      )}
+                    </div>
                   </td>
                 </tr>
               );

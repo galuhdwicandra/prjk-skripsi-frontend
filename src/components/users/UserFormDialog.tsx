@@ -1,5 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import type { Role, User } from "../../types/user";
+import type { Branch } from "../../types/branch";
+import { listBranches } from "../../api/branches";
+import { useAuth } from "../../store/auth";
 
 type Form = {
   name: string;
@@ -34,7 +37,13 @@ type SubmitPayload = {
 };
 
 export default function UserFormDialog({ open, onClose, onSubmit, editing }: Props): React.ReactElement | null {
+  const { user } = useAuth();
+
   const [submitting, setSubmitting] = useState(false);
+  const [loadingBranches, setLoadingBranches] = useState(false);
+  const [branchError, setBranchError] = useState<string | null>(null);
+  const [branches, setBranches] = useState<Branch[]>([]);
+
   const [form, setForm] = useState<Form>({
     name: "",
     email: "",
@@ -45,6 +54,64 @@ export default function UserFormDialog({ open, onClose, onSubmit, editing }: Pro
     is_active: true,
   });
 
+  const isSuperadmin = user?.role === "superadmin";
+  const isAdminCabang = user?.role === "admin_cabang";
+
+  const lockedCabangId = useMemo(() => {
+    if (isAdminCabang && user?.cabang_id) {
+      return user.cabang_id;
+    }
+
+    return undefined;
+  }, [isAdminCabang, user?.cabang_id]);
+
+  const availableBranches = useMemo(() => {
+    if (lockedCabangId) {
+      return branches.filter((branch) => Number(branch.id) === Number(lockedCabangId));
+    }
+
+    return branches;
+  }, [branches, lockedCabangId]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    let alive = true;
+
+    async function fetchBranches(): Promise<void> {
+      setLoadingBranches(true);
+      setBranchError(null);
+
+      try {
+        const res = await listBranches({
+          is_active: true,
+          per_page: 100,
+          sort: "nama",
+        });
+
+        if (!alive) return;
+
+        setBranches(Array.isArray(res.data) ? res.data : []);
+      } catch (err) {
+        if (!alive) return;
+
+        const message = err instanceof Error ? err.message : "Gagal memuat data cabang.";
+        setBranchError(message);
+        setBranches([]);
+      } finally {
+        if (alive) {
+          setLoadingBranches(false);
+        }
+      }
+    }
+
+    void fetchBranches();
+
+    return () => {
+      alive = false;
+    };
+  }, [open]);
+
   useEffect(() => {
     if (editing) {
       setForm({
@@ -52,7 +119,7 @@ export default function UserFormDialog({ open, onClose, onSubmit, editing }: Pro
         email: editing.email,
         phone: editing.phone ?? "",
         password: "",
-        cabang_id: editing.cabang_id ? String(editing.cabang_id) : "",
+        cabang_id: editing.cabang_id ? String(editing.cabang_id) : (lockedCabangId ? String(lockedCabangId) : ""),
         role: editing.role,
         is_active: editing.is_active,
       });
@@ -62,12 +129,12 @@ export default function UserFormDialog({ open, onClose, onSubmit, editing }: Pro
         email: "",
         phone: "",
         password: "",
-        cabang_id: "",
+        cabang_id: lockedCabangId ? String(lockedCabangId) : "",
         role: "kasir",
         is_active: true,
       });
     }
-  }, [editing, open]);
+  }, [editing, open, lockedCabangId]);
 
   if (!open) return null;
 
@@ -76,6 +143,10 @@ export default function UserFormDialog({ open, onClose, onSubmit, editing }: Pro
     setSubmitting(true);
     try {
       const cab = form.cabang_id === "" ? null : Number(form.cabang_id);
+
+      if (form.role !== "superadmin" && !cab) {
+        throw new Error("Pilih cabang terlebih dahulu untuk role ini.");
+      }
 
       const payload: SubmitPayload = {
         name: form.name.trim(),
@@ -173,14 +244,43 @@ export default function UserFormDialog({ open, onClose, onSubmit, editing }: Pro
             </div>
 
             <div className="form-field">
-              <label>Cabang ID (opsional)</label>
-              <input
-                className="input"
-                type="number"
-                min={1}
+              <label>Cabang</label>
+              <select
+                className="select"
                 value={form.cabang_id}
                 onChange={(e) => setForm((s) => ({ ...s, cabang_id: e.target.value }))}
-              />
+                disabled={loadingBranches || Boolean(lockedCabangId)}
+                required={form.role !== "superadmin"}
+              >
+                <option value="">
+                  {loadingBranches ? "Memuat cabang..." : "Pilih cabang"}
+                </option>
+
+                {availableBranches.map((branch) => (
+                  <option key={branch.id} value={String(branch.id)}>
+                    {branch.nama}
+                    {branch.kota ? ` - ${branch.kota}` : ""}
+                  </option>
+                ))}
+              </select>
+
+              {lockedCabangId && (
+                <p style={{ marginTop: 6, fontSize: 12, opacity: 0.75 }}>
+                  Cabang dikunci sesuai cabang akun admin cabang.
+                </p>
+              )}
+
+              {isSuperadmin && form.role === "superadmin" && (
+                <p style={{ marginTop: 6, fontSize: 12, opacity: 0.75 }}>
+                  Superadmin boleh tanpa cabang.
+                </p>
+              )}
+
+              {branchError && (
+                <p style={{ marginTop: 6, fontSize: 12, color: "var(--color-danger)" }}>
+                  {branchError}
+                </p>
+              )}
             </div>
 
             <div className="form-field">

@@ -4,8 +4,14 @@ import type {
   Fee, FeeBase, FeeCalcType, FeeCreatePayload, FeeKind, FeeQuery, PaginatedResponse
 } from "../../types/fees";
 import { listFees, createFee, updateFee, deleteFee } from "../../api/fees";
+import { listBranches } from "../../api/branches";
+import type { Branch } from "../../types/branch";
 
-type CabangOption = { id: number; name: string };
+type CabangOption = {
+  id: number;
+  name: string;
+  kota?: string | null;
+};
 
 const KIND_OPTIONS: FeeKind[] = ["SALES", "CASHIER", "COURIER"];
 const CALC_OPTIONS: FeeCalcType[] = ["PERCENT", "FIXED"];
@@ -57,7 +63,7 @@ function FeeFormDialog(props: {
       };
     }
     return {
-      cabang_id: cabangOptions[0]?.id ?? 1,
+      cabang_id: cabangOptions[0]?.id ?? 0,
       name: "",
       kind: "CASHIER",
       calc_type: "PERCENT",
@@ -82,6 +88,10 @@ function FeeFormDialog(props: {
     setSubmitting(true);
     setError(null);
     try {
+      if (!values.cabang_id || values.cabang_id <= 0) {
+        throw new Error("Pilih cabang terlebih dahulu.");
+      }
+
       if (values.calc_type === "PERCENT" && values.rate > 100) {
         throw new Error("Rate persentase tidak boleh lebih dari 100.");
       }
@@ -125,11 +135,19 @@ function FeeFormDialog(props: {
               <label>Cabang</label>
               <select
                 className="select"
-                value={values.cabang_id}
+                value={values.cabang_id || ""}
                 onChange={(e) => onChange("cabang_id", Number(e.target.value))}
+                required
               >
+                <option value="" disabled>
+                  Pilih cabang
+                </option>
+
                 {cabangOptions.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                    {c.kota ? ` · ${c.kota}` : ""}
+                  </option>
                 ))}
               </select>
             </div>
@@ -215,10 +233,11 @@ function FeeFormDialog(props: {
             >
               Batal
             </button>
+
             <button
               type="submit"
               className="button button-primary"
-              disabled={submitting}
+              disabled={submitting || cabangOptions.length === 0}
             >
               {submitting ? "Menyimpan..." : "Simpan"}
             </button>
@@ -246,15 +265,30 @@ function RowActions(props: {
 
 /* ---------- Main Page ---------- */
 export default function FeeMaster(): React.ReactElement {
-  const cabangOptions: CabangOption[] = useMemo(() => [
-    { id: 1, name: "Cabang 1" },
-    { id: 2, name: "Cabang 2" },
-  ], []);
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [branchesLoading, setBranchesLoading] = useState<boolean>(false);
+  const [branchesError, setBranchesError] = useState<string | null>(null);
+
+  const cabangOptions: CabangOption[] = useMemo(() => {
+    return branches
+      .filter((branch) => branch.is_active)
+      .sort((a, b) => a.nama.localeCompare(b.nama, "id"))
+      .map((branch) => ({
+        id: branch.id,
+        name: branch.nama,
+        kota: branch.kota,
+      }));
+  }, [branches]);
 
   const [q, setQ] = useState<FeeQuery>({
-    page: 1, per_page: 10, sort: "-created_at",
-    cabang_id: cabangOptions[0]?.id ?? 1,
-    is_active: undefined, kind: undefined, base: undefined, q: "",
+    page: 1,
+    per_page: 10,
+    sort: "-created_at",
+    cabang_id: undefined,
+    is_active: undefined,
+    kind: undefined,
+    base: undefined,
+    q: "",
   });
 
   const { data, loading, err, setData } = useAsync<PaginatedResponse<Fee>>(
@@ -264,6 +298,51 @@ export default function FeeMaster(): React.ReactElement {
 
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<FormMode>({ type: "create" });
+
+  useEffect(() => {
+    let alive = true;
+
+    setBranchesLoading(true);
+    setBranchesError(null);
+
+    listBranches({
+      is_active: true,
+      per_page: 100,
+      sort: "nama",
+    })
+      .then((res) => {
+        if (!alive) return;
+        setBranches(res.data ?? []);
+      })
+      .catch((e: unknown) => {
+        if (!alive) return;
+        setBranches([]);
+        setBranchesError(
+          e instanceof Error ? e.message : "Gagal memuat data cabang."
+        );
+      })
+      .finally(() => {
+        if (!alive) return;
+        setBranchesLoading(false);
+      });
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const cabangNameById = useMemo(() => {
+    const map = new Map<number, string>();
+
+    cabangOptions.forEach((cabang) => {
+      map.set(
+        cabang.id,
+        `${cabang.name}${cabang.kota ? ` · ${cabang.kota}` : ""}`
+      );
+    });
+
+    return map;
+  }, [cabangOptions]);
 
   function refresh() {
     setQ((s) => ({ ...s }));
@@ -315,11 +394,33 @@ export default function FeeMaster(): React.ReactElement {
             <label>Cabang</label>
             <select
               className="select"
-              value={q.cabang_id}
-              onChange={(e) => setQ((s) => ({ ...s, page: 1, cabang_id: Number(e.target.value) }))}
+              value={q.cabang_id ?? ""}
+              disabled={branchesLoading}
+              onChange={(e) =>
+                setQ((s) => ({
+                  ...s,
+                  page: 1,
+                  cabang_id: e.target.value ? Number(e.target.value) : undefined,
+                }))
+              }
             >
-              {cabangOptions.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              <option value="">
+                {branchesLoading ? "Memuat cabang..." : "Semua Cabang"}
+              </option>
+
+              {cabangOptions.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                  {c.kota ? ` · ${c.kota}` : ""}
+                </option>
+              ))}
             </select>
+
+            {branchesError && (
+              <div style={{ marginTop: 6, color: "var(--color-danger, #b91c1c)", fontSize: 13 }}>
+                {branchesError}
+              </div>
+            )}
           </div>
 
           <div>
@@ -409,7 +510,9 @@ export default function FeeMaster(): React.ReactElement {
 
               {data?.data.map((r) => (
                 <tr key={r.id}>
-                  <td>#{r.cabang_id}</td>
+                  <td>
+                    {cabangNameById.get(r.cabang_id) ?? `Cabang #${r.cabang_id}`}
+                  </td>
                   <td>{r.name}</td>
                   <td>{r.kind}</td>
                   <td>{r.calc_type}</td>

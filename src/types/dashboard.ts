@@ -38,6 +38,20 @@ export type LowStockRow = {
     min_stock: number;
 };
 
+export type LatestOrder = {
+    id: number;
+    kode: string;
+    cabang_id: number;
+    cabang_nama: string | null;
+    customer_name: string | null;
+    customer_phone: string | null;
+    status: string;
+    grand_total: number;
+    paid_total: number;
+    cash_position: string | null;
+    ordered_at: string;
+};
+
 export type QuickAction =
     | {
         type: 'LOW_STOCK';

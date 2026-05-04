@@ -40,6 +40,7 @@ type VariantsEnvelope = {
     product_id?: number;
     image_url?: string | null;
     media_path?: string | null;
+    stock_qty?: number | string | null;
   }>;
   meta?: {
     current_page?: number;
@@ -84,6 +85,12 @@ function mapResponse(json: VariantsEnvelope): VariantSummary[] {
 /** ✅ Safe BASE resolver */
 const BASE = getBaseUrl();
 
+function canSearch(term: string): boolean {
+  const clean = term.trim();
+
+  return clean.length >= 2 || isLikelyBarcode(clean);
+}
+
 /* ====================== Component ====================== */
 
 export default function ProductSearch({ warehouseId }: Props) {
@@ -95,15 +102,14 @@ export default function ProductSearch({ warehouseId }: Props) {
   // pagination / infinite scroll
   const [page, setPage] = useState<number>(1);
   const [hasMore, setHasMore] = useState<boolean>(true);
-  const perPageDefault = 24; // tampilkan banyak item di awal
 
   const lastGoodItemsRef = useRef<VariantSummary[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const reqSeqRef = useRef<number>(0);
+  const latestTermRef = useRef<string>("");
   const debounceRef = useRef<number | null>(null);
   const mountedRef = useRef<boolean>(true);
-  const didInitRef = useRef<boolean>(false);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   const [activeIdx, setActiveIdx] = useState<number>(-1);
@@ -112,27 +118,31 @@ export default function ProductSearch({ warehouseId }: Props) {
 
   /* =========== Mount / Unmount =========== */
   useEffect(() => {
-    if (import.meta.env.DEV) {
-      if (didInitRef.current) return;
-      didInitRef.current = true;
-    }
     mountedRef.current = true;
+
     try {
       inputRef.current?.focus();
     } catch {
       /* ignore */
     }
+
     return () => {
       mountedRef.current = false;
       abortRef.current?.abort();
-      if (debounceRef.current) window.clearTimeout(debounceRef.current);
+
+      if (debounceRef.current) {
+        window.clearTimeout(debounceRef.current);
+        debounceRef.current = null;
+      }
     };
   }, []);
 
   /* =========== Core fetcher with pagination =========== */
   const fetchPage = useCallback(
     async (term: string, pageToLoad: number): Promise<{ list: VariantSummary[]; lastPage: number }> => {
-      if (!warehouseId) return { list: [], lastPage: 1 };
+      if (!warehouseId) {
+        throw new Error("Gudang belum dipilih. Pilih Cabang & Gudang terlebih dahulu.");
+      }
 
       const myReqId = ++reqSeqRef.current;
 
@@ -155,9 +165,11 @@ export default function ProductSearch({ warehouseId }: Props) {
           );
         }
 
-        url.searchParams.set("q", term ?? "");
-        url.searchParams.set("per_page", String(term.trim() === "" ? perPageDefault : 12));
-        url.searchParams.set("gudang_id", String(warehouseId));
+        const cleanTerm = term.trim();
+
+        url.searchParams.set("q", cleanTerm);
+        url.searchParams.set("per_page", "12");
+        url.searchParams.set("warehouse_id", String(warehouseId));
         url.searchParams.set("page", String(pageToLoad));
 
         const token = getAuthToken();
@@ -208,22 +220,40 @@ export default function ProductSearch({ warehouseId }: Props) {
         }
         throw err;
       } finally {
-        if (mountedRef.current && reqSeqRef.current) {
+        if (mountedRef.current) {
           setLoading(false);
         }
       }
     },
-    [warehouseId, perPageDefault]
+    [warehouseId]
   );
 
-  /* =========== Reset & initial load (show all) =========== */
+  /* =========== Reset & initial load =========== */
   const resetAndLoad = useCallback(
     async (term: string) => {
+      const cleanTerm = term.trim();
+      latestTermRef.current = cleanTerm;
+
       setPage(1);
-      setHasMore(true);
+      setHasMore(false);
+      setActiveIdx(-1);
+      setErrorText(null);
+
+      // Penting: bersihkan hasil lama setiap keyword berubah
+      setItems([]);
+      lastGoodItemsRef.current = [];
+
+      if (!canSearch(cleanTerm)) {
+        return;
+      }
+
       try {
-        const { list, lastPage } = await fetchPage(term, 1);
+        const { list, lastPage } = await fetchPage(cleanTerm, 1);
         if (!mountedRef.current) return;
+
+        // Penting: pastikan hasil yang tampil hanya hasil dari keyword aktif terakhir
+        if (latestTermRef.current !== cleanTerm) return;
+
         setItems(list);
         lastGoodItemsRef.current = list;
         setActiveIdx(list.length ? 0 : -1);
@@ -232,34 +262,50 @@ export default function ProductSearch({ warehouseId }: Props) {
       } catch (err: unknown) {
         if (isAbortLike(err)) return;
         if (!mountedRef.current) return;
+
         const msg =
-          (typeof err === "object" && err && "message" in err && typeof (err as { message?: unknown }).message === "string")
+          (typeof err === "object" &&
+            err &&
+            "message" in err &&
+            typeof (err as { message?: unknown }).message === "string")
             ? (err as { message: string }).message
             : "Gagal memuat data.";
+
         setErrorText(msg);
-        setItems(lastGoodItemsRef.current ?? []);
+        setItems([]);
+        lastGoodItemsRef.current = [];
+        setActiveIdx(-1);
+        setHasMore(false);
       }
     },
     [fetchPage]
   );
 
-  // initial: load semua item (term kosong)
   useEffect(() => {
-    void resetAndLoad("");
-  }, [resetAndLoad]);
+    setItems([]);
+    lastGoodItemsRef.current = [];
+    setActiveIdx(-1);
+    setHasMore(false);
+    setErrorText(null);
+  }, []);
 
-  /* =========== Debounced search (termasuk kosong) =========== */
+  /* =========== Debounced search =========== */
   useEffect(() => {
     if (debounceRef.current) window.clearTimeout(debounceRef.current);
 
     const term = q ?? "";
-    const shouldSearch =
-      term.trim().length === 0 ||
-      term.trim().length >= 2 ||
-      isLikelyBarcode(term);
+
+    if (!canSearch(term)) {
+      setItems([]);
+      lastGoodItemsRef.current = [];
+      setActiveIdx(-1);
+      setHasMore(false);
+      setErrorText(null);
+      return;
+    }
 
     debounceRef.current = window.setTimeout(() => {
-      if (shouldSearch) void resetAndLoad(term);
+      void resetAndLoad(term);
     }, 250);
 
     return () => {
@@ -269,17 +315,34 @@ export default function ProductSearch({ warehouseId }: Props) {
 
   /* =========== Warehouse change re-load =========== */
   useEffect(() => {
-    void resetAndLoad(q ?? "");
+    const term = q ?? "";
+
+    if (!canSearch(term)) {
+      setItems([]);
+      lastGoodItemsRef.current = [];
+      setActiveIdx(-1);
+      setHasMore(false);
+      setErrorText(null);
+      return;
+    }
+
+    void resetAndLoad(term);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [warehouseId]);
 
   /* =========== Load next page (infinite scroll) =========== */
   const loadNextPage = useCallback(async () => {
-    if (loading || !hasMore) return;
+    if (loading || !hasMore || !canSearch(q ?? "")) return;
+
     const next = page + 1;
+    const currentTerm = (q ?? "").trim();
+    latestTermRef.current = currentTerm;
+
     try {
-      const { list, lastPage } = await fetchPage(q ?? "", next);
+      const { list, lastPage } = await fetchPage(currentTerm, next);
       if (!mountedRef.current) return;
+      if (latestTermRef.current !== currentTerm) return;
+
       setItems((prev) => {
         const merged = [...prev, ...list];
         lastGoodItemsRef.current = merged;
@@ -301,19 +364,23 @@ export default function ProductSearch({ warehouseId }: Props) {
 
   // IntersectionObserver untuk sentinel (infinite scroll)
   useEffect(() => {
+    if (!hasMore) return;
+
     const node = sentinelRef.current;
     if (!node) return;
 
     const io = new IntersectionObserver((entries) => {
       const entry = entries[0];
+
       if (entry.isIntersecting) {
         void loadNextPage();
       }
     }, { root: listRef.current, rootMargin: "0px 0px 120px 0px" });
 
     io.observe(node);
+
     return () => io.disconnect();
-  }, [loadNextPage]);
+  }, [hasMore, loadNextPage]);
 
   /* =========== Add to cart =========== */
   function addToCart(v: VariantSummary): void {
@@ -360,7 +427,17 @@ export default function ProductSearch({ warehouseId }: Props) {
         id="pos-search"
         ref={inputRef}
         value={q}
-        onChange={(e) => setQ(e.target.value)}
+        onChange={(e) => {
+          const next = e.target.value;
+
+          setQ(next);
+
+          setItems([]);
+          lastGoodItemsRef.current = [];
+          setActiveIdx(-1);
+          setHasMore(false);
+          setErrorText(null);
+        }}
         onKeyDown={(e) => {
           if (!items.length) {
             if (e.key === "Enter" && isLikelyBarcode(q)) {
@@ -389,7 +466,7 @@ export default function ProductSearch({ warehouseId }: Props) {
             setQ("");
           }
         }}
-        placeholder="Cari produk / scan barcode"
+        placeholder="Cari produk / scan SKU"
         className="input"
         autoComplete="off"
         inputMode="search"
@@ -503,7 +580,7 @@ export default function ProductSearch({ warehouseId }: Props) {
           })}
 
           {/* Sentinel untuk infinite scroll */}
-          <div ref={sentinelRef} style={{ height: 6 }} />
+          {hasMore && <div ref={sentinelRef} style={{ height: 6 }} />}
         </div>
       )}
 
